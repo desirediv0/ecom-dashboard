@@ -69,14 +69,21 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-jost;
+  }
+  p,
+  .description,
+  .desc,
+  .product-desc,
+  .about-text {
+    @apply font-poppins;
   }
 }
 
 /* Add typography styles for blog content */
 @layer components {
   .prose {
-    @apply text-gray-700;
+    @apply text-gray-700 font-poppins;
   }
 
   .prose h1,
@@ -85,7 +92,7 @@
   .prose h4,
   .prose h5,
   .prose h6 {
-    @apply text-gray-900 font-bold mt-6 mb-4;
+    @apply text-gray-900 font-bold mt-6 mb-4 font-jost;
   }
 
   .prose h1 {
@@ -101,7 +108,7 @@
   }
 
   .prose p {
-    @apply my-4;
+    @apply my-4 font-poppins;
   }
 
   .prose ul,

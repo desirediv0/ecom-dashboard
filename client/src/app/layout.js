@@ -6,15 +6,18 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+const jostFont = localFont({
+  src: "./fonts/Jost-Regular.ttf",
+  variable: "--font-jost",
+  weight: "400",
+  display: "swap",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+
+const poppinsFont = localFont({
+  src: "./fonts/Poppins-Regular.ttf",
+  variable: "--font-poppins",
+  weight: "400",
+  display: "swap",
 });
 
 export const metadata = {
@@ -27,7 +30,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${jostFont.variable} ${poppinsFont.variable} font-jost antialiased`}
       >
         <AuthProvider>
           <CartProvider>
