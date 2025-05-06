@@ -16,12 +16,10 @@ import {
   Minus,
   Plus,
   ShoppingCart,
-  Heart,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
-import { useAuth } from "@/lib/auth-context";
 
 export default function ProductQuickView({ product, open, onOpenChange }) {
   const [selectedFlavor, setSelectedFlavor] = useState(null);
@@ -33,7 +31,6 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
   const [addingToCart, setAddingToCart] = useState(false);
   const [success, setSuccess] = useState(false);
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
   const [productDetails, setProductDetails] = useState(null);
   const [imgSrc, setImgSrc] = useState("");
 
