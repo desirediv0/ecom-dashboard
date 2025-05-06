@@ -1,38 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-
-// Mock categories data (replace with your actual data)
-const mockCategories = [
-  {
-    id: 1,
-    name: "Protein",
-    description: "Whey, Plant Based & More",
-    image: "/c3.jpg",
-    count: 24,
-  },
-  {
-    id: 2,
-    name: "Pre-Workout",
-    description: "Energy & Performance",
-    image: "/c3.jpg",
-    count: 18,
-  },
-  {
-    id: 3,
-    name: "Weight Gain",
-    description: "Mass Builders & Gainers",
-    image: "/c3.jpg",
-    count: 12,
-  },
-  {
-    id: 4,
-    name: "Recovery",
-    description: "BCAAs & Recovery Aids",
-    image: "/c3.jpg",
-    count: 16,
-  },
-];
+import { fetchApi } from "@/lib/utils";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
+import Headtext from "./ui/headtext";
 
 const CircularCategoryCard = ({ category, index }) => {
   return (
@@ -72,14 +49,14 @@ const CircularCategoryCard = ({ category, index }) => {
 
             {/* Image */}
             <img
-              src={category.image}
+              src={category.image || "/c3.jpg"}
               alt={category.name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
 
             {/* Product count badge */}
             <div className="absolute bottom-6 left-0 right-0 text-center text-white text-sm font-medium z-20">
-              {category.count} PRODUCTS
+              {category._count?.products || category.count || 0} PRODUCTS
             </div>
 
             {/* Hover effect center circle */}
@@ -128,7 +105,7 @@ const CircularCategoryCard = ({ category, index }) => {
       {/* Category Info */}
       <div className="text-center px-4">
         <h3 className="text-xl font-bold text-black mb-1">{category.name}</h3>
-        <p className="text-gray-600 text-sm">{category.description}</p>
+        <p className="text-gray-600 text-sm">{category.description || ""}</p>
 
         {/* Underline animation on hover */}
         <motion.div
@@ -152,16 +129,70 @@ const SkeletonLoader = () => {
   );
 };
 
-const FeaturedCategories = ({ categories }) => {
+const FeaturedCategoriesCarousel = ({ categories }) => {
+  const [api, setApi] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Update current slide index when carousel changes
+  useEffect(() => {
+    if (!api) return;
+
+    const onSelect = () => {
+      setCurrentIndex(api.selectedScrollSnap());
+    };
+
+    api.on("select", onSelect);
+
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+
+  if (!categories || categories.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No categories available at the moment</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-      {categories.map((category, index) => (
-        <CircularCategoryCard
-          key={category.id}
-          category={category}
-          index={index}
-        />
-      ))}
+    <div className="relative">
+      <Carousel setApi={setApi} opts={{ loop: true }}>
+        <CarouselContent className="-ml-2 md:-ml-4">
+          {categories.map((category, index) => (
+            <CarouselItem
+              key={category.id || index}
+              className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4"
+            >
+              <Link href={`/category/${category.slug || ""}`} className="block">
+                <CircularCategoryCard category={category} index={index} />
+              </Link>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+
+        <CarouselPrevious className="absolute left-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
+        <CarouselNext className="absolute right-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
+
+        {/* Dot indicators */}
+        <div className="flex justify-center mt-8 gap-1.5">
+          {Array.from({ length: Math.ceil(categories.length / 4) }).map(
+            (_, idx) => (
+              <button
+                key={idx}
+                onClick={() => api?.scrollTo(idx * 4)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  Math.floor(currentIndex / 4) === idx
+                    ? "bg-primary scale-110"
+                    : "bg-gray-300"
+                }`}
+                aria-label={`Go to slide group ${idx + 1}`}
+              />
+            )
+          )}
+        </div>
+      </Carousel>
     </div>
   );
 };
@@ -172,45 +203,41 @@ const FeaturedCategoriesSection = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulate API call with a timeout
-    const timer = setTimeout(() => {
-      setCategories(mockCategories);
-      setCategoriesLoading(false);
-    }, 1000);
+    // Fetch categories from API
+    const fetchCategories = async () => {
+      try {
+        const categoriesRes = await fetchApi("/public/categories");
+        setCategories(categoriesRes?.data?.categories || []);
+        setCategoriesLoading(false);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError(err?.message || "Failed to fetch categories");
+        setCategoriesLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchCategories();
   }, []);
 
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              <span className="relative inline-block">
-                FEATURED CATEGORIES
-                <motion.div
-                  className="absolute -bottom-3 left-0 right-0 mx-auto w-24 h-1 bg-black"
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "24px" }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  viewport={{ once: true }}
-                />
-              </span>
-            </h2>
-            <p className="text-gray-600 mt-5 max-w-2xl mx-auto">
+            <Headtext text="FEATURED CATEGORIES" />
+            <p className="text-gray-600 my-6 max-w-2xl mx-auto">
               Discover our collection of premium fitness supplements
             </p>
           </motion.div>
         </div>
 
         {categoriesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, index) => (
               <SkeletonLoader key={index} />
             ))}
@@ -220,7 +247,7 @@ const FeaturedCategoriesSection = () => {
             <p className="text-red-500">Failed to load categories</p>
           </div>
         ) : (
-          <FeaturedCategories categories={categories} />
+          <FeaturedCategoriesCarousel categories={categories} />
         )}
 
         <motion.div
@@ -239,6 +266,7 @@ const FeaturedCategoriesSection = () => {
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
                     strokeLinecap="round"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { fetchApi } from "@/lib/utils";
@@ -11,7 +11,6 @@ import {
   ShoppingCart,
   ChevronRight,
   Heart,
-  ChevronLeft,
 } from "lucide-react";
 import {
   Carousel,
@@ -19,12 +18,12 @@ import {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
-  CarouselAutoplayButton,
 } from "@/components/ui/carousel";
 import { motion } from "framer-motion";
 import GymSupplementShowcase from "@/components/showcase";
 import BenefitsSec from "@/components/benifit-sec";
 import FeaturedCategoriesSection from "@/components/catgry";
+import Headtext from "@/components/ui/headtext";
 
 // Hero Carousel Component
 const HeroCarousel = () => {
@@ -279,102 +278,6 @@ function useWindowSize() {
   return size;
 }
 
-// Featured Categories Component with circular cards and better UI
-const FeaturedCategories = ({ categories = [] }) => {
-  const [api, setApi] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Update current slide index when carousel changes
-  useEffect(() => {
-    if (!api) return;
-
-    const onSelect = () => {
-      setCurrentIndex(api.selectedScrollSnap());
-    };
-
-    api.on("select", onSelect);
-
-    return () => {
-      api.off("select", onSelect);
-    };
-  }, [api]);
-
-  if (!categories || categories.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No categories available at the moment</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <Carousel setApi={setApi} opts={{ loop: true }}>
-        <CarouselContent className="-ml-2 md:-ml-4">
-          {categories.map((category, index) => (
-            <CarouselItem
-              key={category.id || index}
-              className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4"
-            >
-              <Link href={`/category/${category.slug || ""}`} className="block">
-                <div className="relative group flex flex-col items-center">
-                  {/* Circular image container */}
-                  <div className="w-48 h-48 max-w-full mx-auto rounded-full overflow-hidden border-4 border-white shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 mb-4">
-                    {category.image ? (
-                      <img
-                        src={category.image}
-                        alt={category.name || "Category"}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    ) : (
-                      <div
-                        className={`w-full h-full bg-gradient-to-br ${getCategoryGradient(
-                          category.name || "Category"
-                        )}`}
-                      />
-                    )}
-                  </div>
-
-                  {/* Category name and product count */}
-                  <div className="text-center">
-                    <h3 className="text-lg font-bold mb-1 text-gray-800 group-hover:text-primary transition-colors">
-                      {category.name || "Category"}
-                    </h3>
-                    <span className="inline-block bg-primary/10 text-primary text-sm font-medium px-3 py-1 rounded-full">
-                      {category._count?.products || 0} Products
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-
-        <CarouselPrevious className="absolute left-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
-        <CarouselNext className="absolute right-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
-
-        {/* Dot indicators */}
-        <div className="flex justify-center mt-8 gap-1.5">
-          {Array.from({ length: Math.ceil(categories.length / 4) }).map(
-            (_, idx) => (
-              <button
-                key={idx}
-                onClick={() => api?.scrollTo(idx * 4)}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  Math.floor(currentIndex / 4) === idx
-                    ? "bg-primary scale-110"
-                    : "bg-gray-300"
-                }`}
-                aria-label={`Go to slide group ${idx + 1}`}
-              />
-            )
-          )}
-        </div>
-      </Carousel>
-    </div>
-  );
-};
-
 // Featured Products Component with modern card design
 const FeaturedProducts = ({ products = [] }) => {
   return (
@@ -387,19 +290,8 @@ const FeaturedProducts = ({ products = [] }) => {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              <span className="relative inline-block">
-                FEATURED PRODUCTS
-                <motion.span
-                  className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 -z-10"
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "100%" }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  viewport={{ once: true }}
-                />
-              </span>
-            </h2>
-            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            <Headtext text="FEATURED PRODUCTS" />
+            <p className="text-gray-600 my-6 max-w-2xl mx-auto">
               High-quality supplements to enhance your fitness journey
             </p>
           </motion.div>
@@ -541,67 +433,6 @@ const FeaturedProducts = ({ products = [] }) => {
   );
 };
 
-// Benefits Section with modern cards
-// const BenefitsSection = () => {
-//   const benefits = [
-//     {
-//       title: "Premium Quality",
-//       description:
-//         "Lab-tested supplements made with high-quality ingredients for maximum effectiveness.",
-//       icon: "🏆",
-//     },
-//     {
-//       title: "Fast Delivery",
-//       description:
-//         "Get your supplements delivered to your doorstep within 2-3 business days.",
-//       icon: "🚚",
-//     },
-//     {
-//       title: "Expert Support",
-//       description:
-//         "Our team of fitness experts is available to help you choose the right supplements.",
-//       icon: "👨‍⚕️",
-//     },
-//     {
-//       title: "Secure Payments",
-//       description: "Shop with confidence with our 100% secure payment gateway.",
-//       icon: "🔒",
-//     },
-//   ];
-
-//   return (
-//     <section className="py-16 bg-white">
-//       <div className="container mx-auto px-4">
-//         <div className="text-center mb-12">
-//           <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-//             <span className="relative z-10 uppercase">Why Choose Us</span>
-//             <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-//           </h2>
-//           <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-//             We're committed to providing you with the best fitness supplements
-//           </p>
-//         </div>
-
-//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-//           {benefits.map((benefit, index) => (
-//             <div
-//               key={index}
-//               className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center text-center"
-//             >
-//               <div className="text-4xl mb-4 bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center">
-//                 {benefit.icon}
-//               </div>
-//               <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
-//               <p className="text-gray-600">{benefit.description}</p>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-//     </section>
-//   );
-// };
-<BenefitsSec />
-
 // Testimonials Section
 const TestimonialsSection = () => {
   const testimonials = [
@@ -635,13 +466,8 @@ const TestimonialsSection = () => {
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-            <span className="relative z-10 uppercase">
-              What Our Customers Say
-            </span>
-            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-          </h2>
-          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+          <Headtext text="WHAT OUR CUSTOMERS SAY" />
+          <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
             Real experiences from people who trust our products
           </p>
         </div>
@@ -842,13 +668,8 @@ const NewsletterSection = () => {
     <section className="py-16 bg-primary/5">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 relative inline-block">
-            <span className="relative z-10 uppercase">
-              Join Our Fitness Community
-            </span>
-            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-          </h2>
-          <p className="text-gray-600 mb-6">
+          <Headtext text="JOIN OUR FITNESS COMMUNITY" />
+          <p className="text-gray-600 my-6">
             Subscribe to get exclusive deals, fitness tips, and new product
             alerts.
           </p>
@@ -894,20 +715,13 @@ const ProductSkeleton = () => (
 // Home page component
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch featured products and categories
+    // Fetch featured products
     const fetchData = async () => {
       try {
-        // Fetch categories
-        const categoriesRes = await fetchApi("/public/categories");
-        setCategories(categoriesRes?.data?.categories || []);
-        setCategoriesLoading(false);
-
         // Fetch products
         const productsRes = await fetchApi(
           "/public/products?featured=true&limit=8"
@@ -918,7 +732,6 @@ export default function Home() {
         console.error("Error fetching data:", err);
         setError(err?.message || "Failed to fetch data");
         setProductsLoading(false);
-        setCategoriesLoading(false);
       }
     };
 
@@ -930,79 +743,15 @@ export default function Home() {
       <HeroCarousel />
       <AnnouncementBanner />
 
-      {/* Featured Categories section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                <span className="relative inline-block">
-                  FEATURED CATEGORIES
-                  <motion.span
-                    className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 -z-10"
-                    initial={{ width: 0 }}
-                    whileInView={{ width: "100%" }}
-                    transition={{ duration: 0.8, delay: 0.3 }}
-                    viewport={{ once: true }}
-                  />
-                </span>
-              </h2>
-              <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-                Discover our collection of premium fitness supplements
-              </p>
-            </motion.div>
-          </div>
-
-          {categoriesLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-center animate-pulse"
-                >
-                  <div className="w-48 h-48 rounded-full bg-gray-200 mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-16"></div>
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-8">
-              <p className="text-red-500">Failed to load categories</p>
-            </div>
-          ) : (
-            <FeaturedCategories categories={categories} />
-          )}
-
-          <div className="text-center mt-10">
-            <Link href="/products">
-              <Button
-                variant="outline"
-                size="lg"
-                className="font-medium border-primary text-primary hover:bg-primary hover:text-white group"
-              >
-                View All Categories
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Featured Categories Section */}
+      <FeaturedCategoriesSection />
 
       {/* Featured Products - show skeleton if loading */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-              <span className="relative z-10 uppercase">Featured Products</span>
-              <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-            </h2>
-            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            <Headtext text="FEATURED PRODUCTS" />
+            <p className="text-gray-600 my-6 max-w-2xl mx-auto">
               High-quality supplements to enhance your fitness journey
             </p>
           </div>
@@ -1026,20 +775,15 @@ export default function Home() {
           )}
         </div>
       </section>
-     
 
       {/* Trending Products Section */}
       {!productsLoading && !error && featuredProducts.length > 0 && (
         <TrendingSection products={featuredProducts} />
       )}
-       <GymSupplementShowcase />
 
-<BenefitsSec />
-      {/* <BenefitsSection /> */}
-   <TestimonialsSection />
-      
-      <FeaturedCategoriesSection />
-      
+      <GymSupplementShowcase />
+      <BenefitsSec />
+      <TestimonialsSection />
       <NewsletterSection />
     </div>
   );

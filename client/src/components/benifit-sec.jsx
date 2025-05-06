@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Headtext from "./ui/headtext";
 
 const BenefitsSec = () => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -126,16 +127,7 @@ const BenefitsSec = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
-            <span className="relative inline-block">
-              WHY CHOOSE US
-              <motion.span
-                className="absolute -bottom-3 left-0 h-1 bg-black w-0"
-                animate={{ width: "100%" }}
-                transition={{ delay: 0.8, duration: 0.8 }}
-              ></motion.span>
-            </span>
-          </h2>
+          <Headtext text="WHY CHOOSE US" />
           <p className="text-gray-800 mt-6 max-w-2xl mx-auto text-lg">
             We're committed to providing you with the best fitness supplements
             that deliver real results for your training goals
