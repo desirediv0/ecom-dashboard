@@ -7,8 +7,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ClientOnly } from "@/components/client-only";
 import { DynamicIcon } from "@/components/dynamic-icon";
-import { fetchApi, formatCurrency } from "@/lib/utils";
+import { fetchApi } from "@/lib/utils";
 import Image from "next/image";
+import { Eye, Heart, Star } from "lucide-react";
+import ProductQuickView from "@/components/ProductQuickView";
 
 export default function WishlistPage() {
   const { isAuthenticated, loading } = useAuth();
@@ -16,6 +18,8 @@ export default function WishlistPage() {
 
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState(true);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [error, setError] = useState("");
 
   // Redirect if not authenticated
@@ -68,42 +72,9 @@ export default function WishlistPage() {
     }
   };
 
-  // Add to cart and remove from wishlist
-  const addToCartAndRemove = async (wishlistItemId, productId) => {
-    try {
-      // Get the first variant for the product
-      const productResponse = await fetchApi(`/public/products/${productId}`, {
-        credentials: "include",
-      });
-
-      const product = productResponse.data.product;
-
-      if (!product || !product.variants || product.variants.length === 0) {
-        setError("Product variants not available.");
-        return;
-      }
-
-      // Use the first variant by default
-      const productVariantId = product.variants[0].id;
-
-      // Add to cart
-      await fetchApi("/cart/add", {
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify({
-          productVariantId,
-          quantity: 1,
-        }),
-      });
-
-      // Remove from wishlist
-      await removeFromWishlist(wishlistItemId);
-
-      // Show success message or notification (optional)
-    } catch (error) {
-      console.error("Failed to add item to cart:", error);
-      setError("Failed to add item to cart. Please try again.");
-    }
+  const handleQuickView = (product) => {
+    setQuickViewProduct(product);
+    setQuickViewOpen(true);
   };
 
   if (loading) {
@@ -147,71 +118,89 @@ export default function WishlistPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {wishlistItems.map((item) => (
+            {wishlistItems.map((product) => (
               <div
-                key={item.id}
-                className="bg-white rounded-lg shadow overflow-hidden"
+                key={product.id}
+                className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
               >
-                <div className="relative h-48 bg-gray-100">
-                  {item.images && item.images[0] ? (
+                <Link href={`/products/${product.slug}`}>
+                  <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
                     <Image
-                      width={96}
-                      height={96}
-                      src={item.images[0]}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-contain p-4 transition-transform group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center">
-                      <DynamicIcon
-                        name="Image"
-                        className="h-12 w-12 text-gray-400"
-                      />
-                    </div>
-                  )}
-                  <button
-                    onClick={() => removeFromWishlist(item.id)}
-                    className="absolute top-2 right-2 p-1 bg-white rounded-full shadow hover:bg-gray-100"
-                    aria-label="Remove from wishlist"
-                  >
-                    <DynamicIcon name="X" className="h-5 w-5 text-gray-600" />
-                  </button>
-                </div>
-                <div className="p-4">
-                  <Link href={`/products/${item.id}`}>
-                    <h3 className="text-lg font-semibold line-clamp-2 hover:text-primary">
-                      {item.name}
-                    </h3>
-                  </Link>
-                  <p className="text-gray-500 my-2 line-clamp-2">
-                    {item.description}
-                  </p>
-                  <div className="flex justify-between items-center mt-4">
-                    <div className="font-semibold">
-                      {formatCurrency(item.price)}
-                    </div>
-                    <div className="flex space-x-2">
+
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="text-primary"
-                        onClick={() =>
-                          addToCartAndRemove(item.id, item.productId)
-                        }
+                        className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleQuickView(product);
+                        }}
                       >
-                        <DynamicIcon
-                          name="ShoppingCart"
-                          className="h-4 w-4 mr-1"
-                        />
-                        Add to Cart
+                        <Eye className="h-5 w-5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
+                      >
+                        <Heart className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>
+                </Link>
+
+                <div className="p-4 text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <div className="flex text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-4 w-4"
+                          fill={
+                            i < Math.round(product.avgRating || 0)
+                              ? "currentColor"
+                              : "none"
+                          }
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-500 ml-2">
+                      ({product.reviewCount || 0})
+                    </span>
+                  </div>
+
+                  <Link
+                    href={`/products/${product.slug}`}
+                    className="hover:text-primary"
+                  >
+                    <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
+                      {product.name}
+                    </h3>
+                  </Link>
+
+                  {product.flavors > 1 && (
+                    <span className="text-xs text-gray-500 block">
+                      {product.flavors} flavors available
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
+        {/* Quick View Dialog */}
+        <ProductQuickView
+          product={quickViewProduct}
+          open={quickViewOpen}
+          onOpenChange={setQuickViewOpen}
+        />
       </div>
     </ClientOnly>
   );

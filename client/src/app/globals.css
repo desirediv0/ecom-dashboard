@@ -6,6 +6,15 @@
   .text-balance {
     text-wrap: balance;
   }
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }
 
 @layer base {
@@ -160,5 +169,22 @@
   .prose em,
   .prose i {
     @apply italic;
+  }
+
+  /* Product thumbnails carousel */
+  .embla-thumbs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .embla-thumbs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .embla-thumbs > div {
+    display: flex;
+    flex-direction: row;
+    min-width: 100%;
   }
 }

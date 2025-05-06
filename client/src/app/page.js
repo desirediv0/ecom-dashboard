@@ -13,96 +13,145 @@ import {
   ChevronRight,
   Heart,
 } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  CarouselAutoplayButton,
+} from "@/components/ui/carousel";
 
 // Hero Carousel Component
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [api, setApi] = useState(null);
+  const [autoplay, setAutoplay] = useState(true);
+
   const slides = [
     {
-      image: "/hero-supplements.jpg",
-      bgColor: "from-blue-900 to-indigo-800",
-      title: "Premium Supplements for Your Fitness Journey",
+      title: "PREMIUM SUPPLEMENTS",
       subtitle: "Fuel your workouts with high-quality ingredients",
-      cta: "Shop Now",
+      cta: "SHOP NOW",
       ctaLink: "/products",
     },
     {
-      image: "/protein-banner.jpg",
-      bgColor: "from-purple-900 to-fuchsia-800",
-      title: "NEW: Advanced Protein Formula",
+      title: "ADVANCED PROTEIN FORMULA",
       subtitle: "30g protein per serving with zero added sugar",
-      cta: "Explore",
+      cta: "EXPLORE",
       ctaLink: "/category/protein",
     },
     {
-      image: "/pre-workout-banner.jpg",
-      bgColor: "from-red-900 to-orange-800",
-      title: "Supercharge Your Workout",
+      title: "SUPERCHARGE YOUR WORKOUT",
       subtitle: "Pre-workout supplements that deliver real results",
-      cta: "Shop Pre-Workout",
+      cta: "SHOP PRE-WORKOUT",
       ctaLink: "/category/pre-workout",
     },
   ];
 
+  // Handle autoplay functionality
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+    if (!api || !autoplay) return;
+
+    const interval = setInterval(() => {
+      api.scrollNext();
     }, 5000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
+
+    return () => clearInterval(interval);
+  }, [api, autoplay]);
+
+  // Update current slide index when carousel changes
+  useEffect(() => {
+    if (!api) return;
+
+    const onSelect = () => {
+      setCurrentSlide(api.selectedScrollSnap());
+    };
+
+    api.on("select", onSelect);
+
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
 
   return (
     <div className="relative overflow-hidden h-[500px] md:h-[600px]">
-      {slides.map((slide, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentSlide
-              ? "opacity-100"
-              : "opacity-0 pointer-events-none"
-          }`}
+      {/* Single background video that stays consistent across all slides */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <video
+          className="w-full h-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent z-10" />
-          <div
-            className={`relative h-full w-full bg-gradient-to-r ${slide.bgColor}`}
-          >
-            {/* Try to load image, fallback to gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-black/20" />
-            <div className="absolute inset-0 z-20 flex items-center">
-              <div className="container mx-auto px-4">
-                <div className="max-w-2xl">
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-                    {slide.title}
-                  </h1>
-                  <p className="text-xl md:text-2xl text-white/90 mb-8">
-                    {slide.subtitle}
-                  </p>
-                  <Link href={slide.ctaLink}>
-                    <Button size="lg" className="text-lg px-8 py-6">
-                      {slide.cta}
-                      <ChevronRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </Link>
+          <source src="/video.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/60 z-10" />
+      </div>
+
+      <Carousel setApi={setApi} className="h-full relative z-20">
+        <CarouselContent className="h-full">
+          {slides.map((slide, index) => (
+            <CarouselItem key={index} className="h-full p-0">
+              <div className="relative h-full w-full overflow-hidden flex items-center justify-center">
+                {/* Content */}
+                <div className="container mx-auto px-4">
+                  <div className="max-w-2xl mx-auto text-center">
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 uppercase tracking-wider">
+                      {slide.title}
+                    </h1>
+                    <p className="text-xl md:text-2xl text-white/90 mb-8">
+                      {slide.subtitle}
+                    </p>
+                    <Link href={slide.ctaLink}>
+                      <Button
+                        size="lg"
+                        className="text-lg px-12 py-6 font-bold"
+                      >
+                        {slide.cta}
+                        <ChevronRight className="ml-2 h-5 w-5" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      ))}
+            </CarouselItem>
+          ))}
+        </CarouselContent>
 
-      {/* Carousel Controls */}
-      <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center space-x-2">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              index === currentSlide ? "bg-white scale-125" : "bg-white/50"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
+        {/* Navigation Controls */}
+        <CarouselPrevious
+          className="left-8 h-10 w-10 z-30 opacity-70 hover:opacity-100"
+          variant="secondary"
+        />
+        <CarouselNext
+          className="right-8 h-10 w-10 z-30 opacity-70 hover:opacity-100"
+          variant="secondary"
+        />
+
+        {/* Dot Indicators */}
+        <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center space-x-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => api?.scrollTo(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentSlide ? "bg-white scale-125" : "bg-white/50"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Autoplay Toggle */}
+        <CarouselAutoplayButton
+          className="bottom-6 right-6 h-8 w-8 z-30 bg-white/20 hover:bg-white/30"
+          isPlaying={autoplay}
+          onToggle={() => setAutoplay(!autoplay)}
+        />
+      </Carousel>
     </div>
   );
 };
@@ -134,42 +183,60 @@ const AnnouncementBanner = () => {
   );
 };
 
+// Utility functions for colors
+// Function to get a consistent color based on category name
+const getCategoryColor = (name) => {
+  const colors = [
+    "from-blue-700 to-blue-500",
+    "from-purple-700 to-purple-500",
+    "from-red-700 to-red-500",
+    "from-green-700 to-green-500",
+    "from-yellow-700 to-yellow-500",
+    "from-indigo-700 to-indigo-500",
+    "from-pink-700 to-pink-500",
+    "from-teal-700 to-teal-500",
+  ];
+
+  // Simple hash function to get consistent color for same category name
+  const index =
+    name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+    colors.length;
+  return colors[index];
+};
+
+// Function to get a consistent color based on product name
+const getProductColor = (name) => {
+  const colors = [
+    "bg-blue-100",
+    "bg-purple-100",
+    "bg-red-100",
+    "bg-green-100",
+    "bg-yellow-100",
+    "bg-indigo-100",
+    "bg-pink-100",
+    "bg-teal-100",
+  ];
+
+  // Simple hash function to get consistent color for same product name
+  const index =
+    name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+    colors.length;
+  return colors[index];
+};
+
 // Featured Categories Component with hover animation
 const FeaturedCategories = ({ categories }) => {
-  // Function to get a consistent color based on category name
-  const getCategoryColor = (name) => {
-    const colors = [
-      "from-blue-700 to-blue-500",
-      "from-purple-700 to-purple-500",
-      "from-red-700 to-red-500",
-      "from-green-700 to-green-500",
-      "from-yellow-700 to-yellow-500",
-      "from-indigo-700 to-indigo-500",
-      "from-pink-700 to-pink-500",
-      "from-teal-700 to-teal-500",
-    ];
-
-    // Simple hash function to get consistent color for same category name
-    const index =
-      name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-      colors.length;
-    return colors[index];
-  };
-
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold relative">
-            <span className="relative z-10">Featured Categories</span>
-            <span className="absolute bottom-0 left-0 h-3 w-1/2 bg-primary/20 z-0"></span>
+        <div className="text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+            <span className="relative z-10 uppercase">Featured Categories</span>
+            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
           </h2>
-          <Link
-            href="/products"
-            className="text-primary flex items-center hover:underline font-medium"
-          >
-            View All <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            Discover our collection of premium fitness supplements
+          </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -213,6 +280,13 @@ const FeaturedCategories = ({ categories }) => {
             </Link>
           ))}
         </div>
+        <div className="text-center mt-10">
+          <Link href="/products">
+            <Button variant="outline" size="lg" className="font-medium">
+              View All Categories <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -220,40 +294,17 @@ const FeaturedCategories = ({ categories }) => {
 
 // Featured Products Component with modern card design
 const FeaturedProducts = ({ products }) => {
-  // Function to get a consistent color based on product name
-  const getProductColor = (name) => {
-    const colors = [
-      "bg-blue-100",
-      "bg-purple-100",
-      "bg-red-100",
-      "bg-green-100",
-      "bg-yellow-100",
-      "bg-indigo-100",
-      "bg-pink-100",
-      "bg-teal-100",
-    ];
-
-    // Simple hash function to get consistent color for same product name
-    const index =
-      name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-      colors.length;
-    return colors[index];
-  };
-
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold relative">
-            <span className="relative z-10">Featured Products</span>
-            <span className="absolute bottom-0 left-0 h-3 w-1/2 bg-primary/20 z-0"></span>
+        <div className="text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+            <span className="relative z-10 uppercase">Featured Products</span>
+            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
           </h2>
-          <Link
-            href="/products"
-            className="text-primary flex items-center hover:underline font-medium"
-          >
-            View All <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            High-quality supplements to enhance your fitness journey
+          </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -368,6 +419,14 @@ const FeaturedProducts = ({ products }) => {
             </div>
           ))}
         </div>
+
+        <div className="text-center mt-10">
+          <Link href="/products">
+            <Button variant="outline" size="lg" className="font-medium">
+              View All Products <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -404,10 +463,15 @@ const BenefitsSection = () => {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 relative inline-flex mx-auto">
-          <span className="relative z-10">Why Choose Us</span>
-          <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-        </h2>
+        <div className="text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+            <span className="relative z-10 uppercase">Why Choose Us</span>
+            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
+          </h2>
+          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            We're committed to providing you with the best fitness supplements
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {benefits.map((benefit, index) => (
@@ -460,10 +524,17 @@ const TestimonialsSection = () => {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 relative inline-flex mx-auto">
-          <span className="relative z-10">What Our Customers Say</span>
-          <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-        </h2>
+        <div className="text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+            <span className="relative z-10 uppercase">
+              What Our Customers Say
+            </span>
+            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
+          </h2>
+          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            Real experiences from people who trust our products
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((testimonial, index) => (
@@ -502,36 +573,17 @@ const TestimonialsSection = () => {
 
 // Trending Products Section with horizontal scroll on mobile
 const TrendingSection = ({ products }) => {
-  // Reuse the same function to get consistent product colors
-  const getProductColor = (name) => {
-    const colors = [
-      "bg-blue-100",
-      "bg-purple-100",
-      "bg-red-100",
-      "bg-green-100",
-      "bg-yellow-100",
-      "bg-indigo-100",
-      "bg-pink-100",
-      "bg-teal-100",
-    ];
-
-    const index =
-      name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-      colors.length;
-    return colors[index];
-  };
-
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
-        <div className="flex items-center mb-10">
-          <div className="mr-4 bg-primary/10 p-2 rounded-full">
-            <TrendingUp className="h-6 w-6 text-primary" />
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold relative">
-            <span className="relative z-10">Trending Now</span>
-            <span className="absolute bottom-0 left-0 h-3 w-1/2 bg-primary/20 z-0"></span>
+        <div className="text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+            <span className="relative z-10 uppercase">Trending Now</span>
+            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
           </h2>
+          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+            Our most popular supplements that customers love
+          </p>
         </div>
 
         <div className="flex overflow-x-auto pb-4 md:grid md:grid-cols-4 gap-4 md:gap-6 snap-x">
@@ -609,8 +661,11 @@ const NewsletterSection = () => {
     <section className="py-16 bg-primary/5">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">
-            Join Our Fitness Community
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 relative inline-block">
+            <span className="relative z-10 uppercase">
+              Join Our Fitness Community
+            </span>
+            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
           </h2>
           <p className="text-gray-600 mb-6">
             Subscribe to get exclusive deals, fitness tips, and new product
@@ -639,68 +694,375 @@ const NewsletterSection = () => {
   );
 };
 
+// Product and Category skeletons
+const CategorySkeleton = () => (
+  <div className="aspect-[4/5] rounded-lg overflow-hidden bg-gray-200 animate-pulse"></div>
+);
+
+const ProductSkeleton = () => (
+  <div className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
+    <div className="aspect-square bg-gray-200"></div>
+    <div className="p-4">
+      <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
+      <div className="h-4 bg-gray-200 rounded mb-4 w-1/2"></div>
+      <div className="h-8 bg-gray-200 rounded w-full"></div>
+    </div>
+  </div>
+);
+
 // Home page component
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     // Fetch featured products and categories
     const fetchData = async () => {
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
-          fetchApi("/public/products?featured=true&limit=8"),
-          fetchApi("/public/categories"),
-        ]);
-
-        setFeaturedProducts(productsRes.data.products || []);
+        // Fetch categories
+        const categoriesRes = await fetchApi("/public/categories");
         setCategories(categoriesRes.data.categories || []);
+        setCategoriesLoading(false);
+
+        // Fetch products
+        const productsRes = await fetchApi(
+          "/public/products?featured=true&limit=8"
+        );
+        setFeaturedProducts(productsRes.data.products || []);
+        setProductsLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err.message);
-      } finally {
-        setLoading(false);
+        setProductsLoading(false);
+        setCategoriesLoading(false);
       }
     };
 
     fetchData();
   }, []);
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading amazing products...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">Oops! Something went wrong.</p>
-          <p className="text-gray-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
       <HeroCarousel />
       <AnnouncementBanner />
-      <FeaturedCategories categories={categories.slice(0, 8)} />
-      <FeaturedProducts products={featuredProducts} />
+
+      {/* Featured Categories - show skeleton if loading */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+              <span className="relative z-10 uppercase">
+                Featured Categories
+              </span>
+              <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
+            </h2>
+            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+              Discover our collection of premium fitness supplements
+            </p>
+          </div>
+
+          {categoriesLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {[...Array(8)].map((_, index) => (
+                <CategorySkeleton key={index} />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-500">Failed to load categories</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {categories.slice(0, 8).map((category) => (
+                  <Link
+                    href={`/category/${category.slug}`}
+                    key={category.id}
+                    className="group relative rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md"
+                  >
+                    <div className="aspect-[4/5] relative">
+                      {category.image ? (
+                        <Image
+                          src={category.image}
+                          alt={category.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                        />
+                      ) : (
+                        <div
+                          className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(
+                            category.name
+                          )}`}
+                        ></div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                      <h3 className="text-lg md:text-xl font-semibold mb-1">
+                        {category.name}
+                      </h3>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-white/80">
+                          {category._count?.products || 0} Products
+                        </span>
+                        <span className="bg-white text-primary rounded-full w-6 h-6 flex items-center justify-center opacity-0 transform translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+                          <ChevronRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <div className="text-center mt-10">
+                <Link href="/products">
+                  <Button variant="outline" size="lg" className="font-medium">
+                    View All Categories <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Featured Products - show skeleton if loading */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+              <span className="relative z-10 uppercase">Featured Products</span>
+              <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
+            </h2>
+            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+              High-quality supplements to enhance your fitness journey
+            </p>
+          </div>
+
+          {productsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {[...Array(8)].map((_, index) => (
+                <ProductSkeleton key={index} />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-500">Failed to load products</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {featuredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="bg-white rounded-lg overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md group"
+                  >
+                    <div className="relative">
+                      <Link
+                        href={`/products/${product.slug}`}
+                        className="block relative aspect-square"
+                      >
+                        {product.image ? (
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                          />
+                        ) : (
+                          <div
+                            className={`absolute inset-0 ${getProductColor(
+                              product.name
+                            )} flex items-center justify-center`}
+                          >
+                            <span className="font-medium text-gray-500">
+                              {product.name.substring(0, 2).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </Link>
+                      {product.hasSale && (
+                        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                          SALE
+                        </span>
+                      )}
+                      <div className="absolute top-2 right-2 flex flex-col gap-2">
+                        <button
+                          aria-label="Add to wishlist"
+                          className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110"
+                        >
+                          <Heart className="h-4 w-4 text-gray-600" />
+                        </button>
+                        <button
+                          aria-label="Quick shop"
+                          className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110"
+                        >
+                          <ShoppingCart className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex items-center mb-1.5">
+                        <div className="flex text-yellow-400">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className="h-3 w-3"
+                              fill={
+                                i < Math.round(product.avgRating || 0)
+                                  ? "currentColor"
+                                  : "none"
+                              }
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-gray-500 ml-2">
+                          ({product.reviewCount || 0})
+                        </span>
+                      </div>
+
+                      <Link href={`/products/${product.slug}`}>
+                        <h3 className="text-sm md:text-base font-medium line-clamp-2 group-hover:text-primary transition-colors mb-1">
+                          {product.name}
+                        </h3>
+                      </Link>
+
+                      <div className="flex flex-wrap items-center justify-between mt-2">
+                        <div>
+                          {product.hasSale ? (
+                            <div className="flex items-center">
+                              <span className="font-bold text-sm md:text-base">
+                                ₹{product.basePrice}
+                              </span>
+                              <span className="text-gray-500 line-through text-xs ml-2">
+                                ₹{product.regularPrice}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="font-bold text-sm md:text-base">
+                              ₹{product.basePrice}
+                            </span>
+                          )}
+                        </div>
+
+                        {product.flavors > 1 && (
+                          <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                            {product.flavors} flavors
+                          </span>
+                        )}
+                      </div>
+
+                      <Link href={`/products/${product.slug}`}>
+                        <Button size="sm" className="w-full mt-3 py-1">
+                          Add to Cart
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-10">
+                <Link href="/products">
+                  <Button variant="outline" size="lg" className="font-medium">
+                    View All Products <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Trending Products Section - use skeleton loading */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+              <span className="relative z-10 uppercase">Trending Now</span>
+              <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
+            </h2>
+            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+              Our most popular supplements that customers love
+            </p>
+          </div>
+
+          {productsLoading ? (
+            <div className="flex overflow-x-auto pb-4 md:grid md:grid-cols-4 gap-4 md:gap-6 snap-x">
+              {[...Array(4)].map((_, index) => (
+                <div
+                  key={index}
+                  className="flex-shrink-0 w-[220px] md:w-auto snap-start bg-gray-200 rounded-lg h-64 animate-pulse"
+                ></div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex overflow-x-auto pb-4 md:grid md:grid-cols-4 gap-4 md:gap-6 snap-x">
+              {featuredProducts.slice(0, 4).map((product) => (
+                <div
+                  key={product.id}
+                  className="flex-shrink-0 w-[220px] md:w-auto snap-start bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all group"
+                >
+                  <Link
+                    href={`/products/${product.slug}`}
+                    className="block relative aspect-square"
+                  >
+                    {product.image ? (
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 220px, (max-width: 1200px) 33vw, 25vw"
+                      />
+                    ) : (
+                      <div
+                        className={`absolute inset-0 ${getProductColor(
+                          product.name
+                        )} flex items-center justify-center`}
+                      >
+                        <span className="font-medium text-gray-500">
+                          {product.name.substring(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+
+                  <div className="p-4">
+                    <Link href={`/products/${product.slug}`}>
+                      <h3 className="text-sm md:text-base font-medium mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                        {product.name}
+                      </h3>
+                    </Link>
+
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm md:text-base">
+                        ₹{product.basePrice}
+                      </span>
+                      <Link href={`/products/${product.slug}`}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="px-2 py-1 text-xs"
+                        >
+                          Quick View
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       <BenefitsSection />
       <TestimonialsSection />
-      <TrendingSection products={featuredProducts.slice().reverse()} />
       <NewsletterSection />
     </div>
   );
