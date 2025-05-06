@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { adminUsers } from "@/api/adminService";
 import { Admin, Role } from "@/types/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,14 +114,14 @@ export default function AdminsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Admin Users</h1>
-        {isSuperAdmin && (
+        {/* {isSuperAdmin && (
           <Button asChild>
             <Link to="/admins/new">
               <Plus className="mr-2 h-4 w-4" />
               Add Admin
             </Link>
           </Button>
-        )}
+        )} */}
       </div>
 
       {loading ? (
