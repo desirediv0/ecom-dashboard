@@ -16,6 +16,8 @@ import {
   ChevronRight,
   AlertCircle,
   Search,
+  Heart,
+  Eye,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import ProductQuickView from "@/components/ProductQuickView";
@@ -243,8 +245,27 @@ function ProductsContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Hero Banner */}
+      <div className="relative w-full h-[280px] mb-10 rounded-lg overflow-hidden">
+        <Image
+          src="/banner-background.jpg"
+          alt="Premium Supplements"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex flex-col justify-center pl-12">
+          <h1 className="text-5xl font-bold text-white mb-4">
+            PREMIUM SUPPLEMENTS
+          </h1>
+          <p className="text-xl text-white max-w-xl">
+            Fuel your performance with premium quality supplements
+          </p>
+        </div>
+      </div>
+
       {/* Mobile filter toggle */}
-      <div className="md:hidden flex items-center justify-between mb-4">
+      <div className="md:hidden flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Products</h1>
         <Button
           variant="outline"
@@ -260,12 +281,14 @@ function ProductsContent() {
         {/* Filters Sidebar */}
         <div
           className={`md:w-1/4 lg:w-1/5 ${
-            mobileFiltersOpen ? "block" : "hidden"
-          } md:block`}
+            mobileFiltersOpen
+              ? "block fixed inset-0 z-50 bg-white p-4 overflow-auto"
+              : "hidden"
+          } md:block md:static md:z-auto md:bg-transparent md:p-0`}
         >
-          <div className="bg-white p-4 rounded-lg shadow-sm border sticky top-20">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Filters</h2>
+          <div className="bg-white rounded-lg shadow-sm border sticky top-20">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold uppercase">Filters</h2>
               <div className="flex gap-2">
                 <button
                   onClick={clearFilters}
@@ -283,14 +306,14 @@ function ProductsContent() {
             </div>
 
             {/* Search Filter */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Search</h3>
+            <div className="p-4 border-b">
+              <h3 className="text-sm font-medium mb-2 uppercase">Search</h3>
               <form onSubmit={handleSearch} className="relative">
                 <Input
                   name="search"
                   placeholder="Search products..."
                   defaultValue={filters.search}
-                  className="w-full pr-10"
+                  className="w-full pr-10 border-gray-300"
                 />
                 <button
                   type="submit"
@@ -302,8 +325,11 @@ function ProductsContent() {
             </div>
 
             {/* Categories Filter */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Categories</h3>
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium uppercase">Categories</h3>
+                <ChevronDown className="h-4 w-4" />
+              </div>
               <div className="space-y-2">
                 <div
                   className={`cursor-pointer hover:text-primary ${
@@ -353,8 +379,11 @@ function ProductsContent() {
             </div>
 
             {/* Price Range Filter */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Price Range</h3>
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium uppercase">Price Range</h3>
+                <ChevronDown className="h-4 w-4" />
+              </div>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -364,7 +393,7 @@ function ProductsContent() {
                   onChange={(e) =>
                     handleFilterChange("minPrice", e.target.value)
                   }
-                  className="w-full"
+                  className="w-full border-gray-300"
                 />
                 <span>-</span>
                 <Input
@@ -375,14 +404,17 @@ function ProductsContent() {
                   onChange={(e) =>
                     handleFilterChange("maxPrice", e.target.value)
                   }
-                  className="w-full"
+                  className="w-full border-gray-300"
                 />
               </div>
             </div>
 
             {/* Flavors Filter */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Flavor</h3>
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium uppercase">Flavor</h3>
+                <ChevronDown className="h-4 w-4" />
+              </div>
               <div className="space-y-2">
                 <div
                   className={`cursor-pointer hover:text-primary ${
@@ -419,8 +451,11 @@ function ProductsContent() {
             </div>
 
             {/* Weights Filter */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Weight</h3>
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium uppercase">Weight</h3>
+                <ChevronDown className="h-4 w-4" />
+              </div>
               <div className="space-y-2">
                 <div
                   className={`cursor-pointer hover:text-primary ${
@@ -450,32 +485,24 @@ function ProductsContent() {
 
         {/* Products Grid */}
         <div className="md:w-3/4 lg:w-4/5">
-          {/* Products Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-bold hidden md:block">Products</h1>
-              <p className="text-gray-600">
-                Showing {products.length} of {pagination.total} products
-              </p>
-            </div>
-
-            <div className="flex items-center mt-4 sm:mt-0">
-              <label htmlFor="sort" className="text-sm mr-2">
-                Sort by:
-              </label>
+          {/* Sort Dropdown */}
+          <div className="flex justify-end mb-6">
+            <div className="inline-flex items-center border rounded-md overflow-hidden bg-white">
+              <span className="px-3 py-2 text-sm">SORT BY</span>
               <select
                 id="sort"
                 name="sort"
-                className="rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+                className="border-l px-3 py-2 focus:outline-none"
                 onChange={handleSortChange}
                 value={`${filters.sort}-${filters.order}`}
               >
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="name-asc">Name: A-Z</option>
-                <option value="name-desc">Name: Z-A</option>
+                <option value="newest">Featured</option>
+                <option value="price-low">Price, low to high</option>
+                <option value="price-high">Price, high to low</option>
+                <option value="name-asc">Alphabetically, A-Z</option>
+                <option value="name-desc">Alphabetically, Z-A</option>
+                <option value="oldest">Date, old to new</option>
+                <option value="newest">Date, new to old</option>
               </select>
             </div>
           </div>
@@ -487,7 +514,7 @@ function ProductsContent() {
             filters.weight ||
             filters.minPrice ||
             filters.maxPrice) && (
-            <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-gray-50 rounded-md">
+            <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-gray-50 rounded-md border">
               <span className="text-sm font-medium">Active Filters:</span>
 
               {filters.search && (
@@ -593,36 +620,48 @@ function ProductsContent() {
               {products.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 transition-shadow hover:shadow-md"
+                  className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
                 >
                   <Link href={`/products/${product.slug}`}>
-                    <div className="relative h-64 w-full bg-gray-100">
+                    <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
                       <Image
                         src={product.image || "/product-placeholder.jpg"}
                         alt={product.name}
                         fill
-                        className="object-contain p-4"
+                        className="object-contain p-4 transition-transform group-hover:scale-105"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                       {product.hasSale && (
-                        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-sm">
                           SALE
                         </span>
                       )}
+
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleQuickView(product);
+                          }}
+                        >
+                          <Eye className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
+                        >
+                          <Heart className="h-5 w-5" />
+                        </Button>
+                      </div>
                     </div>
                   </Link>
 
-                  <div className="p-4">
-                    <Link
-                      href={`/products/${product.slug}`}
-                      className="hover:text-primary"
-                    >
-                      <h3 className="text-lg font-medium mb-2 line-clamp-2">
-                        {product.name}
-                      </h3>
-                    </Link>
-
-                    <div className="flex items-center mb-2">
+                  <div className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
                       <div className="flex text-yellow-400">
                         {[...Array(5)].map((_, i) => (
                           <Star
@@ -641,41 +680,37 @@ function ProductsContent() {
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        {product.hasSale ? (
-                          <div className="flex items-center">
-                            <span className="font-bold text-lg">
-                              {formatCurrency(product.basePrice)}
-                            </span>
-                            <span className="text-gray-500 line-through text-sm ml-2">
-                              {formatCurrency(product.regularPrice)}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="font-bold text-lg">
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="hover:text-primary"
+                    >
+                      <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
+                        {product.name}
+                      </h3>
+                    </Link>
+
+                    <div className="flex items-center justify-center mb-2">
+                      {product.hasSale ? (
+                        <div className="flex items-center">
+                          <span className="font-bold text-lg text-primary">
                             {formatCurrency(product.basePrice)}
                           </span>
-                        )}
-                      </div>
-
-                      {product.flavors > 1 && (
-                        <span className="text-xs text-gray-500">
-                          {product.flavors} flavors
+                          <span className="text-gray-500 line-through text-sm ml-2">
+                            {formatCurrency(product.regularPrice)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="font-bold text-lg text-primary">
+                          {formatCurrency(product.basePrice)}
                         </span>
                       )}
                     </div>
 
-                    <div className="mt-2 flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleQuickView(product)}
-                      >
-                        Quick View
-                      </Button>
-                    </div>
+                    {product.flavors > 1 && (
+                      <span className="text-xs text-gray-500 block">
+                        {product.flavors} flavors available
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -684,13 +719,14 @@ function ProductsContent() {
 
           {/* Pagination */}
           {pagination.pages > 1 && (
-            <div className="flex justify-center items-center mt-10">
-              <div className="flex items-center gap-2">
+            <div className="flex justify-center items-center mt-10 mb-4">
+              <div className="inline-flex items-center rounded-md overflow-hidden border divide-x">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
+                  className="rounded-none border-0 hover:bg-gray-100"
                 >
                   <ChevronUp className="h-4 w-4 rotate-90" />
                 </Button>
@@ -704,17 +740,17 @@ function ProductsContent() {
                     (page >= pagination.page - 1 && page <= pagination.page + 1)
                   ) {
                     return (
-                      <Button
+                      <button
                         key={page}
-                        variant={
-                          pagination.page === page ? "default" : "outline"
-                        }
-                        size="sm"
                         onClick={() => handlePageChange(page)}
-                        className="w-8 h-8 p-0"
+                        className={`px-3 py-2 ${
+                          pagination.page === page
+                            ? "bg-primary text-white"
+                            : "hover:bg-gray-100"
+                        }`}
                       >
                         {page}
-                      </Button>
+                      </button>
                     );
                   }
 
@@ -724,17 +760,22 @@ function ProductsContent() {
                     (page === pagination.pages - 1 &&
                       pagination.page < pagination.pages - 2)
                   ) {
-                    return <span key={page}>...</span>;
+                    return (
+                      <span key={page} className="px-3 py-2">
+                        ...
+                      </span>
+                    );
                   }
 
                   return null;
                 })}
 
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page === pagination.pages}
+                  className="rounded-none border-0 hover:bg-gray-100"
                 >
                   <ChevronDown className="h-4 w-4 rotate-90" />
                 </Button>
