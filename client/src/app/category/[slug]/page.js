@@ -6,8 +6,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchApi, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Star, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Star,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  Heart,
+} from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import ProductQuickView from "@/components/ProductQuickView";
 
 export default function CategoryPage() {
   const params = useParams();
@@ -18,6 +26,8 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortOption, setSortOption] = useState("newest");
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -113,6 +123,12 @@ export default function CategoryPage() {
     } catch (err) {
       console.error("Error adding to cart:", err);
     }
+  };
+
+  // Handle quick view
+  const handleQuickView = (product) => {
+    setQuickViewProduct(product);
+    setQuickViewOpen(true);
   };
 
   // Loading state
@@ -233,36 +249,48 @@ export default function CategoryPage() {
           {products.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 transition-shadow hover:shadow-md"
+              className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
             >
               <Link href={`/products/${product.slug}`}>
-                <div className="relative h-64 w-full bg-gray-100">
+                <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
                   <Image
                     src={product.images[0]?.url || "/product-placeholder.jpg"}
                     alt={product.name}
                     fill
-                    className="object-contain p-4"
+                    className="object-contain p-4 transition-transform group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   {product.variants[0]?.salePrice && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-sm">
                       SALE
                     </span>
                   )}
+
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleQuickView(product);
+                      }}
+                    >
+                      <Eye className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
+                    >
+                      <Heart className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               </Link>
 
-              <div className="p-4">
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="hover:text-primary"
-                >
-                  <h3 className="text-lg font-medium mb-2 line-clamp-2">
-                    {product.name}
-                  </h3>
-                </Link>
-
-                <div className="flex items-center mb-2">
+              <div className="p-4 text-center">
+                <div className="flex items-center justify-center mb-2">
                   <div className="flex text-yellow-400">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -281,35 +309,39 @@ export default function CategoryPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    {product.variants[0]?.salePrice ? (
-                      <div className="flex items-center">
-                        <span className="font-bold text-lg">
-                          {formatCurrency(product.variants[0]?.salePrice)}
-                        </span>
-                        <span className="text-gray-500 line-through text-sm ml-2">
-                          {formatCurrency(product.variants[0]?.price)}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="font-bold text-lg">
-                        {formatCurrency(
-                          product.basePrice || product.variants[0]?.price || 0
-                        )}
+                <Link
+                  href={`/products/${product.slug}`}
+                  className="hover:text-primary"
+                >
+                  <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
+                    {product.name}
+                  </h3>
+                </Link>
+
+                <div className="flex items-center justify-center mb-2">
+                  {product.variants[0]?.salePrice ? (
+                    <div className="flex items-center">
+                      <span className="font-bold text-lg text-primary">
+                        {formatCurrency(product.variants[0]?.salePrice)}
                       </span>
-                    )}
-                  </div>
+                      <span className="text-gray-500 line-through text-sm ml-2">
+                        {formatCurrency(product.variants[0]?.price)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="font-bold text-lg text-primary">
+                      {formatCurrency(
+                        product.basePrice || product.variants[0]?.price || 0
+                      )}
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    className="w-full"
-                    onClick={() => handleAddToCart(product)}
-                  >
-                    Add to Cart
-                  </Button>
-                </div>
+                {product.flavors > 1 && (
+                  <span className="text-xs text-gray-500 block">
+                    {product.flavors} flavors available
+                  </span>
+                )}
               </div>
             </div>
           ))}
@@ -373,6 +405,13 @@ export default function CategoryPage() {
           </div>
         </div>
       )}
+
+      {/* Product Quick View */}
+      <ProductQuickView
+        product={quickViewProduct}
+        open={quickViewOpen}
+        onOpenChange={setQuickViewOpen}
+      />
     </div>
   );
 }
