@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { fetchApi } from "@/lib/utils";
@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   Star,
-  TrendingUp,
   ShoppingCart,
   ChevronRight,
   Heart,
+  ChevronLeft,
 } from "lucide-react";
 import {
   Carousel,
@@ -21,6 +21,10 @@ import {
   CarouselNext,
   CarouselAutoplayButton,
 } from "@/components/ui/carousel";
+import { motion } from "framer-motion";
+import GymSupplementShowcase from "@/components/showcase";
+import BenefitsSec from "@/components/benifit-sec";
+import FeaturedCategoriesSection from "@/components/catgry";
 
 // Hero Carousel Component
 const HeroCarousel = () => {
@@ -99,7 +103,7 @@ const HeroCarousel = () => {
                 {/* Content */}
                 <div className="container mx-auto px-4">
                   <div className="max-w-2xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 uppercase tracking-wider">
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mt-32 lg:mt-48 text-white mb-4 uppercase tracking-wider">
                       {slide.title}
                     </h1>
                     <p className="text-xl md:text-2xl text-white/90 mb-8">
@@ -108,7 +112,7 @@ const HeroCarousel = () => {
                     <Link href={slide.ctaLink}>
                       <Button
                         size="lg"
-                        className="text-lg px-12 py-6 font-bold"
+                        className="text-lg px-4 lg:px-12 py-6 font-bold"
                       >
                         {slide.cta}
                         <ChevronRight className="ml-2 h-5 w-5" />
@@ -146,11 +150,21 @@ const HeroCarousel = () => {
         </div>
 
         {/* Autoplay Toggle */}
-        <CarouselAutoplayButton
-          className="bottom-6 right-6 h-8 w-8 z-30 bg-white/20 hover:bg-white/30"
-          isPlaying={autoplay}
-          onToggle={() => setAutoplay(!autoplay)}
-        />
+        <div className="absolute bottom-6 right-6 z-30">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 bg-white/20 hover:bg-white/30"
+            onClick={() => setAutoplay(!autoplay)}
+            aria-label={autoplay ? "Pause slideshow" : "Play slideshow"}
+          >
+            {autoplay ? (
+              <span className="block w-3 h-3 bg-current"></span>
+            ) : (
+              <span className="block w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[8px] border-l-current ml-0.5"></span>
+            )}
+          </Button>
+        </div>
       </Carousel>
     </div>
   );
@@ -224,137 +238,224 @@ const getProductColor = (name) => {
   return colors[index];
 };
 
-// Featured Categories Component with hover animation
-const FeaturedCategories = ({ categories }) => {
-  return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-            <span className="relative z-10 uppercase">Featured Categories</span>
-            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-          </h2>
-          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-            Discover our collection of premium fitness supplements
-          </p>
-        </div>
+// This returns a gradient background for categories without images
+const getCategoryGradient = (name) => {
+  const gradients = {
+    Protein: "from-orange-400 to-amber-600",
+    "Pre-Workout": "from-purple-500 to-indigo-600",
+    "Weight Loss": "from-green-400 to-teal-500",
+    Vitamins: "from-blue-400 to-cyan-500",
+    Performance: "from-red-400 to-rose-600",
+    Wellness: "from-pink-400 to-fuchsia-600",
+    Accessories: "from-gray-400 to-slate-600",
+  };
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {categories.map((category) => (
-            <Link
-              href={`/category/${category.slug}`}
-              key={category.id}
-              className="group relative rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md"
-            >
-              <div className="aspect-[4/5] relative">
-                {category.image ? (
-                  <Image
-                    src={category.image}
-                    alt={category.name}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                  />
-                ) : (
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(
-                      category.name
-                    )}`}
-                  ></div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                <h3 className="text-lg md:text-xl font-semibold mb-1">
-                  {category.name}
-                </h3>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-white/80">
-                    {category._count?.products || 0} Products
-                  </span>
-                  <span className="bg-white text-primary rounded-full w-6 h-6 flex items-center justify-center opacity-0 transform translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-                    <ChevronRight className="h-4 w-4" />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-        <div className="text-center mt-10">
-          <Link href="/products">
-            <Button variant="outline" size="lg" className="font-medium">
-              View All Categories <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
+  return gradients[name] || "from-primary/60 to-primary";
+};
+
+// Calculate number of items to show based on screen size
+function useWindowSize() {
+  const [size, setSize] = useState(4);
+
+  useEffect(() => {
+    function updateSize() {
+      if (window.innerWidth < 640) {
+        setSize(1);
+      } else if (window.innerWidth < 768) {
+        setSize(2);
+      } else if (window.innerWidth < 1024) {
+        setSize(3);
+      } else {
+        setSize(4);
+      }
+    }
+
+    window.addEventListener("resize", updateSize);
+    updateSize();
+
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
+  return size;
+}
+
+// Featured Categories Component with circular cards and better UI
+const FeaturedCategories = ({ categories = [] }) => {
+  const [api, setApi] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Update current slide index when carousel changes
+  useEffect(() => {
+    if (!api) return;
+
+    const onSelect = () => {
+      setCurrentIndex(api.selectedScrollSnap());
+    };
+
+    api.on("select", onSelect);
+
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+
+  if (!categories || categories.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No categories available at the moment</p>
       </div>
-    </section>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <Carousel setApi={setApi} opts={{ loop: true }}>
+        <CarouselContent className="-ml-2 md:-ml-4">
+          {categories.map((category, index) => (
+            <CarouselItem
+              key={category.id || index}
+              className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4"
+            >
+              <Link href={`/category/${category.slug || ""}`} className="block">
+                <div className="relative group flex flex-col items-center">
+                  {/* Circular image container */}
+                  <div className="w-48 h-48 max-w-full mx-auto rounded-full overflow-hidden border-4 border-white shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 mb-4">
+                    {category.image ? (
+                      <img
+                        src={category.image}
+                        alt={category.name || "Category"}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div
+                        className={`w-full h-full bg-gradient-to-br ${getCategoryGradient(
+                          category.name || "Category"
+                        )}`}
+                      />
+                    )}
+                  </div>
+
+                  {/* Category name and product count */}
+                  <div className="text-center">
+                    <h3 className="text-lg font-bold mb-1 text-gray-800 group-hover:text-primary transition-colors">
+                      {category.name || "Category"}
+                    </h3>
+                    <span className="inline-block bg-primary/10 text-primary text-sm font-medium px-3 py-1 rounded-full">
+                      {category._count?.products || 0} Products
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+
+        <CarouselPrevious className="absolute left-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
+        <CarouselNext className="absolute right-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
+
+        {/* Dot indicators */}
+        <div className="flex justify-center mt-8 gap-1.5">
+          {Array.from({ length: Math.ceil(categories.length / 4) }).map(
+            (_, idx) => (
+              <button
+                key={idx}
+                onClick={() => api?.scrollTo(idx * 4)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  Math.floor(currentIndex / 4) === idx
+                    ? "bg-primary scale-110"
+                    : "bg-gray-300"
+                }`}
+                aria-label={`Go to slide group ${idx + 1}`}
+              />
+            )
+          )}
+        </div>
+      </Carousel>
+    </div>
   );
 };
 
 // Featured Products Component with modern card design
-const FeaturedProducts = ({ products }) => {
+const FeaturedProducts = ({ products = [] }) => {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-            <span className="relative z-10 uppercase">Featured Products</span>
-            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-          </h2>
-          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-            High-quality supplements to enhance your fitness journey
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              <span className="relative inline-block">
+                FEATURED PRODUCTS
+                <motion.span
+                  className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 -z-10"
+                  initial={{ width: 0 }}
+                  whileInView={{ width: "100%" }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  viewport={{ once: true }}
+                />
+              </span>
+            </h2>
+            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+              High-quality supplements to enhance your fitness journey
+            </p>
+          </motion.div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {products.map((product) => (
             <div
-              key={product.id}
-              className="bg-white rounded-lg overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md group"
+              key={product.id || product.slug || Math.random().toString()}
+              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group"
             >
-              <div className="relative">
+              <div className="relative p-6 bg-gray-50/50">
+                {/* Circular image with aspect ratio preserved */}
                 <Link
-                  href={`/products/${product.slug}`}
-                  className="block relative aspect-square"
+                  href={`/products/${product.slug || ""}`}
+                  className="block relative aspect-square mx-auto max-w-[180px]"
                 >
                   {product.image ? (
                     <Image
                       src={product.image}
-                      alt={product.name}
+                      alt={product.name || "Product"}
                       fill
-                      className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                      className="object-contain p-2 transition-transform duration-500 group-hover:scale-110"
                       sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                     />
                   ) : (
                     <div
-                      className={`absolute inset-0 ${getProductColor(
-                        product.name
+                      className={`absolute inset-0 rounded-full ${getProductColor(
+                        product.name || "Product"
                       )} flex items-center justify-center`}
                     >
-                      <span className="font-medium text-gray-500">
-                        {product.name.substring(0, 2).toUpperCase()}
+                      <span className="font-medium text-gray-500 text-xl">
+                        {(product.name || "XX").substring(0, 2).toUpperCase()}
                       </span>
                     </div>
                   )}
                 </Link>
+
+                {/* Labels and action buttons */}
                 {product.hasSale && (
-                  <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                  <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-full">
                     SALE
                   </span>
                 )}
-                <div className="absolute top-2 right-2 flex flex-col gap-2">
+                <div className="absolute top-3 right-3 flex flex-col gap-2">
                   <button
                     aria-label="Add to wishlist"
-                    className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110"
+                    className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110 hover:bg-primary hover:text-white"
                   >
-                    <Heart className="h-4 w-4 text-gray-600" />
+                    <Heart className="h-[18px] w-[18px]" />
                   </button>
                   <button
                     aria-label="Quick shop"
-                    className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110"
+                    className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110 hover:bg-primary hover:text-white"
                   >
-                    <ShoppingCart className="h-4 w-4 text-gray-600" />
+                    <ShoppingCart className="h-[18px] w-[18px]" />
                   </button>
                 </div>
               </div>
@@ -365,7 +466,7 @@ const FeaturedProducts = ({ products }) => {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className="h-3 w-3"
+                        className="h-3.5 w-3.5"
                         fill={
                           i < Math.round(product.avgRating || 0)
                             ? "currentColor"
@@ -379,39 +480,42 @@ const FeaturedProducts = ({ products }) => {
                   </span>
                 </div>
 
-                <Link href={`/products/${product.slug}`}>
-                  <h3 className="text-sm md:text-base font-medium line-clamp-2 group-hover:text-primary transition-colors mb-1">
-                    {product.name}
+                <Link href={`/products/${product.slug || ""}`}>
+                  <h3 className="text-base md:text-lg font-medium line-clamp-2 group-hover:text-primary transition-colors mb-1">
+                    {product.name || "Product"}
                   </h3>
                 </Link>
 
-                <div className="flex flex-wrap items-center justify-between mt-2">
+                <div className="flex flex-wrap items-center justify-between mt-3">
                   <div>
                     {product.hasSale ? (
                       <div className="flex items-center">
-                        <span className="font-bold text-sm md:text-base">
-                          ₹{product.basePrice}
+                        <span className="font-bold text-base md:text-lg">
+                          ₹{product.basePrice || 0}
                         </span>
                         <span className="text-gray-500 line-through text-xs ml-2">
-                          ₹{product.regularPrice}
+                          ₹{product.regularPrice || 0}
                         </span>
                       </div>
                     ) : (
-                      <span className="font-bold text-sm md:text-base">
-                        ₹{product.basePrice}
+                      <span className="font-bold text-base md:text-lg">
+                        ₹{product.basePrice || 0}
                       </span>
                     )}
                   </div>
 
-                  {product.flavors > 1 && (
-                    <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                  {(product.flavors || 0) > 1 && (
+                    <span className="text-xs text-primary font-medium bg-primary/10 px-2 py-1 rounded-full">
                       {product.flavors} flavors
                     </span>
                   )}
                 </div>
 
-                <Link href={`/products/${product.slug}`}>
-                  <Button size="sm" className="w-full mt-3 py-1">
+                <Link href={`/products/${product.slug || ""}`}>
+                  <Button
+                    size="sm"
+                    className="w-full mt-4 py-2 rounded-full font-medium group-hover:bg-primary/90 transition-colors"
+                  >
                     Add to Cart
                   </Button>
                 </Link>
@@ -422,8 +526,13 @@ const FeaturedProducts = ({ products }) => {
 
         <div className="text-center mt-10">
           <Link href="/products">
-            <Button variant="outline" size="lg" className="font-medium">
-              View All Products <ArrowRight className="ml-2 h-4 w-4" />
+            <Button
+              variant="outline"
+              size="lg"
+              className="font-medium border-primary text-primary hover:bg-primary hover:text-white group rounded-full"
+            >
+              View All Products
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
             </Button>
           </Link>
         </div>
@@ -433,64 +542,65 @@ const FeaturedProducts = ({ products }) => {
 };
 
 // Benefits Section with modern cards
-const BenefitsSection = () => {
-  const benefits = [
-    {
-      title: "Premium Quality",
-      description:
-        "Lab-tested supplements made with high-quality ingredients for maximum effectiveness.",
-      icon: "🏆",
-    },
-    {
-      title: "Fast Delivery",
-      description:
-        "Get your supplements delivered to your doorstep within 2-3 business days.",
-      icon: "🚚",
-    },
-    {
-      title: "Expert Support",
-      description:
-        "Our team of fitness experts is available to help you choose the right supplements.",
-      icon: "👨‍⚕️",
-    },
-    {
-      title: "Secure Payments",
-      description: "Shop with confidence with our 100% secure payment gateway.",
-      icon: "🔒",
-    },
-  ];
+// const BenefitsSection = () => {
+//   const benefits = [
+//     {
+//       title: "Premium Quality",
+//       description:
+//         "Lab-tested supplements made with high-quality ingredients for maximum effectiveness.",
+//       icon: "🏆",
+//     },
+//     {
+//       title: "Fast Delivery",
+//       description:
+//         "Get your supplements delivered to your doorstep within 2-3 business days.",
+//       icon: "🚚",
+//     },
+//     {
+//       title: "Expert Support",
+//       description:
+//         "Our team of fitness experts is available to help you choose the right supplements.",
+//       icon: "👨‍⚕️",
+//     },
+//     {
+//       title: "Secure Payments",
+//       description: "Shop with confidence with our 100% secure payment gateway.",
+//       icon: "🔒",
+//     },
+//   ];
 
-  return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-            <span className="relative z-10 uppercase">Why Choose Us</span>
-            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-          </h2>
-          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-            We're committed to providing you with the best fitness supplements
-          </p>
-        </div>
+//   return (
+//     <section className="py-16 bg-white">
+//       <div className="container mx-auto px-4">
+//         <div className="text-center mb-12">
+//           <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
+//             <span className="relative z-10 uppercase">Why Choose Us</span>
+//             <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
+//           </h2>
+//           <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+//             We're committed to providing you with the best fitness supplements
+//           </p>
+//         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {benefits.map((benefit, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center text-center"
-            >
-              <div className="text-4xl mb-4 bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center">
-                {benefit.icon}
-              </div>
-              <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
-              <p className="text-gray-600">{benefit.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+//           {benefits.map((benefit, index) => (
+//             <div
+//               key={index}
+//               className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center text-center"
+//             >
+//               <div className="text-4xl mb-4 bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center">
+//                 {benefit.icon}
+//               </div>
+//               <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
+//               <p className="text-gray-600">{benefit.description}</p>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+//     </section>
+//   );
+// };
+<BenefitsSec />
 
 // Testimonials Section
 const TestimonialsSection = () => {
@@ -572,75 +682,146 @@ const TestimonialsSection = () => {
 };
 
 // Trending Products Section with horizontal scroll on mobile
-const TrendingSection = ({ products }) => {
+const TrendingSection = ({ products = [] }) => {
+  const [api, setApi] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const displayProducts = products.slice(0, 8);
+
+  // Update current slide index when carousel changes
+  useEffect(() => {
+    if (!api) return;
+
+    const onSelect = () => {
+      setCurrentIndex(api.selectedScrollSnap());
+    };
+
+    api.on("select", onSelect);
+
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-            <span className="relative z-10 uppercase">Trending Now</span>
-            <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-          </h2>
-          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-            Our most popular supplements that customers love
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              <span className="relative inline-block">
+                TRENDING NOW
+                <motion.span
+                  className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 -z-10"
+                  initial={{ width: 0 }}
+                  whileInView={{ width: "100%" }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  viewport={{ once: true }}
+                />
+              </span>
+            </h2>
+            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+              Our most popular supplements that customers love
+            </p>
+          </motion.div>
         </div>
 
-        <div className="flex overflow-x-auto pb-4 md:grid md:grid-cols-4 gap-4 md:gap-6 snap-x">
-          {products.slice(0, 4).map((product) => (
-            <div
-              key={product.id}
-              className="flex-shrink-0 w-[220px] md:w-auto snap-start bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all group"
-            >
-              <Link
-                href={`/products/${product.slug}`}
-                className="block relative aspect-square"
-              >
-                {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 220px, (max-width: 1200px) 33vw, 25vw"
-                  />
-                ) : (
-                  <div
-                    className={`absolute inset-0 ${getProductColor(
-                      product.name
-                    )} flex items-center justify-center`}
-                  >
-                    <span className="font-medium text-gray-500">
-                      {product.name.substring(0, 2).toUpperCase()}
-                    </span>
+        <div className="relative">
+          <Carousel setApi={setApi} opts={{ loop: true, align: "start" }}>
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {displayProducts.map((product) => (
+                <CarouselItem
+                  key={product.id || product.slug || Math.random().toString()}
+                  className="pl-2 md:pl-4 basis-3/4 sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
+                >
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <div className="p-6 bg-gray-50/50 relative">
+                      <Link
+                        href={`/products/${product.slug || ""}`}
+                        className="block relative aspect-square mx-auto max-w-[160px]"
+                      >
+                        {product.image ? (
+                          <Image
+                            src={product.image}
+                            alt={product.name || "Product"}
+                            fill
+                            className="object-contain p-2 transition-transform duration-500 group-hover:scale-110"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                          />
+                        ) : (
+                          <div
+                            className={`absolute inset-0 rounded-full ${getProductColor(
+                              product.name || "Product"
+                            )} flex items-center justify-center`}
+                          >
+                            <span className="font-medium text-gray-500 text-xl">
+                              {(product.name || "XX")
+                                .substring(0, 2)
+                                .toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </Link>
+
+                      {product.hasSale && (
+                        <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-full">
+                          SALE
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-4">
+                      <Link href={`/products/${product.slug || ""}`}>
+                        <h3 className="text-base font-medium mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                          {product.name || "Product"}
+                        </h3>
+                      </Link>
+
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-base">
+                          ₹{product.basePrice || 0}
+                        </span>
+                        <Link href={`/products/${product.slug || ""}`}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="px-3 py-1 text-xs rounded-full"
+                          >
+                            Quick View
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
 
-              <div className="p-4">
-                <Link href={`/products/${product.slug}`}>
-                  <h3 className="text-sm md:text-base font-medium mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                    {product.name}
-                  </h3>
-                </Link>
+            <CarouselPrevious className="absolute left-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
+            <CarouselNext className="absolute right-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
 
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm md:text-base">
-                    ₹{product.basePrice}
-                  </span>
-                  <Link href={`/products/${product.slug}`}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="px-2 py-1 text-xs"
-                    >
-                      Quick View
-                    </Button>
-                  </Link>
-                </div>
-              </div>
+            {/* Dot indicators */}
+            <div className="flex justify-center mt-8 gap-1.5">
+              {Array.from({
+                length: Math.ceil(displayProducts.length / 4),
+              }).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => api?.scrollTo(idx * 4)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    Math.floor(currentIndex / 4) === idx
+                      ? "bg-primary scale-110"
+                      : "bg-gray-300"
+                  }`}
+                  aria-label={`Go to slide group ${idx + 1}`}
+                />
+              ))}
             </div>
-          ))}
+          </Carousel>
         </div>
       </div>
     </section>
@@ -724,18 +905,18 @@ export default function Home() {
       try {
         // Fetch categories
         const categoriesRes = await fetchApi("/public/categories");
-        setCategories(categoriesRes.data.categories || []);
+        setCategories(categoriesRes?.data?.categories || []);
         setCategoriesLoading(false);
 
         // Fetch products
         const productsRes = await fetchApi(
           "/public/products?featured=true&limit=8"
         );
-        setFeaturedProducts(productsRes.data.products || []);
+        setFeaturedProducts(productsRes?.data?.products || []);
         setProductsLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError(err.message);
+        setError(err?.message || "Failed to fetch data");
         setProductsLoading(false);
         setCategoriesLoading(false);
       }
@@ -749,25 +930,45 @@ export default function Home() {
       <HeroCarousel />
       <AnnouncementBanner />
 
-      {/* Featured Categories - show skeleton if loading */}
+      {/* Featured Categories section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-              <span className="relative z-10 uppercase">
-                Featured Categories
-              </span>
-              <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-            </h2>
-            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-              Discover our collection of premium fitness supplements
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-2xl md:text-3xl font-bold mb-2">
+                <span className="relative inline-block">
+                  FEATURED CATEGORIES
+                  <motion.span
+                    className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 -z-10"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: "100%" }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    viewport={{ once: true }}
+                  />
+                </span>
+              </h2>
+              <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
+                Discover our collection of premium fitness supplements
+              </p>
+            </motion.div>
           </div>
 
           {categoriesLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {[...Array(8)].map((_, index) => (
-                <CategorySkeleton key={index} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col items-center animate-pulse"
+                >
+                  <div className="w-48 h-48 rounded-full bg-gray-200 mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
               ))}
             </div>
           ) : error ? (
@@ -775,57 +976,21 @@ export default function Home() {
               <p className="text-red-500">Failed to load categories</p>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {categories.slice(0, 8).map((category) => (
-                  <Link
-                    href={`/category/${category.slug}`}
-                    key={category.id}
-                    className="group relative rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md"
-                  >
-                    <div className="aspect-[4/5] relative">
-                      {category.image ? (
-                        <Image
-                          src={category.image}
-                          alt={category.name}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
-                          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                        />
-                      ) : (
-                        <div
-                          className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(
-                            category.name
-                          )}`}
-                        ></div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                      <h3 className="text-lg md:text-xl font-semibold mb-1">
-                        {category.name}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-white/80">
-                          {category._count?.products || 0} Products
-                        </span>
-                        <span className="bg-white text-primary rounded-full w-6 h-6 flex items-center justify-center opacity-0 transform translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-                          <ChevronRight className="h-4 w-4" />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-              <div className="text-center mt-10">
-                <Link href="/products">
-                  <Button variant="outline" size="lg" className="font-medium">
-                    View All Categories <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </>
+            <FeaturedCategories categories={categories} />
           )}
+
+          <div className="text-center mt-10">
+            <Link href="/products">
+              <Button
+                variant="outline"
+                size="lg"
+                className="font-medium border-primary text-primary hover:bg-primary hover:text-white group"
+              >
+                View All Categories
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -852,217 +1017,29 @@ export default function Home() {
             <div className="text-center py-8">
               <p className="text-red-500">Failed to load products</p>
             </div>
+          ) : featuredProducts.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No products found</p>
+            </div>
           ) : (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {featuredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="bg-white rounded-lg overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md group"
-                  >
-                    <div className="relative">
-                      <Link
-                        href={`/products/${product.slug}`}
-                        className="block relative aspect-square"
-                      >
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            fill
-                            className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                          />
-                        ) : (
-                          <div
-                            className={`absolute inset-0 ${getProductColor(
-                              product.name
-                            )} flex items-center justify-center`}
-                          >
-                            <span className="font-medium text-gray-500">
-                              {product.name.substring(0, 2).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </Link>
-                      {product.hasSale && (
-                        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                          SALE
-                        </span>
-                      )}
-                      <div className="absolute top-2 right-2 flex flex-col gap-2">
-                        <button
-                          aria-label="Add to wishlist"
-                          className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110"
-                        >
-                          <Heart className="h-4 w-4 text-gray-600" />
-                        </button>
-                        <button
-                          aria-label="Quick shop"
-                          className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110"
-                        >
-                          <ShoppingCart className="h-4 w-4 text-gray-600" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-4">
-                      <div className="flex items-center mb-1.5">
-                        <div className="flex text-yellow-400">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className="h-3 w-3"
-                              fill={
-                                i < Math.round(product.avgRating || 0)
-                                  ? "currentColor"
-                                  : "none"
-                              }
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-gray-500 ml-2">
-                          ({product.reviewCount || 0})
-                        </span>
-                      </div>
-
-                      <Link href={`/products/${product.slug}`}>
-                        <h3 className="text-sm md:text-base font-medium line-clamp-2 group-hover:text-primary transition-colors mb-1">
-                          {product.name}
-                        </h3>
-                      </Link>
-
-                      <div className="flex flex-wrap items-center justify-between mt-2">
-                        <div>
-                          {product.hasSale ? (
-                            <div className="flex items-center">
-                              <span className="font-bold text-sm md:text-base">
-                                ₹{product.basePrice}
-                              </span>
-                              <span className="text-gray-500 line-through text-xs ml-2">
-                                ₹{product.regularPrice}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="font-bold text-sm md:text-base">
-                              ₹{product.basePrice}
-                            </span>
-                          )}
-                        </div>
-
-                        {product.flavors > 1 && (
-                          <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                            {product.flavors} flavors
-                          </span>
-                        )}
-                      </div>
-
-                      <Link href={`/products/${product.slug}`}>
-                        <Button size="sm" className="w-full mt-3 py-1">
-                          Add to Cart
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="text-center mt-10">
-                <Link href="/products">
-                  <Button variant="outline" size="lg" className="font-medium">
-                    View All Products <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </>
+            <FeaturedProducts products={featuredProducts} />
           )}
         </div>
       </section>
+     
 
-      {/* Trending Products Section - use skeleton loading */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold relative inline-block">
-              <span className="relative z-10 uppercase">Trending Now</span>
-              <span className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 z-0"></span>
-            </h2>
-            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-              Our most popular supplements that customers love
-            </p>
-          </div>
+      {/* Trending Products Section */}
+      {!productsLoading && !error && featuredProducts.length > 0 && (
+        <TrendingSection products={featuredProducts} />
+      )}
+       <GymSupplementShowcase />
 
-          {productsLoading ? (
-            <div className="flex overflow-x-auto pb-4 md:grid md:grid-cols-4 gap-4 md:gap-6 snap-x">
-              {[...Array(4)].map((_, index) => (
-                <div
-                  key={index}
-                  className="flex-shrink-0 w-[220px] md:w-auto snap-start bg-gray-200 rounded-lg h-64 animate-pulse"
-                ></div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex overflow-x-auto pb-4 md:grid md:grid-cols-4 gap-4 md:gap-6 snap-x">
-              {featuredProducts.slice(0, 4).map((product) => (
-                <div
-                  key={product.id}
-                  className="flex-shrink-0 w-[220px] md:w-auto snap-start bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all group"
-                >
-                  <Link
-                    href={`/products/${product.slug}`}
-                    className="block relative aspect-square"
-                  >
-                    {product.image ? (
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-                        sizes="(max-width: 768px) 220px, (max-width: 1200px) 33vw, 25vw"
-                      />
-                    ) : (
-                      <div
-                        className={`absolute inset-0 ${getProductColor(
-                          product.name
-                        )} flex items-center justify-center`}
-                      >
-                        <span className="font-medium text-gray-500">
-                          {product.name.substring(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                  </Link>
-
-                  <div className="p-4">
-                    <Link href={`/products/${product.slug}`}>
-                      <h3 className="text-sm md:text-base font-medium mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                        {product.name}
-                      </h3>
-                    </Link>
-
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm md:text-base">
-                        ₹{product.basePrice}
-                      </span>
-                      <Link href={`/products/${product.slug}`}>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="px-2 py-1 text-xs"
-                        >
-                          Quick View
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <BenefitsSection />
-      <TestimonialsSection />
+<BenefitsSec />
+      {/* <BenefitsSection /> */}
+   <TestimonialsSection />
+      
+      <FeaturedCategoriesSection />
+      
       <NewsletterSection />
     </div>
   );

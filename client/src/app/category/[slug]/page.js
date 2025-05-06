@@ -14,8 +14,14 @@ import {
   Eye,
   Heart,
 } from "lucide-react";
-import { useCart } from "@/lib/cart-context";
 import ProductQuickView from "@/components/ProductQuickView";
+
+// Helper function to format image URLs correctly
+const getImageUrl = (image) => {
+  if (!image) return "/images/blog-placeholder.jpg";
+  if (image.startsWith("http")) return image;
+  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+};
 
 export default function CategoryPage() {
   const params = useParams();
@@ -35,8 +41,6 @@ export default function CategoryPage() {
     total: 0,
     pages: 0,
   });
-
-  const { addToCart } = useCart();
 
   // Fetch category and products
   useEffect(() => {
@@ -109,22 +113,6 @@ export default function CategoryPage() {
     setSortOption(e.target.value);
   };
 
-  // Handle add to cart
-  const handleAddToCart = async (product) => {
-    if (!product.variants || product.variants.length === 0) {
-      return;
-    }
-
-    try {
-      // Get the first variant (default)
-      const variantId = product.variants[0].id;
-      await addToCart(variantId, 1);
-      // You could add a toast notification here
-    } catch (err) {
-      console.error("Error adding to cart:", err);
-    }
-  };
-
   // Handle quick view
   const handleQuickView = (product) => {
     setQuickViewProduct(product);
@@ -189,7 +177,7 @@ export default function CategoryPage() {
             {category.image && (
               <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
                 <Image
-                  src={category.image}
+                  src={getImageUrl(category.image)}
                   alt={category.name}
                   width={96}
                   height={96}
@@ -254,7 +242,11 @@ export default function CategoryPage() {
               <Link href={`/products/${product.slug}`}>
                 <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
                   <Image
-                    src={product.images[0]?.url || "/product-placeholder.jpg"}
+                    src={
+                      product.images[0]?.url
+                        ? getImageUrl(product.images[0].url)
+                        : "/product-placeholder.jpg"
+                    }
                     alt={product.name}
                     fill
                     className="object-contain p-4 transition-transform group-hover:scale-105"
