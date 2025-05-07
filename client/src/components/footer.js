@@ -88,7 +88,7 @@ export function Footer() {
               <div className="mb-6">
                 <Link href="/" className="inline-block">
                   <span className="text-2xl font-bold text-white">
-                    <span className="text-primary">Ecom</span>
+                    <span className="text-gray-400">Ecom</span>
                     Supplements
                   </span>
                 </Link>
@@ -173,7 +173,7 @@ export function Footer() {
                 <div className="flex items-start">
                   <MapPin
                     size={18}
-                    className="text-primary mr-2 mt-0.5 flex-shrink-0"
+                    className="text-gray-400 mr-2 mt-0.5 flex-shrink-0"
                   />
                   <span>123 Fitness Street, Mumbai, Maharashtra, 400001</span>
                 </div>
@@ -181,13 +181,13 @@ export function Footer() {
                 <div className="flex items-center">
                   <Phone
                     size={18}
-                    className="text-primary mr-2 flex-shrink-0"
+                    className="text-gray-400 mr-2 flex-shrink-0"
                   />
                   <span>+91 98765 43210</span>
                 </div>
 
                 <div className="flex items-center">
-                  <Mail size={18} className="text-primary mr-2 flex-shrink-0" />
+                  <Mail size={18} className="text-gray-400 mr-2 flex-shrink-0" />
                   <span>info@ecomsupplements.com</span>
                 </div>
               </div>

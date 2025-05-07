@@ -166,7 +166,7 @@ const FeaturedCategoriesCarousel = ({ categories }) => {
           {categories.map((category, index) => (
             <CarouselItem
               key={category.id || index}
-              className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4"
+              className="pl-2 md:pl-4  md:basis-1/3 lg:basis-1/4"
             >
               <Link href={`/category/${category.slug || ""}`} className="block">
                 <CircularCategoryCard category={category} index={index} />
@@ -261,8 +261,8 @@ const FeaturedCategoriesSection = () => {
           viewport={{ once: true }}
         >
           <Link href="/products">
-            <button className="group relative inline-flex items-center justify-center px-8 py-3 font-medium overflow-hidden">
-              <span className="relative z-10 px-5 py-2 bg-black text-white hover:bg-white hover:text-black border border-black rounded-full flex items-center">
+            <button className="group relative inline-flex items-center  -mt-20 lg:mt-0 justify-center px-8 py-3 font-medium overflow-hidden">
+              <span className="relative z-10 px-3 lg:px-5 py-2 lg:py-3 bg-black text-nowrap text-white hover:bg-white hover:text-black border border-black rounded-full flex items-center">
                 VIEW ALL CATEGORIES
                 <svg
                   className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform duration-300"
