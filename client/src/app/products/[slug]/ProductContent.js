@@ -785,7 +785,8 @@ export default function ProductContent({ slug }) {
                   <li className="pb-4 border-b border-gray-100">
                     <p className="font-medium mb-1">Process</p>
                     <p className="text-gray-600 text-sm">
-                      Initiate return from your account and we'll arrange pickup
+                      Initiate return from your account and we&apos;ll arrange
+                      pickup
                     </p>
                   </li>
                 </ul>

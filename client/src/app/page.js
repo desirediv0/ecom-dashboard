@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   ChevronRight,
   Heart,
+  ChevronLeft,
 } from "lucide-react";
 import {
   Carousel,
@@ -281,7 +282,7 @@ function useWindowSize() {
 // Featured Products Component with modern card design
 const FeaturedProducts = ({ products = [] }) => {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-10 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <motion.div
@@ -439,15 +440,15 @@ const TestimonialsSection = () => {
     {
       name: "Ravi Sharma",
       role: "Fitness Enthusiast",
-      avatar: "RS",
+      avatar: "/avatar1.jpg",
       quote:
-        "I've tried many supplements, but EcomSupplements products have truly made a difference in my training and recovery.",
+        "I've tried many supplements, but these products have truly made a difference in my training and recovery.",
       rating: 5,
     },
     {
       name: "Priya Patel",
       role: "Yoga Instructor",
-      avatar: "PP",
+      avatar: "/avatar2.jpg",
       quote:
         "The quality of these supplements is exceptional. I recommend them to all my clients looking for clean nutrition.",
       rating: 5,
@@ -455,7 +456,7 @@ const TestimonialsSection = () => {
     {
       name: "Arjun Singh",
       role: "Bodybuilder",
-      avatar: "AS",
+      avatar: "/avatar3.jpg",
       quote:
         "These supplements have been a game-changer for my competition prep. Pure ingredients and great results!",
       rating: 5,
@@ -463,44 +464,91 @@ const TestimonialsSection = () => {
   ];
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+    <section className="py-24 bg-white relative">
+      {/* Background pattern */}
+      <div className="absolute inset-0 z-0 opacity-5">
+        <div className="absolute inset-y-0 left-0 w-1/6 bg-primary/10"></div>
+        <div className="absolute inset-y-0 right-0 w-1/6 bg-primary/10"></div>
+        <div className="absolute inset-x-0 top-0 h-1/6 bg-primary/10"></div>
+        <div className="absolute inset-x-0 bottom-0 h-1/6 bg-primary/10"></div>
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-16">
           <Headtext text="WHAT OUR CUSTOMERS SAY" />
           <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
             Real experiences from people who trust our products
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden relative bg-primary/20 flex items-center justify-center text-primary font-semibold">
-                  {testimonial.avatar}
+        <div className="relative max-w-5xl mx-auto">
+          {/* Decorative quotes */}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="relative rounded-lg p-6 transition-all"
+              >
+                {/* Top border highlight */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-16 bg-primary rounded-full"></div>
+
+                {/* Testimonial content */}
+                <div className="pt-6">
+                  {/* Avatar and info */}
+                  <div className="flex items-center mb-6">
+                    <div className="w-16 h-16 relative rounded-full overflow-hidden border-2 border-white shadow-md">
+                      {testimonial.avatar && (
+                        <div className="w-full h-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white font-bold">
+                          {testimonial.name.substring(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="font-bold text-gray-900">
+                        {testimonial.name}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {testimonial.role}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Rating */}
+                  <div className="flex mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${
+                          i < testimonial.rating
+                            ? "text-yellow-400 fill-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Quote */}
+                  <p className="text-gray-700 italic">
+                    &quot;{testimonial.quote}&quot;
+                  </p>
+
+                  {/* Bottom design element */}
+                  <div className="mt-6 flex justify-center">
+                    <motion.div
+                      className="h-1 w-12 bg-primary/30 rounded-full"
+                      whileHover={{ width: 60 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">{testimonial.name}</h3>
-                  <p className="text-sm text-gray-600">{testimonial.role}</p>
-                </div>
-              </div>
-              <div className="flex text-yellow-400 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4"
-                    fill={i < testimonial.rating ? "currentColor" : "none"}
-                  />
-                ))}
-              </div>
-              <p className="text-gray-700 italic">
-                &quot;{testimonial.quote}&quot;
-              </p>
-            </div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -657,39 +705,209 @@ const TrendingSection = ({ products = [] }) => {
 // Newsletter Section
 const NewsletterSection = () => {
   const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`Thank you for subscribing with: ${email}`);
-    setEmail("");
+    if (email) {
+      console.log(`Subscribed with: ${email}`);
+      setSubscribed(true);
+      setTimeout(() => setSubscribed(false), 5000);
+      setEmail("");
+    }
   };
 
   return (
-    <section className="py-16 bg-primary/5">
-      <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <Headtext text="JOIN OUR FITNESS COMMUNITY" />
-          <p className="text-gray-600 my-6">
-            Subscribe to get exclusive deals, fitness tips, and new product
-            alerts.
-          </p>
+    <section className="relative py-24 overflow-hidden">
+      {/* Background with gradient overlay */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 to-black/90 z-10" />
+        <Image
+          src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1500"
+          alt="Fitness background"
+          fill
+          className="object-cover object-center"
+          priority
+        />
+      </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-          >
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email address"
-              className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-            />
-            <Button type="submit" className="whitespace-nowrap">
-              Subscribe
-            </Button>
-          </form>
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white/10 backdrop-blur-md p-10 rounded-2xl border border-white/20 shadow-xl">
+            <div className="flex flex-col md:flex-row gap-10 items-center">
+              {/* Left content */}
+              <div className="w-full md:w-1/2 text-white">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+                  JOIN OUR <span className="text-primary">FITNESS</span>{" "}
+                  COMMUNITY
+                </h2>
+
+                <p className="text-gray-300 mb-6">
+                  Get exclusive workout tips, nutrition advice, and special
+                  offers straight to your inbox.
+                </p>
+
+                <div className="flex flex-col gap-4 mb-6">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
+                      <motion.div
+                        className="h-6 w-6 text-primary"
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 4,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                        </svg>
+                      </motion.div>
+                    </div>
+                    <span className="text-sm">Weekly fitness newsletter</span>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6 text-primary"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M20 7h-9"></path>
+                        <path d="M14 17H5"></path>
+                        <circle cx="17" cy="17" r="3"></circle>
+                        <circle cx="7" cy="7" r="3"></circle>
+                      </svg>
+                    </div>
+                    <span className="text-sm">Personalized workout plans</span>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6 text-primary"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                      </svg>
+                    </div>
+                    <span className="text-sm">
+                      Exclusive discounts & offers
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right form */}
+              <div className="w-full md:w-1/2 bg-white p-6 rounded-xl shadow-lg">
+                {subscribed ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center py-10"
+                  >
+                    <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-green-600"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M20 6L9 17l-5-5"></path>
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      Thank You for Subscribing!
+                    </h3>
+                    <p className="text-gray-600">
+                      Check your inbox for a welcome message and a special
+                      discount code.
+                    </p>
+                  </motion.div>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-bold text-gray-900 mb-6">
+                      Subscribe to Our Newsletter
+                    </h3>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="space-y-4">
+                        <div>
+                          <label
+                            htmlFor="email"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Your Email
+                          </label>
+                          <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="john@example.com"
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          type="submit"
+                          className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center"
+                        >
+                          Subscribe Now
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 ml-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 12h14M12 5l7 7-7 7"></path>
+                          </svg>
+                        </motion.button>
+                      </div>
+
+                      <p className="text-xs text-gray-500 text-center mt-4">
+                        By subscribing, you agree to our Privacy Policy and
+                        consent to receive updates from our company.
+                      </p>
+                    </form>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -747,7 +965,7 @@ export default function Home() {
       <FeaturedCategoriesSection />
 
       {/* Featured Products - show skeleton if loading */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-10 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Headtext text="FEATURED PRODUCTS" />

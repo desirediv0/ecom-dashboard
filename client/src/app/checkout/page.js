@@ -5,11 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { fetchApi, formatCurrency, loadScript } from "@/lib/utils";
-import {
-  playSuccessSound,
-  playFinalizeSound,
-  fireConfetti,
-} from "@/lib/sound-utils";
+import { playSuccessSound, fireConfetti } from "@/lib/sound-utils";
 import { Button } from "@/components/ui/button";
 import {
   CreditCard,
@@ -21,14 +17,12 @@ import {
   IndianRupee,
   ShoppingBag,
   PartyPopper,
-  Music,
   Gift,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import AddressForm from "@/components/AddressForm";
 import Image from "next/image";
-import confetti from "canvas-confetti";
 
 export default function CheckoutPage() {
   const { isAuthenticated, user } = useAuth();

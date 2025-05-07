@@ -10,6 +10,7 @@ import {
   CarouselNext,
 } from "@/components/ui/carousel";
 import Headtext from "./ui/headtext";
+import Image from "next/image";
 
 const CircularCategoryCard = ({ category, index }) => {
   return (
@@ -48,7 +49,9 @@ const CircularCategoryCard = ({ category, index }) => {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50 z-10" />
 
             {/* Image */}
-            <img
+            <Image
+              width={800}
+              height={800}
               src={category.image || "/c3.jpg"}
               alt={category.name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
