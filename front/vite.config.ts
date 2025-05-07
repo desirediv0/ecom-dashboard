@@ -11,4 +11,15 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Add the preview configuration for production builds
+  preview: {
+    port: 4173,
+    host: '0.0.0.0',
+    allowedHosts: ['b.desirediv.com', 'www.b.desirediv.com']
+  },
+  // Add server configuration for development
+  server: {
+    host: '0.0.0.0',
+    allowedHosts: ['b.desirediv.com', 'www.b.desirediv.com']
+  }
 });
