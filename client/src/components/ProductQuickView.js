@@ -33,6 +33,8 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
   const { addToCart } = useCart();
   const [productDetails, setProductDetails] = useState(null);
   const [imgSrc, setImgSrc] = useState("");
+  const [availableCombinations, setAvailableCombinations] = useState([]);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Reset states when product changes or dialog closes
   useEffect(() => {
@@ -46,6 +48,8 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
       setSuccess(false);
       setProductDetails(null);
       setImgSrc("");
+      setAvailableCombinations([]);
+      setInitialLoading(true);
       return;
     }
 
@@ -61,40 +65,64 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
       if (!product || !open) return;
 
       setLoading(true);
+      setInitialLoading(true);
       try {
         // Fetch detailed product info
         const response = await fetchApi(`/public/products/${product.slug}`);
         if (response.data && response.data.product) {
-          setProductDetails(response.data.product);
+          const productData = response.data.product;
+          setProductDetails(productData);
 
           // Update image if available
-          if (
-            response.data.product.images &&
-            response.data.product.images.length > 0
-          ) {
+          if (productData.images && productData.images.length > 0) {
             setImgSrc(
-              response.data.product.images[0].url ||
-                response.data.product.image ||
+              productData.images[0].url ||
+                productData.image ||
                 "/product-placeholder.jpg"
             );
           }
 
-          // Set default selections
-          if (response.data.product.flavorOptions?.length > 0) {
-            setSelectedFlavor(response.data.product.flavorOptions[0]);
+          // Get all available combinations from variants
+          const combinations = [];
+          if (productData.variants) {
+            productData.variants.forEach((variant) => {
+              if (variant.flavorId && variant.weightId) {
+                combinations.push({
+                  flavorId: variant.flavorId,
+                  weightId: variant.weightId,
+                });
+              }
+            });
           }
+          setAvailableCombinations(combinations);
 
-          if (response.data.product.weightOptions?.length > 0) {
-            setSelectedWeight(response.data.product.weightOptions[0]);
+          // Set default selections
+          if (productData.flavorOptions?.length > 0) {
+            const firstFlavor = productData.flavorOptions[0];
+            setSelectedFlavor(firstFlavor);
+
+            // Find first available weight for this flavor
+            if (productData.weightOptions?.length > 0) {
+              const availableWeight = productData.weightOptions.find((weight) =>
+                combinations.some(
+                  (combo) =>
+                    combo.flavorId === firstFlavor.id &&
+                    combo.weightId === weight.id
+                )
+              );
+              if (availableWeight) {
+                setSelectedWeight(availableWeight);
+              }
+            }
           }
 
           // If no flavor/weight options but variants exist, use the first variant
           if (
-            response.data.product.variants?.length > 0 &&
-            (!response.data.product.flavorOptions?.length ||
-              !response.data.product.weightOptions?.length)
+            productData.variants?.length > 0 &&
+            (!productData.flavorOptions?.length ||
+              !productData.weightOptions?.length)
           ) {
-            setSelectedVariant(response.data.product.variants[0]);
+            setSelectedVariant(productData.variants[0]);
           }
         } else {
           setError("Product details not available");
@@ -104,6 +132,7 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
         setError("Failed to load product details");
       } finally {
         setLoading(false);
+        setInitialLoading(false);
       }
     };
 
@@ -145,6 +174,47 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
 
     fetchVariant();
   }, [selectedFlavor, selectedWeight, productDetails]);
+
+  // Check if a combination is available
+  const isCombinationAvailable = (flavorId, weightId) => {
+    return availableCombinations.some(
+      (combo) => combo.flavorId === flavorId && combo.weightId === weightId
+    );
+  };
+
+  // Handle flavor change
+  const handleFlavorChange = (flavor) => {
+    setSelectedFlavor(flavor);
+
+    // Find first available weight for this flavor
+    if (productDetails?.weightOptions?.length > 0) {
+      const availableWeight = productDetails.weightOptions.find((weight) =>
+        isCombinationAvailable(flavor.id, weight.id)
+      );
+      if (availableWeight) {
+        setSelectedWeight(availableWeight);
+      } else {
+        setSelectedWeight(null);
+      }
+    }
+  };
+
+  // Handle weight change
+  const handleWeightChange = (weight) => {
+    setSelectedWeight(weight);
+
+    // Find first available flavor for this weight
+    if (productDetails?.flavorOptions?.length > 0) {
+      const availableFlavor = productDetails.flavorOptions.find((flavor) =>
+        isCombinationAvailable(flavor.id, weight.id)
+      );
+      if (availableFlavor) {
+        setSelectedFlavor(availableFlavor);
+      } else {
+        setSelectedFlavor(null);
+      }
+    }
+  };
 
   // Handle quantity change
   const handleQuantityChange = (change) => {
@@ -196,9 +266,14 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
 
   // Format price display
   const getPriceDisplay = () => {
+    // Show loading state while initial data is being fetched
+    if (initialLoading || loading) {
+      return <div className="h-8 w-32 bg-gray-200 animate-pulse rounded"></div>;
+    }
+
     // If we have a selected variant, show its price
     if (selectedVariant) {
-      if (selectedVariant.salePrice) {
+      if (selectedVariant.salePrice && selectedVariant.salePrice > 0) {
         return (
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-primary">
@@ -212,49 +287,49 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
       }
       return (
         <span className="text-2xl font-bold">
-          {formatCurrency(selectedVariant.price)}
+          {formatCurrency(selectedVariant.price || 0)}
         </span>
       );
     }
 
     // If no variant but product details available, show base price
     if (productDetails) {
-      if (productDetails.hasSale) {
+      if (productDetails.hasSale && productDetails.basePrice > 0) {
         return (
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-primary">
               {formatCurrency(productDetails.basePrice)}
             </span>
             <span className="text-lg text-gray-500 line-through">
-              {formatCurrency(productDetails.regularPrice)}
+              {formatCurrency(productDetails.regularPrice || 0)}
             </span>
           </div>
         );
       }
       return (
         <span className="text-2xl font-bold">
-          {formatCurrency(productDetails.basePrice)}
+          {formatCurrency(productDetails.basePrice || 0)}
         </span>
       );
     }
 
     // Fallback to product from props if no details fetched yet
     if (product) {
-      if (product.hasSale) {
+      if (product.hasSale && product.basePrice > 0) {
         return (
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-primary">
               {formatCurrency(product.basePrice)}
             </span>
             <span className="text-lg text-gray-500 line-through">
-              {formatCurrency(product.regularPrice)}
+              {formatCurrency(product.regularPrice || 0)}
             </span>
           </div>
         );
       }
       return (
         <span className="text-2xl font-bold">
-          {formatCurrency(product.basePrice)}
+          {formatCurrency(product.basePrice || 0)}
         </span>
       );
     }
@@ -352,20 +427,29 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
                       Flavor
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {productDetails.flavorOptions.map((flavor) => (
-                        <button
-                          key={flavor.id}
-                          type="button"
-                          onClick={() => setSelectedFlavor(flavor)}
-                          className={`px-3 py-2 rounded-md border text-sm transition-all ${
-                            selectedFlavor?.id === flavor.id
-                              ? "border-primary bg-primary/10 text-primary font-medium"
-                              : "border-gray-300 hover:border-gray-400"
-                          }`}
-                        >
-                          {flavor.name}
-                        </button>
-                      ))}
+                      {productDetails.flavorOptions.map((flavor) => {
+                        const isAvailable = productDetails.weightOptions?.some(
+                          (weight) =>
+                            isCombinationAvailable(flavor.id, weight.id)
+                        );
+                        return (
+                          <button
+                            key={flavor.id}
+                            type="button"
+                            onClick={() => handleFlavorChange(flavor)}
+                            disabled={!isAvailable}
+                            className={`px-3 py-2 rounded-md border text-sm transition-all ${
+                              selectedFlavor?.id === flavor.id
+                                ? "border-primary bg-primary/10 text-primary font-medium"
+                                : isAvailable
+                                ? "border-gray-300 hover:border-gray-400"
+                                : "border-gray-200 text-gray-400 cursor-not-allowed"
+                            }`}
+                          >
+                            {flavor.name}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -378,20 +462,29 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
                       Weight
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {productDetails.weightOptions.map((weight) => (
-                        <button
-                          key={weight.id}
-                          type="button"
-                          onClick={() => setSelectedWeight(weight)}
-                          className={`px-3 py-2 rounded-md border text-sm transition-all ${
-                            selectedWeight?.id === weight.id
-                              ? "border-primary bg-primary/10 text-primary font-medium"
-                              : "border-gray-300 hover:border-gray-400"
-                          }`}
-                        >
-                          {weight.value} {weight.unit}
-                        </button>
-                      ))}
+                      {productDetails.weightOptions.map((weight) => {
+                        const isAvailable = productDetails.flavorOptions?.some(
+                          (flavor) =>
+                            isCombinationAvailable(flavor.id, weight.id)
+                        );
+                        return (
+                          <button
+                            key={weight.id}
+                            type="button"
+                            onClick={() => handleWeightChange(weight)}
+                            disabled={!isAvailable}
+                            className={`px-3 py-2 rounded-md border text-sm transition-all ${
+                              selectedWeight?.id === weight.id
+                                ? "border-primary bg-primary/10 text-primary font-medium"
+                                : isAvailable
+                                ? "border-gray-300 hover:border-gray-400"
+                                : "border-gray-200 text-gray-400 cursor-not-allowed"
+                            }`}
+                          >
+                            {weight.value} {weight.unit}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

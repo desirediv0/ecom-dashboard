@@ -41,6 +41,8 @@ export default function ProductContent({ slug }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [selectedShade, setSelectedShade] = useState(null);
+  const [availableCombinations, setAvailableCombinations] = useState([]);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const { addToCart } = useCart();
 
@@ -48,6 +50,7 @@ export default function ProductContent({ slug }) {
   useEffect(() => {
     const fetchProductDetails = async () => {
       setLoading(true);
+      setInitialLoading(true);
       try {
         const response = await fetchApi(`/public/products/${slug}`);
         const productData = response.data.product;
@@ -59,13 +62,41 @@ export default function ProductContent({ slug }) {
           setMainImage(productData.images[0]);
         }
 
+        // Get all available combinations from variants
+        const combinations = [];
+        if (productData.variants) {
+          productData.variants.forEach((variant) => {
+            if (variant.flavorId && variant.weightId) {
+              combinations.push({
+                flavorId: variant.flavorId,
+                weightId: variant.weightId,
+              });
+            }
+          });
+        }
+        setAvailableCombinations(combinations);
+
         // Set default flavor and weight if available
         if (productData.flavorOptions && productData.flavorOptions.length > 0) {
-          setSelectedFlavor(productData.flavorOptions[0]);
-        }
+          const firstFlavor = productData.flavorOptions[0];
+          setSelectedFlavor(firstFlavor);
 
-        if (productData.weightOptions && productData.weightOptions.length > 0) {
-          setSelectedWeight(productData.weightOptions[0]);
+          // Find first available weight for this flavor
+          if (
+            productData.weightOptions &&
+            productData.weightOptions.length > 0
+          ) {
+            const availableWeight = productData.weightOptions.find((weight) =>
+              combinations.some(
+                (combo) =>
+                  combo.flavorId === firstFlavor.id &&
+                  combo.weightId === weight.id
+              )
+            );
+            if (availableWeight) {
+              setSelectedWeight(availableWeight);
+            }
+          }
         }
 
         // Set default variant if no flavor or weight options
@@ -84,6 +115,7 @@ export default function ProductContent({ slug }) {
         setError(err.message);
       } finally {
         setLoading(false);
+        setInitialLoading(false);
       }
     };
 
@@ -91,6 +123,47 @@ export default function ProductContent({ slug }) {
       fetchProductDetails();
     }
   }, [slug]);
+
+  // Check if a combination is available
+  const isCombinationAvailable = (flavorId, weightId) => {
+    return availableCombinations.some(
+      (combo) => combo.flavorId === flavorId && combo.weightId === weightId
+    );
+  };
+
+  // Handle flavor change
+  const handleFlavorChange = (flavor) => {
+    setSelectedFlavor(flavor);
+
+    // Find first available weight for this flavor
+    if (product?.weightOptions?.length > 0) {
+      const availableWeight = product.weightOptions.find((weight) =>
+        isCombinationAvailable(flavor.id, weight.id)
+      );
+      if (availableWeight) {
+        setSelectedWeight(availableWeight);
+      } else {
+        setSelectedWeight(null);
+      }
+    }
+  };
+
+  // Handle weight change
+  const handleWeightChange = (weight) => {
+    setSelectedWeight(weight);
+
+    // Find first available flavor for this weight
+    if (product?.flavorOptions?.length > 0) {
+      const availableFlavor = product.flavorOptions.find((flavor) =>
+        isCombinationAvailable(flavor.id, weight.id)
+      );
+      if (availableFlavor) {
+        setSelectedFlavor(availableFlavor);
+      } else {
+        setSelectedFlavor(null);
+      }
+    }
+  };
 
   // Fetch selected variant when flavor or weight changes
   useEffect(() => {
@@ -205,21 +278,16 @@ export default function ProductContent({ slug }) {
     setMainImage(image);
   };
 
-  // Handle flavor change
-  const handleFlavorChange = (flavor) => {
-    setSelectedFlavor(flavor);
-  };
-
-  // Handle weight change
-  const handleWeightChange = (weight) => {
-    setSelectedWeight(weight);
-  };
-
   // Format price display
   const getPriceDisplay = () => {
+    // Show loading state while initial data is being fetched
+    if (initialLoading) {
+      return <div className="h-8 w-32 bg-gray-200 animate-pulse rounded"></div>;
+    }
+
     // If we have a selected variant, use its price
     if (selectedVariant) {
-      if (selectedVariant.salePrice) {
+      if (selectedVariant.salePrice && selectedVariant.salePrice > 0) {
         return (
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold text-primary">
@@ -234,21 +302,21 @@ export default function ProductContent({ slug }) {
 
       return (
         <span className="text-3xl font-bold">
-          {formatCurrency(selectedVariant.price)}
+          {formatCurrency(selectedVariant.price || 0)}
         </span>
       );
     }
 
     // Fallback to product base price if no variant is selected
     if (product) {
-      if (product.hasSale) {
+      if (product.hasSale && product.basePrice > 0) {
         return (
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold text-primary">
               {formatCurrency(product.basePrice)}
             </span>
             <span className="text-xl text-gray-500 line-through">
-              {formatCurrency(product.regularPrice)}
+              {formatCurrency(product.regularPrice || 0)}
             </span>
           </div>
         );
@@ -256,7 +324,7 @@ export default function ProductContent({ slug }) {
 
       return (
         <span className="text-3xl font-bold">
-          {formatCurrency(product.basePrice)}
+          {formatCurrency(product.basePrice || 0)}
         </span>
       );
     }
@@ -454,19 +522,27 @@ export default function ProductContent({ slug }) {
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-3 uppercase">Flavor</h3>
               <div className="flex flex-wrap gap-2">
-                {product.flavorOptions.map((flavor) => (
-                  <button
-                    key={flavor.id}
-                    className={`px-4 py-2 rounded-md border text-sm transition-all ${
-                      selectedFlavor?.id === flavor.id
-                        ? "border-primary bg-primary text-white font-medium"
-                        : "border-gray-300 hover:border-gray-400"
-                    }`}
-                    onClick={() => handleFlavorChange(flavor)}
-                  >
-                    {flavor.name}
-                  </button>
-                ))}
+                {product.flavorOptions.map((flavor) => {
+                  const isAvailable = product.weightOptions?.some((weight) =>
+                    isCombinationAvailable(flavor.id, weight.id)
+                  );
+                  return (
+                    <button
+                      key={flavor.id}
+                      className={`px-4 py-2 rounded-md border text-sm transition-all ${
+                        selectedFlavor?.id === flavor.id
+                          ? "border-primary bg-primary text-white font-medium"
+                          : isAvailable
+                          ? "border-gray-300 hover:border-gray-400"
+                          : "border-gray-200 text-gray-400 cursor-not-allowed"
+                      }`}
+                      onClick={() => handleFlavorChange(flavor)}
+                      disabled={!isAvailable}
+                    >
+                      {flavor.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -476,19 +552,27 @@ export default function ProductContent({ slug }) {
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-3 uppercase">Weight</h3>
               <div className="flex flex-wrap gap-2">
-                {product.weightOptions.map((weight) => (
-                  <button
-                    key={weight.id}
-                    className={`px-4 py-2 rounded-md border text-sm transition-all ${
-                      selectedWeight?.id === weight.id
-                        ? "border-primary bg-primary text-white font-medium"
-                        : "border-gray-300 hover:border-gray-400"
-                    }`}
-                    onClick={() => handleWeightChange(weight)}
-                  >
-                    {weight.display}
-                  </button>
-                ))}
+                {product.weightOptions.map((weight) => {
+                  const isAvailable = product.flavorOptions?.some((flavor) =>
+                    isCombinationAvailable(flavor.id, weight.id)
+                  );
+                  return (
+                    <button
+                      key={weight.id}
+                      className={`px-4 py-2 rounded-md border text-sm transition-all ${
+                        selectedWeight?.id === weight.id
+                          ? "border-primary bg-primary text-white font-medium"
+                          : isAvailable
+                          ? "border-gray-300 hover:border-gray-400"
+                          : "border-gray-200 text-gray-400 cursor-not-allowed"
+                      }`}
+                      onClick={() => handleWeightChange(weight)}
+                      disabled={!isAvailable}
+                    >
+                      {weight.display}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
