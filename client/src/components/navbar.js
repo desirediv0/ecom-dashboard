@@ -141,31 +141,46 @@ export function Navbar() {
                 <span className="text-primary">Ecom</span>
               </span>
             </Link>
-            <button
-              onClick={() => setIsMenuOpen(false)}
-              className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
-              aria-label="Close menu"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+                aria-label="Close menu"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-6">
             <form onSubmit={handleSearch} className="relative mb-6">
-              <Input
-                type="search"
-                placeholder="Search products..."
-                className="w-full pr-10 py-2 border-primary"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                aria-label="Search"
-              >
-                <Search className="h-4 w-4 text-primary" />
-              </button>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Search products..."
+                  className="w-full pl-12 pr-12 py-4 text-base border-gray-200 focus:border-primary focus:ring-primary rounded-lg"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="absolute right-12 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-primary text-white"
+                  aria-label="Search"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
             </form>
 
             <div className="border-b pb-2 mb-4">
@@ -354,14 +369,16 @@ export function Navbar() {
       <div className="border-b border-gray-200">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16 md:h-20">
-            {/* Menu toggle for mobile */}
-            <button
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none"
-              onClick={() => setIsMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
+            {/* Menu toggle and search for mobile */}
+            <div className="flex items-center md:hidden gap-2">
+              <button
+                className="p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none"
+                onClick={() => setIsMenuOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+            </div>
 
             {/* Logo */}
             <Link href="/" className="flex items-center">
@@ -463,36 +480,47 @@ export function Navbar() {
                       className="fixed inset-0 bg-black/50 z-40"
                       onClick={() => setIsSearchExpanded(false)}
                     />
-                    <div className="absolute right-0 top-0 z-50 w-full md:w-[500px] animate-in slide-in-from-right duration-300">
+                    <div className="fixed inset-x-0 top-0 z-50 w-full animate-in slide-in-from-top duration-300 p-2">
                       <form
                         onSubmit={handleSearch}
-                        className="relative bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
+                        className="relative bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden max-h-[90vh] md:max-w-[600px] mx-auto"
                       >
-                        <div className="flex items-center px-4 py-3 border-b border-gray-100">
+                        <div className="flex items-center px-4 py-4 border-b border-gray-100">
                           <h3 className="text-lg font-semibold text-gray-900">
                             Search Products
                           </h3>
                           <button
                             type="button"
-                            className="ml-auto p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200"
+                            className="ml-auto p-2 rounded-full hover:bg-gray-100 transition-all duration-200"
                             onClick={() => setIsSearchExpanded(false)}
                             aria-label="Close search"
                           >
-                            <X className="h-5 w-5 text-gray-500" />
+                            <X className="h-6 w-6 text-gray-500" />
                           </button>
                         </div>
 
-                        <div className="p-4">
+                        <div className="p-5">
                           <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <Input
                               ref={searchInputRef}
                               type="search"
-                              placeholder="Search for supplements, equipment, accessories..."
-                              className="w-full pl-10 pr-4 py-3 text-base border-gray-200 focus:border-primary focus:ring-primary rounded-lg"
+                              placeholder="Search for products..."
+                              className="w-full pl-12 pr-12 py-3 border-gray-200 focus:border-primary focus:ring-primary rounded-lg text-base"
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
+                              autoComplete="off"
                             />
+                            {searchQuery && (
+                              <button
+                                type="button"
+                                className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                                onClick={() => setSearchQuery("")}
+                                aria-label="Clear search"
+                              >
+                                <X className="h-5 w-5" />
+                              </button>
+                            )}
                           </div>
 
                           <div className="mt-4">
@@ -522,10 +550,17 @@ export function Navbar() {
                           </div>
                         </div>
 
-                        <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-between">
+                          <button
+                            type="button"
+                            onClick={() => setIsSearchExpanded(false)}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-200 font-medium text-sm"
+                          >
+                            Cancel
+                          </button>
                           <button
                             type="submit"
-                            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 flex items-center gap-2"
+                            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 flex items-center gap-2 font-medium text-sm"
                           >
                             <Search className="h-4 w-4" />
                             Search
@@ -537,7 +572,7 @@ export function Navbar() {
                 ) : (
                   <button
                     onClick={() => setIsSearchExpanded(true)}
-                    className="p-2 text-gray-600 hover:text-primary transition-all duration-200 focus:outline-none hover:scale-110"
+                    className="p-2 text-gray-600 hover:text-primary transition-all duration-200 focus:outline-none hover:scale-110 hidden md:block"
                     aria-label="Search"
                   >
                     <Search className="h-5 w-5" />
