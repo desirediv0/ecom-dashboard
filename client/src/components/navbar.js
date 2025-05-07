@@ -20,7 +20,6 @@ import { Input } from "./ui/input";
 import { useRouter, usePathname } from "next/navigation";
 import { fetchApi } from "@/lib/utils";
 import { ClientOnly } from "./client-only";
-import Image from "next/image";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -30,6 +29,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isHoveringDropdown, setIsHoveringDropdown] = useState(null);
   const searchInputRef = useRef(null);
   const navbarRef = useRef(null);
   const router = useRouter();
@@ -83,6 +83,7 @@ export function Navbar() {
     if (searchQuery.trim()) {
       router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
       setIsSearchExpanded(false);
+      setSearchQuery("");
     }
   };
 
@@ -95,6 +96,22 @@ export function Navbar() {
     setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
   };
 
+  // Handle hover for dropdowns
+  const handleDropdownHover = (dropdown) => {
+    setIsHoveringDropdown(dropdown);
+    if (dropdown) {
+      setActiveDropdown(dropdown);
+    }
+  };
+
+  const handleDropdownLeave = () => {
+    setIsHoveringDropdown(null);
+    // Only close if not clicking inside the dropdown
+    if (!navbarRef.current?.contains(document.activeElement)) {
+      setActiveDropdown(null);
+    }
+  };
+
   // Mobile menu with ClientOnly to prevent hydration issues
   const MobileMenu = ({
     isMenuOpen,
@@ -104,8 +121,6 @@ export function Navbar() {
     setSearchQuery,
     handleSearch,
     isAuthenticated,
-    user,
-    cart,
     handleLogout,
   }) => {
     if (!isMenuOpen) return null;
@@ -365,13 +380,17 @@ export function Navbar() {
               </Link>
 
               {/* Categories dropdown */}
-              <div className="relative">
+              <div
+                className="relative"
+                onMouseEnter={() => handleDropdownHover("categories")}
+                onMouseLeave={handleDropdownLeave}
+              >
                 <button
                   className={`font-medium ${
                     activeDropdown === "categories"
                       ? "text-primary"
                       : "text-gray-700"
-                  } hover:text-primary transition-colors flex items-center focus:outline-none`}
+                  } hover:text-primary transition-all duration-200 flex items-center focus:outline-none group`}
                   onClick={() => toggleDropdown("categories")}
                   aria-expanded={activeDropdown === "categories"}
                 >
@@ -379,21 +398,21 @@ export function Navbar() {
                   <ChevronDown
                     className={`ml-1 h-4 w-4 transition-transform duration-200 ${
                       activeDropdown === "categories" ? "rotate-180" : ""
-                    }`}
+                    } group-hover:rotate-180`}
                   />
                 </button>
                 <div
-                  className={`absolute left-0 top-full mt-1 w-64 bg-white shadow-lg rounded-md py-2 border border-gray-100 z-50 transition-all duration-200 origin-top ${
+                  className={`absolute left-0 top-full mt-1 w-64 bg-white shadow-lg rounded-md py-2 border border-gray-100 z-50 transition-all duration-300 ease-in-out transform origin-top ${
                     activeDropdown === "categories"
-                      ? "opacity-100 scale-100"
-                      : "opacity-0 scale-95 pointer-events-none"
+                      ? "opacity-100 scale-100 translate-y-0"
+                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
                   }`}
                 >
                   {categories.map((category) => (
                     <div key={category.id}>
                       <Link
                         href={`/category/${category.slug}`}
-                        className="block px-4 py-2.5 hover:bg-gray-50 hover:text-primary transition-colors"
+                        className="block px-4 py-2.5 hover:bg-gray-50 hover:text-primary transition-all duration-200"
                         onClick={() => setActiveDropdown(null)}
                       >
                         {category.name}
@@ -403,7 +422,7 @@ export function Navbar() {
                   <div className="pt-2 mt-2 border-t border-gray-100">
                     <Link
                       href="/products"
-                      className="block px-4 py-2.5 text-primary font-medium hover:bg-primary/5 transition-colors"
+                      className="block px-4 py-2.5 text-primary font-medium hover:bg-primary/5 transition-all duration-200"
                       onClick={() => setActiveDropdown(null)}
                     >
                       View All Categories
@@ -439,38 +458,86 @@ export function Navbar() {
               {/* Search button/form */}
               <div className="relative">
                 {isSearchExpanded ? (
-                  <form
-                    onSubmit={handleSearch}
-                    className="absolute right-0 top-0 z-20 flex"
-                  >
-                    <Input
-                      ref={searchInputRef}
-                      type="search"
-                      placeholder="Search products..."
-                      className="w-[200px] md:w-[300px] pr-10 border-primary focus:ring-primary focus:border-primary"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button
-                      type="submit"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      aria-label="Search"
-                    >
-                      <Search className="h-4 w-4 text-primary" />
-                    </button>
-                    <button
-                      type="button"
-                      className="absolute right-[calc(100%+4px)] top-1/2 transform -translate-y-1/2 p-1.5 bg-white rounded-full border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none"
-                      aria-label="Close search"
+                  <>
+                    <div
+                      className="fixed inset-0 bg-black/50 z-40"
                       onClick={() => setIsSearchExpanded(false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </form>
+                    />
+                    <div className="absolute right-0 top-0 z-50 w-full md:w-[500px] animate-in slide-in-from-right duration-300">
+                      <form
+                        onSubmit={handleSearch}
+                        className="relative bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
+                      >
+                        <div className="flex items-center px-4 py-3 border-b border-gray-100">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Search Products
+                          </h3>
+                          <button
+                            type="button"
+                            className="ml-auto p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200"
+                            onClick={() => setIsSearchExpanded(false)}
+                            aria-label="Close search"
+                          >
+                            <X className="h-5 w-5 text-gray-500" />
+                          </button>
+                        </div>
+
+                        <div className="p-4">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <Input
+                              ref={searchInputRef}
+                              type="search"
+                              placeholder="Search for supplements, equipment, accessories..."
+                              className="w-full pl-10 pr-4 py-3 text-base border-gray-200 focus:border-primary focus:ring-primary rounded-lg"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                          </div>
+
+                          <div className="mt-4">
+                            <h4 className="text-sm font-medium text-gray-500 mb-2">
+                              Popular Searches
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                "Protein Powder",
+                                "Dumbbells",
+                                "Resistance Bands",
+                                "Pre-Workout",
+                              ].map((term) => (
+                                <button
+                                  key={term}
+                                  type="button"
+                                  onClick={() => {
+                                    setSearchQuery(term);
+                                    handleSearch({ preventDefault: () => {} });
+                                  }}
+                                  className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-primary/10 text-gray-700 hover:text-primary rounded-full transition-all duration-200"
+                                >
+                                  {term}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+                          <button
+                            type="submit"
+                            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all duration-200 flex items-center gap-2"
+                          >
+                            <Search className="h-4 w-4" />
+                            Search
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </>
                 ) : (
                   <button
                     onClick={() => setIsSearchExpanded(true)}
-                    className="p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none"
+                    className="p-2 text-gray-600 hover:text-primary transition-all duration-200 focus:outline-none hover:scale-110"
                     aria-label="Search"
                   >
                     <Search className="h-5 w-5" />
@@ -487,106 +554,119 @@ export function Navbar() {
               </Link>
 
               {/* Cart */}
-              <Link
-                href="/cart"
-                className="p-2 text-gray-600 hover:text-primary transition-colors relative"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {cart && cart.items?.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                    {cart.items.reduce((acc, item) => acc + item.quantity, 0)}
-                  </span>
-                )}
-              </Link>
+              <ClientOnly>
+                <Link
+                  href="/cart"
+                  className="p-2 text-gray-600 hover:text-primary transition-colors relative"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {cart && cart.items?.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                      {cart.items.reduce((acc, item) => acc + item.quantity, 0)}
+                    </span>
+                  )}
+                </Link>
+              </ClientOnly>
 
               {/* Account - desktop */}
-              <div className="hidden md:block relative">
-                <button
-                  className={`p-2 ${
-                    activeDropdown === "account"
-                      ? "text-primary"
-                      : "text-gray-600"
-                  } hover:text-primary transition-colors flex items-center focus:outline-none`}
-                  onClick={() => toggleDropdown("account")}
-                  aria-expanded={activeDropdown === "account"}
-                >
-                  <User className="h-5 w-5" />
-                  <ChevronDown
-                    className={`ml-1 h-4 w-4 transition-transform duration-200 ${
-                      activeDropdown === "account" ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+              <div
+                className="hidden md:block relative"
+                onMouseEnter={() => handleDropdownHover("account")}
+                onMouseLeave={handleDropdownLeave}
+              >
+                <ClientOnly>
+                  <button
+                    className={`p-2 ${
+                      activeDropdown === "account"
+                        ? "text-primary"
+                        : "text-gray-600"
+                    } hover:text-primary transition-all duration-200 flex items-center focus:outline-none group`}
+                    onClick={() => toggleDropdown("account")}
+                    aria-expanded={activeDropdown === "account"}
+                  >
+                    <User className="h-5 w-5" />
+                    <ChevronDown
+                      className={`ml-1 h-4 w-4 transition-transform duration-200 ${
+                        activeDropdown === "account" ? "rotate-180" : ""
+                      } group-hover:rotate-180`}
+                    />
+                  </button>
 
-                <div
-                  className={`absolute right-0 top-full mt-1 w-64 bg-white shadow-lg rounded-md py-2 border border-gray-100 z-50 transition-all duration-200 origin-top ${
-                    activeDropdown === "account"
-                      ? "opacity-100 scale-100"
-                      : "opacity-0 scale-95 pointer-events-none"
-                  }`}
-                >
-                  {isAuthenticated ? (
-                    <>
-                      <div className="px-4 py-2 border-b border-gray-100 mb-2">
-                        <p className="font-medium">
-                          Hi, {user?.name || "User"}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {user?.email}
-                        </p>
-                      </div>
-                      <Link
-                        href="/account"
-                        className="block px-4 py-2 hover:bg-gray-50 hover:text-primary transition-colors"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        My Account
-                      </Link>
-                      <Link
-                        href="/account/orders"
-                        className="block px-4 py-2 hover:bg-gray-50 hover:text-primary transition-colors"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        My Orders
-                      </Link>
-                      <Link
-                        href="/wishlist"
-                        className="block px-4 py-2 hover:bg-gray-50 hover:text-primary transition-colors"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        My Wishlist
-                      </Link>
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setActiveDropdown(null);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors mt-2 border-t border-gray-100"
-                      >
-                        Logout
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="px-4 py-3">
+                  <div
+                    className={`absolute right-0 top-full mt-1 w-64 bg-white shadow-lg rounded-md py-2 border border-gray-100 z-50 transition-all duration-300 ease-in-out transform origin-top ${
+                      activeDropdown === "account"
+                        ? "opacity-100 scale-100 translate-y-0"
+                        : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                    }`}
+                  >
+                    {isAuthenticated ? (
+                      <>
+                        <div className="px-4 py-2 border-b border-gray-100 mb-2">
+                          <p className="font-medium">
+                            Hi, {user?.name || "User"}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {user?.email}
+                          </p>
+                        </div>
                         <Link
-                          href="/login"
+                          href="/account"
+                          className="block px-4 py-2 hover:bg-gray-50 hover:text-primary transition-all duration-200"
                           onClick={() => setActiveDropdown(null)}
                         >
-                          <Button className="w-full mb-2">Login</Button>
+                          My Account
                         </Link>
                         <Link
-                          href="/register"
+                          href="/account/orders"
+                          className="block px-4 py-2 hover:bg-gray-50 hover:text-primary transition-all duration-200"
                           onClick={() => setActiveDropdown(null)}
                         >
-                          <Button variant="outline" className="w-full">
-                            Register
-                          </Button>
+                          My Orders
                         </Link>
-                      </div>
-                    </>
-                  )}
-                </div>
+                        <Link
+                          href="/wishlist"
+                          className="block px-4 py-2 hover:bg-gray-50 hover:text-primary transition-all duration-200"
+                          onClick={() => setActiveDropdown(null)}
+                        >
+                          My Wishlist
+                        </Link>
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                            setActiveDropdown(null);
+                          }}
+                          className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-all duration-200 mt-2 border-t border-gray-100"
+                        >
+                          Logout
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="px-4 py-3">
+                          <Link
+                            href="/login"
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <Button className="w-full mb-2 hover:scale-[1.02] transition-transform duration-200">
+                              Login
+                            </Button>
+                          </Link>
+                          <Link
+                            href="/register"
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <Button
+                              variant="outline"
+                              className="w-full hover:scale-[1.02] transition-transform duration-200"
+                            >
+                              Register
+                            </Button>
+                          </Link>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </ClientOnly>
               </div>
             </div>
           </div>
