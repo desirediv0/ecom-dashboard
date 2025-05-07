@@ -124,19 +124,19 @@ export function Navbar() {
     isAuthenticated,
     handleLogout,
   }) => {
-    if (!isMenuOpen) return null;
-
     const mobileSearchInputRef = useRef(null);
 
     useEffect(() => {
       // Focus the search input when menu opens with a small delay
-      const timer = setTimeout(() => {
-        if (mobileSearchInputRef.current) {
-          mobileSearchInputRef.current.focus();
-        }
-      }, 300);
+      if (isMenuOpen) {
+        const timer = setTimeout(() => {
+          if (mobileSearchInputRef.current) {
+            mobileSearchInputRef.current.focus();
+          }
+        }, 300);
 
-      return () => clearTimeout(timer);
+        return () => clearTimeout(timer);
+      }
     }, [isMenuOpen]);
 
     const handleMobileSearch = (e) => {
@@ -152,6 +152,8 @@ export function Navbar() {
       e.stopPropagation();
       setSearchQuery(e.target.value);
     };
+
+    if (!isMenuOpen) return null;
 
     return (
       <div

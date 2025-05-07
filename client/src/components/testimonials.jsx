@@ -144,7 +144,7 @@ export default function TestimonialsSection() {
                 </div>
 
                 <p className="text-gray-300 text-lg mb-4">
-                  "{testimonial.quote}"
+                  &quot;{testimonial.quote}&quot;
                 </p>
 
                 <motion.div
