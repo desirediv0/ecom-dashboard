@@ -118,8 +118,8 @@ export default function AccountPage() {
 
         {/* Profile information */}
         <div className="bg-white rounded-lg shadow mb-8">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
+          <div className="p-4 lg:p-6">
+            <div className="  flex  justify-between gap-2 items-center mb-6">
               <h2 className="text-xl font-semibold">Profile Information</h2>
               {!isEditing && (
                 <Button
@@ -147,7 +147,7 @@ export default function AccountPage() {
 
             {isEditing ? (
               <form onSubmit={handleSubmit}>
-                <div className="space-y-4">
+                <div className="space-y-4 ">
                   <div>
                     <label
                       htmlFor="name"
@@ -245,7 +245,7 @@ export default function AccountPage() {
                 </div>
               </form>
             ) : (
-              <div className="flex space-x-6">
+              <div className="flex-col lg:flex-row space-x-4 lg:space-x-8 flex items-start">
                 <div className="flex-shrink-0">
                   {user?.profileImageUrl ? (
                     <Image
@@ -305,11 +305,11 @@ export default function AccountPage() {
 
         {/* Recent addresses */}
         <div className="bg-white rounded-lg shadow mb-8">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Saved Addresses</h2>
+          <div className="p-4 lg:p-6">
+            <div className="flex justify-between gap-2 items-center mb-4">
+              <h2 className="text-lg lg:text-xl font-semibold">Saved Addresses</h2>
               <Link href="/account/addresses">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className=" text-wrap py-2">
                   Manage Addresses
                 </Button>
               </Link>

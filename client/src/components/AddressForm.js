@@ -21,35 +21,58 @@ export default function AddressForm({
     city: existingAddress?.city || "",
     state: existingAddress?.state || "",
     postalCode: existingAddress?.postalCode || "",
-    country: existingAddress?.country || "India", // Default to India
+    country: existingAddress?.country || "India",
     phone: existingAddress?.phone || "",
     isDefault: existingAddress?.isDefault || false,
   });
   const [errors, setErrors] = useState({});
 
+  // Improved validation rules
+  const validations = {
+    name: (value) => {
+      if (!value.trim()) return "Name is required";
+      if (value.length < 2) return "Name must be at least 2 characters";
+      return "";
+    },
+    phone: (value) => {
+      if (!value.trim()) return "Phone number is required";
+      if (!/^[0-9]{10}$/.test(value)) return "Enter valid 10-digit phone number";
+      return "";
+    },
+    postalCode: (value) => {
+      if (!value.trim()) return "Postal code is required";
+      if (!/^[0-9]{6}$/.test(value)) return "Enter valid 6-digit postal code";
+      return "";
+    },
+    street: (value) => !value.trim() ? "Street address is required" : "",
+    city: (value) => !value.trim() ? "City is required" : "",
+    state: (value) => !value.trim() ? "State is required" : "",
+    country: (value) => !value.trim() ? "Country is required" : "",
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    const newValue = type === "checkbox" ? checked : value;
+
+    setFormData(prev => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: newValue
     }));
 
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    // Validate field on change
+    const validationError = validations[name]?.(newValue) || "";
+    setErrors(prev => ({
+      ...prev,
+      [name]: validationError
+    }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.street.trim()) newErrors.street = "Address is required";
-    if (!formData.city.trim()) newErrors.city = "City is required";
-    if (!formData.state.trim()) newErrors.state = "State is required";
-    if (!formData.postalCode.trim())
-      newErrors.postalCode = "Postal code is required";
-    if (!formData.country.trim()) newErrors.country = "Country is required";
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
+    Object.keys(validations).forEach(field => {
+      const error = validations[field](formData[field]);
+      if (error) newErrors[field] = error;
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -59,52 +82,35 @@ export default function AddressForm({
     e.preventDefault();
 
     if (!validateForm()) {
+      toast.error("Please fix the errors in the form");
       return;
     }
 
     setLoading(true);
 
     try {
-      console.log("Sending address data:", formData);
+      const endpoint = existingAddress 
+        ? `/users/addresses/${existingAddress.id}`
+        : "/users/addresses";
+      
+      const method = existingAddress ? "PATCH" : "POST";
 
-      if (existingAddress) {
-        // Update existing address
-        const response = await fetchApi(
-          `/users/addresses/${existingAddress.id}`,
-          {
-            method: "PATCH",
-            credentials: "include",
-            body: JSON.stringify(formData),
-          }
-        );
+      const response = await fetchApi(endpoint, {
+        method,
+        credentials: "include",
+        body: JSON.stringify(formData),
+      });
 
-        if (!response.success) {
-          throw new Error(response.message || "Failed to update address");
-        }
-
-        toast.success("Address updated successfully");
-      } else {
-        // Create new address
-        const response = await fetchApi("/users/addresses", {
-          method: "POST",
-          credentials: "include",
-          body: JSON.stringify(formData),
-        });
-
-        if (!response.success) {
-          throw new Error(response.message || "Failed to add address");
-        }
-
-        toast.success("Address added successfully");
+      if (!response.success) {
+        throw new Error(response.message || `Failed to ${existingAddress ? 'update' : 'add'} address`);
       }
 
-      if (onSuccess) {
-        onSuccess();
-      }
+      toast.success(`Address ${existingAddress ? 'updated' : 'added'} successfully`);
+      if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Error saving address:", error);
       toast.error(error.message || "Failed to save address");
-      setErrors((prev) => ({ ...prev, general: error.message }));
+      setErrors(prev => ({ ...prev, general: error.message }));
     } finally {
       setLoading(false);
     }
@@ -131,9 +137,10 @@ export default function AddressForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="col-span-2">
+            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Full Name - Full width */}
+          <div className="sm:col-span-2 lg:col-span-3">
             <Label htmlFor="name">Full Name*</Label>
             <Input
               id="name"
@@ -141,13 +148,15 @@ export default function AddressForm({
               value={formData.name}
               onChange={handleChange}
               className={errors.name ? "border-red-500" : ""}
+              placeholder="Enter your full name"
             />
             {errors.name && (
               <p className="text-red-500 text-sm mt-1">{errors.name}</p>
             )}
           </div>
-
-          <div className="col-span-2">
+      
+          {/* Street Address - Full width */}
+          <div className="sm:col-span-2 lg:col-span-3">
             <Label htmlFor="street">Street Address*</Label>
             <Input
               id="street"
@@ -161,7 +170,8 @@ export default function AddressForm({
               <p className="text-red-500 text-sm mt-1">{errors.street}</p>
             )}
           </div>
-
+      
+          {/* City */}
           <div>
             <Label htmlFor="city">City*</Label>
             <Input
@@ -170,12 +180,14 @@ export default function AddressForm({
               value={formData.city}
               onChange={handleChange}
               className={errors.city ? "border-red-500" : ""}
+              placeholder="Enter city"
             />
             {errors.city && (
               <p className="text-red-500 text-sm mt-1">{errors.city}</p>
             )}
           </div>
-
+      
+          {/* State */}
           <div>
             <Label htmlFor="state">State*</Label>
             <Input
@@ -184,12 +196,14 @@ export default function AddressForm({
               value={formData.state}
               onChange={handleChange}
               className={errors.state ? "border-red-500" : ""}
+              placeholder="Enter state"
             />
             {errors.state && (
               <p className="text-red-500 text-sm mt-1">{errors.state}</p>
             )}
           </div>
-
+      
+          {/* Postal Code */}
           <div>
             <Label htmlFor="postalCode">Postal Code*</Label>
             <Input
@@ -198,26 +212,15 @@ export default function AddressForm({
               value={formData.postalCode}
               onChange={handleChange}
               className={errors.postalCode ? "border-red-500" : ""}
+              placeholder="Enter 6-digit postal code"
+              maxLength={6}
             />
             {errors.postalCode && (
               <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>
             )}
           </div>
-
-          <div>
-            <Label htmlFor="country">Country*</Label>
-            <Input
-              id="country"
-              name="country"
-              value={formData.country}
-              onChange={handleChange}
-              className={errors.country ? "border-red-500" : ""}
-            />
-            {errors.country && (
-              <p className="text-red-500 text-sm mt-1">{errors.country}</p>
-            )}
-          </div>
-
+      
+          {/* Phone Number */}
           <div>
             <Label htmlFor="phone">Phone Number*</Label>
             <Input
@@ -226,27 +229,48 @@ export default function AddressForm({
               value={formData.phone}
               onChange={handleChange}
               className={errors.phone ? "border-red-500" : ""}
+              placeholder="Enter 10-digit phone number"
+              maxLength={10}
             />
             {errors.phone && (
               <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
             )}
           </div>
-
-          <div className="col-span-2 flex items-center space-x-2 mt-2">
-            <input
-              type="checkbox"
-              id="isDefault"
-              name="isDefault"
-              checked={formData.isDefault}
+      
+          {/* Country */}
+          <div className="sm:col-span-2">
+            <Label htmlFor="country">Country*</Label>
+            <Input
+              id="country"
+              name="country"
+              value={formData.country}
               onChange={handleChange}
-              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              className={errors.country ? "border-red-500" : ""}
+              placeholder="Enter country"
             />
-            <Label htmlFor="isDefault" className="font-normal cursor-pointer">
-              Set as default address
-            </Label>
+            {errors.country && (
+              <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+            )}
+          </div>
+      
+          {/* Default Address Checkbox - Full width */}
+          <div className="lg:col-span-3">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isDefault"
+                name="isDefault"
+                checked={formData.isDefault}
+                onChange={handleChange}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <Label htmlFor="isDefault" className="font-normal cursor-pointer">
+                Set as default address
+              </Label>
+            </div>
           </div>
         </div>
-
+      
         <div className="flex justify-end gap-3 mt-6">
           {onCancel && (
             <Button

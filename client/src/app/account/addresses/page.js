@@ -100,11 +100,11 @@ export default function AddressesPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">My Addresses</h1>
+    <div className="p-4 max-w-4xl mx-auto">
+      <div className="flex justify-between gap-2 items-center mb-8">
+        <h1 className=" text-xl lg:text-2xl font-semibold">My Addresses</h1>
         {!showAddForm && !editingAddress && (
-          <Button onClick={() => setShowAddForm(true)}>
+          <Button onClick={() => setShowAddForm(true)} className="px-3 lg:px-4 text-wrap py-2">
             <Plus className="h-4 w-4 mr-2" />
             Add New Address
           </Button>
