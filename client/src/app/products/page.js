@@ -254,11 +254,11 @@ function ProductsContent() {
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex flex-col justify-center pl-12">
-          <h1 className="text-5xl font-bold text-white mb-4">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex flex-col justify-center md:pl-12">
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 md:text-left text-center">
             PREMIUM SUPPLEMENTS
           </h1>
-          <p className="text-xl text-white max-w-xl">
+          <p className=" md:text-xl text-white max-w-xl md:text-left text-center">
             Fuel your performance with premium quality supplements
           </p>
         </div>

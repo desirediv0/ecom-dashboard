@@ -83,6 +83,7 @@ export function Navbar() {
     if (searchQuery.trim()) {
       router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
       setIsSearchExpanded(false);
+      setIsMenuOpen(false);
       setSearchQuery("");
     }
   };
@@ -125,6 +126,33 @@ export function Navbar() {
   }) => {
     if (!isMenuOpen) return null;
 
+    const mobileSearchInputRef = useRef(null);
+
+    useEffect(() => {
+      // Focus the search input when menu opens with a small delay
+      const timer = setTimeout(() => {
+        if (mobileSearchInputRef.current) {
+          mobileSearchInputRef.current.focus();
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }, [isMenuOpen]);
+
+    const handleMobileSearch = (e) => {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
+        setIsMenuOpen(false);
+        setSearchQuery("");
+      }
+    };
+
+    const handleSearchInputChange = (e) => {
+      e.stopPropagation();
+      setSearchQuery(e.target.value);
+    };
+
     return (
       <div
         className="md:hidden fixed inset-0 z-50 bg-white overflow-y-auto"
@@ -153,21 +181,30 @@ export function Navbar() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-6">
-            <form onSubmit={handleSearch} className="relative mb-6">
+            <form onSubmit={handleMobileSearch} className="relative mb-6">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
-                  type="search"
+                  ref={mobileSearchInputRef}
+                  type="text"
                   placeholder="Search products..."
                   className="w-full pl-12 pr-12 py-4 text-base border-gray-200 focus:border-primary focus:ring-primary rounded-lg"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchInputChange}
+                  autoComplete="off"
+                  onClick={(e) => e.stopPropagation()}
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     className="absolute right-12 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600"
-                    onClick={() => setSearchQuery("")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSearchQuery("");
+                      if (mobileSearchInputRef.current) {
+                        mobileSearchInputRef.current.focus();
+                      }
+                    }}
                     aria-label="Clear search"
                   >
                     <X className="h-5 w-5" />
