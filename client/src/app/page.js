@@ -738,7 +738,7 @@ const NewsletterSection = () => {
               {/* Left content */}
               <div className="w-full md:w-1/2 text-white">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-                  JOIN OUR <span className="text-primary">FITNESS</span>{" "}
+                  JOIN OUR <span className="text-gray-400">FITNESS</span>{" "}
                   COMMUNITY
                 </h2>
 
@@ -763,7 +763,7 @@ const NewsletterSection = () => {
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
                           fill="none"
-                          stroke="currentColor"
+                          stroke="white"
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -782,7 +782,7 @@ const NewsletterSection = () => {
                         className="h-6 w-6 text-primary"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="currentColor"
+                        stroke="white"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -803,7 +803,7 @@ const NewsletterSection = () => {
                         className="h-6 w-6 text-primary"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="currentColor"
+                        stroke="white"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"

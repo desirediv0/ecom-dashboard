@@ -273,12 +273,12 @@ export default function RegisterPage() {
           </Button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <span className="text-sm text-gray-600">
               Already have an account?{" "}
               <Link href="/login" className="text-primary hover:underline">
                 Sign in
               </Link>
-            </p>
+            </span>
           </div>
         </form>
       </div>

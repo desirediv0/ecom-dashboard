@@ -164,7 +164,7 @@ export default function FAQsPage() {
               <p className="text-lg font-medium mb-2">
                 No FAQs found for &quot;{searchQuery}&quot;
               </p>
-              <p className="text-gray-600">
+              <span className="text-gray-600">
                 Try a different search term or{" "}
                 <button
                   onClick={() => {
@@ -175,7 +175,7 @@ export default function FAQsPage() {
                 >
                   view all FAQs
                 </button>
-              </p>
+              </span>
             </div>
           )}
 

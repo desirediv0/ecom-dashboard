@@ -437,7 +437,7 @@ export default function CheckoutPage() {
 
             {addresses.length === 0 && !showAddressForm ? (
               <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200">
-                <p className="text-yellow-700">
+                <span className="text-yellow-700">
                   You don&apos;t have any saved addresses.{" "}
                   <button
                     className="font-medium underline"
@@ -446,7 +446,7 @@ export default function CheckoutPage() {
                     Add an address
                   </button>{" "}
                   to continue.
-                </p>
+                </span>
               </div>
             ) : (
               <div
