@@ -80,7 +80,7 @@ export function Footer() {
       </div>
 
       {/* Main footer with dark background */}
-      <div className="bg-[#181818] py-32">
+      <div className="bg-[#181818] py-12 md:py-32">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Column 1 - About */}
