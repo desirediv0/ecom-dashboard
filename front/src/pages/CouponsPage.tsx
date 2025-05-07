@@ -295,7 +295,7 @@ function CouponForm({
           if (response.data.success) {
             const couponData = response.data.data?.coupon;
             setFormData({
-              code: couponData?.code || "",
+              code: couponData?.code.toUpperCase() || "",
               description: couponData?.description || "",
               discountType: couponData?.discountType || "PERCENTAGE",
               discountValue: couponData?.discountValue?.toString() || "",

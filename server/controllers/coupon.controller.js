@@ -111,7 +111,7 @@ export const createCoupon = asyncHandler(async (req, res) => {
   // Create coupon
   const coupon = await prisma.coupon.create({
     data: {
-      code,
+      code: code.toUpperCase(),
       description,
       discountType,
       discountValue,
@@ -179,7 +179,7 @@ export const updateCoupon = asyncHandler(async (req, res) => {
 
   // Prepare update data
   const updateData = {
-    ...(code && { code }),
+    ...(code && { code: code.toUpperCase() }),
     ...(description !== undefined && { description }),
     ...(discountType && { discountType }),
     ...(discountValue && { discountValue }),
