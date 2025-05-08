@@ -503,18 +503,36 @@ export const createProduct = asyncHandler(async (req, res, next) => {
           hasVariants === false ||
           hasVariants === undefined)
       ) {
+        // Log values for debugging
+        console.log("Creating default variant with values:", {
+          price: req.body.price,
+          salePrice: req.body.salePrice,
+          quantity: req.body.quantity,
+        });
+
+        // Generate default SKU
         const defaultSku = generateSKU(productInfo, "DEFAULT");
+
+        // Ensure price, salePrice, and quantity are properly parsed
+        const price = req.body.price ? parseFloat(req.body.price) : 0;
+        const salePrice =
+          req.body.salePrice &&
+          req.body.salePrice !== "null" &&
+          req.body.salePrice !== ""
+            ? parseFloat(req.body.salePrice)
+            : null;
+        const quantity = req.body.quantity ? parseInt(req.body.quantity) : 0;
+
+        // Create the default variant with properly parsed values
         await prisma.productVariant.create({
           data: {
             productId: newProduct.id,
             sku: defaultSku,
             flavorId: null,
             weightId: null,
-            price: req.body.price ? parseFloat(req.body.price) : 0,
-            salePrice: req.body.salePrice
-              ? parseFloat(req.body.salePrice)
-              : null,
-            quantity: req.body.quantity ? parseInt(req.body.quantity) : 0,
+            price: price,
+            salePrice: salePrice,
+            quantity: quantity,
             isActive: true,
           },
         });
@@ -1050,27 +1068,46 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         // If no variants exist, create a default one, otherwise update the first one
         if (product.variants.length === 0) {
           const defaultSku = `${baseSku}-DEF`;
+
+          // Ensure price, salePrice, and quantity are properly parsed
+          const parsedPrice = price ? parseFloat(price) : 0;
+          const parsedSalePrice =
+            salePrice && salePrice !== "null" && salePrice !== ""
+              ? parseFloat(salePrice)
+              : null;
+          const parsedQuantity = req.body.quantity
+            ? parseInt(req.body.quantity)
+            : 0;
+
           await prisma.productVariant.create({
             data: {
               productId,
               sku: defaultSku,
               flavorId: null,
               weightId: null,
-              price: price ? parseFloat(price) : 0,
-              salePrice: salePrice ? parseFloat(salePrice) : null,
-              quantity: req.body.quantity ? parseInt(req.body.quantity) : 0,
+              price: parsedPrice,
+              salePrice: parsedSalePrice,
+              quantity: parsedQuantity,
               isActive: true,
             },
           });
         } else if (price || salePrice || quantity) {
           // Update the first variant with new price/quantity
+
+          // Ensure price, salePrice, and quantity are properly parsed for update
+          const updateData = {};
+          if (price) updateData.price = parseFloat(price);
+          if (salePrice !== undefined) {
+            updateData.salePrice =
+              salePrice && salePrice !== "null" && salePrice !== ""
+                ? parseFloat(salePrice)
+                : null;
+          }
+          if (quantity) updateData.quantity = parseInt(quantity);
+
           await prisma.productVariant.update({
             where: { id: product.variants[0].id },
-            data: {
-              ...(price && { price: parseFloat(price) }),
-              ...(salePrice && { salePrice: parseFloat(salePrice) }),
-              ...(quantity && { quantity: parseInt(quantity) }),
-            },
+            data: updateData,
           });
         }
       }
