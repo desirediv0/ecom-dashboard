@@ -614,46 +614,65 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     });
 
     // Format the response data
-    const formattedProduct = {
-      ...result,
-      // Extract categories into a more usable format
-      categories: result.categories.map((pc) => ({
-        id: pc.category.id,
-        name: pc.category.name,
-        description: pc.category.description,
-        image: pc.category.image ? getFileUrl(pc.category.image) : null,
-        slug: pc.category.slug,
-        isPrimary: pc.isPrimary,
-      })),
-      primaryCategory:
-        result.categories.find((pc) => pc.isPrimary)?.category ||
-        (result.categories.length > 0 ? result.categories[0].category : null),
-      images: result.images.map((image) => ({
-        ...image,
-        url: getFileUrl(image.url),
-      })),
-      variants: result.variants.map((variant) => ({
-        ...variant,
-        flavor: variant.flavor
-          ? {
-              ...variant.flavor,
-              image: variant.flavor.image
-                ? getFileUrl(variant.flavor.image)
-                : null,
-            }
-          : null,
-      })),
-    };
+    try {
+      const formattedProduct = {
+        ...result,
+        // Extract categories into a more usable format
+        categories: result.categories.map((pc) => ({
+          id: pc.category.id,
+          name: pc.category.name,
+          description: pc.category.description,
+          image: pc.category.image ? getFileUrl(pc.category.image) : null,
+          slug: pc.category.slug,
+          isPrimary: pc.isPrimary,
+        })),
+        primaryCategory:
+          result.categories.find((pc) => pc.isPrimary)?.category ||
+          (result.categories.length > 0 ? result.categories[0].category : null),
+        images: result.images.map((image) => ({
+          ...image,
+          url: getFileUrl(image.url),
+        })),
+        variants: result.variants.map((variant) => ({
+          ...variant,
+          flavor: variant.flavor
+            ? {
+                ...variant.flavor,
+                image: variant.flavor.image
+                  ? getFileUrl(variant.flavor.image)
+                  : null,
+              }
+            : null,
+        })),
+      };
 
-    res
-      .status(201)
-      .json(
+      // Send success response
+      res
+        .status(201)
+        .json(
+          new ApiResponsive(
+            201,
+            { product: formattedProduct },
+            "Product created successfully"
+          )
+        );
+    } catch (formattingError) {
+      // If formatting fails but product was created, still return success
+      console.error("Error formatting product response:", formattingError);
+      res.status(201).json(
         new ApiResponsive(
           201,
-          { product: formattedProduct },
-          "Product created successfully"
+          {
+            product: {
+              id: result.id,
+              name: result.name,
+              slug: result.slug,
+            },
+          },
+          "Product created successfully but encountered error formatting response"
         )
       );
+    }
   } catch (error) {
     console.error("Product creation error:", error);
     throw new ApiError(500, `Failed to create product: ${error.message}`);
