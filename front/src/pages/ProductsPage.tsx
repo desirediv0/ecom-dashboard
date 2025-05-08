@@ -1203,7 +1203,7 @@ export function ProductForm({
                               Sale Price
                             </th>
                             <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Quantity
+                              Stock
                             </th>
                             <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Actions

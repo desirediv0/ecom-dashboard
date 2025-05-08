@@ -637,25 +637,8 @@ export const createProduct = asyncHandler(async (req, res, next) => {
         )
       );
   } catch (error) {
-    // Handle specific errors
-    if (error.code === "P2002" && error.meta?.target?.includes("sku")) {
-      throw new ApiError(400, "A product with this SKU already exists");
-    }
-
-    // For variant combination uniqueness violation
-    if (
-      error.code === "P2002" &&
-      error.meta?.target?.includes("flavorId") &&
-      error.meta?.target?.includes("weightId")
-    ) {
-      throw new ApiError(
-        400,
-        "A variant with the same flavor and weight combination already exists"
-      );
-    }
-
-    // Rethrow other errors
-    throw error;
+    console.error("Product creation error:", error);
+    throw new ApiError(500, `Failed to create product: ${error.message}`);
   }
 });
 
@@ -1136,36 +1119,36 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           });
         }
       } else if (req.file) {
-        // For backward compatibility with single image upload
-        // Delete existing primary image if any
-        const primaryImage = product.images.find((img) => img.isPrimary);
-        if (primaryImage) {
-          try {
+        try {
+          // For backward compatibility with single image upload
+          // Delete existing primary image if any
+          const primaryImage = product.images.find((img) => img.isPrimary);
+          if (primaryImage) {
             console.log(`Deleting primary image from S3: ${primaryImage.url}`);
             await deleteFromS3(primaryImage.url);
             await prisma.productImage.delete({
               where: { id: primaryImage.id },
             });
-          } catch (error) {
-            console.error("Error deleting primary image:", error);
-            // Continue with upload even if deletion has issues
           }
+
+          // Upload new primary image
+          const imageUrl = await processAndUploadImage(
+            req.file,
+            `products/${productId}`
+          );
+
+          await prisma.productImage.create({
+            data: {
+              productId,
+              url: imageUrl,
+              alt: updatedProduct.name,
+              isPrimary: true,
+            },
+          });
+        } catch (error) {
+          console.error("Error updating primary image:", error);
+          // Continue with response even if image upload fails
         }
-
-        // Upload new primary image
-        const imageUrl = await processAndUploadImage(
-          req.file,
-          `products/${productId}`
-        );
-
-        await prisma.productImage.create({
-          data: {
-            productId,
-            url: imageUrl,
-            alt: updatedProduct.name,
-            isPrimary: true,
-          },
-        });
       }
 
       // Return updated product with relations
@@ -1230,25 +1213,8 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         )
       );
   } catch (error) {
-    // Handle specific errors
-    if (error.code === "P2002" && error.meta?.target?.includes("sku")) {
-      throw new ApiError(400, "A product with this SKU already exists");
-    }
-
-    // For variant combination uniqueness violation
-    if (
-      error.code === "P2002" &&
-      error.meta?.target?.includes("flavorId") &&
-      error.meta?.target?.includes("weightId")
-    ) {
-      throw new ApiError(
-        400,
-        "A variant with the same flavor and weight combination already exists"
-      );
-    }
-
-    // Rethrow other errors
-    throw error;
+    console.error("Product update error:", error);
+    throw new ApiError(500, `Failed to update product: ${error.message}`);
   }
 });
 
@@ -1339,48 +1305,56 @@ export const uploadProductImage = asyncHandler(async (req, res, next) => {
     throw new ApiError(404, "Product not found");
   }
 
-  // Process and upload image to S3
-  const imageUrl = await processAndUploadImage(
-    req.file,
-    `products/${productId}`
-  );
-
-  // If setting as primary, update other images to not be primary
-  if (isPrimary === "true" || isPrimary === true) {
-    await prisma.productImage.updateMany({
-      where: {
-        productId,
-        isPrimary: true,
-      },
-      data: { isPrimary: false },
-    });
-  }
-
-  // Create image record
-  const image = await prisma.productImage.create({
-    data: {
-      productId,
-      url: imageUrl,
-      alt: req.body.alt || product.name,
-      isPrimary: isPrimary === "true" || isPrimary === true,
-    },
-  });
-
-  // Format response with full URL
-  const formattedImage = {
-    ...image,
-    url: getFileUrl(imageUrl),
-  };
-
-  res
-    .status(201)
-    .json(
-      new ApiResponsive(
-        201,
-        { image: formattedImage },
-        "Product image uploaded successfully"
-      )
+  try {
+    // Process and upload image to S3
+    const imageUrl = await processAndUploadImage(
+      req.file,
+      `products/${productId}`
     );
+
+    // Use a transaction to ensure all database operations complete together
+    const result = await prisma.$transaction(async (tx) => {
+      // If setting as primary, update other images to not be primary
+      if (isPrimary === "true" || isPrimary === true) {
+        await tx.productImage.updateMany({
+          where: {
+            productId,
+            isPrimary: true,
+          },
+          data: { isPrimary: false },
+        });
+      }
+
+      // Create image record
+      return await tx.productImage.create({
+        data: {
+          productId,
+          url: imageUrl,
+          alt: req.body.alt || product.name,
+          isPrimary: isPrimary === "true" || isPrimary === true,
+        },
+      });
+    });
+
+    // Format response with full URL
+    const formattedImage = {
+      ...result,
+      url: getFileUrl(imageUrl),
+    };
+
+    res
+      .status(201)
+      .json(
+        new ApiResponsive(
+          201,
+          { image: formattedImage },
+          "Product image uploaded successfully"
+        )
+      );
+  } catch (error) {
+    console.error("Image upload error:", error);
+    throw new ApiError(500, `Failed to upload image: ${error.message}`);
+  }
 });
 
 // Delete product image

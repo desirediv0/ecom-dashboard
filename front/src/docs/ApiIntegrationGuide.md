@@ -10,7 +10,7 @@ All API requests go through our API client that handles authentication and error
 
 ```typescript
 // Base API URL is configured from environment variable
-const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:4005";
 
 // Authentication tokens are automatically added to requests
 // JWT tokens are stored in localStorage under "adminToken" or "userToken" keys
