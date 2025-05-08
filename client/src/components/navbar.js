@@ -20,6 +20,7 @@ import { Input } from "./ui/input";
 import { useRouter, usePathname } from "next/navigation";
 import { fetchApi } from "@/lib/utils";
 import { ClientOnly } from "./client-only";
+import Image from "next/image";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -422,7 +423,14 @@ export function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center">
               <span className="text-xl md:text-2xl font-bold text-gray-900 flex items-center">
-                <span className="text-primary">Ecom</span>
+                {/* <span className="text-primary">Ecom</span> */}
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={150}
+                  height={150}
+                  className="ml-2 p-2 lg:p-0"
+                />
               </span>
             </Link>
 
