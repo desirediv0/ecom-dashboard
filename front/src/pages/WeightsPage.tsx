@@ -265,13 +265,13 @@ function WeightForm({
   const [isFetching, setIsFetching] = useState(mode === "edit");
   const [formData, setFormData] = useState({
     value: "",
-    unit: "g",
+    unit: "kg",
   });
   const [error, setError] = useState<string | null>(null);
 
   const unitOptions = [
-    { value: "g", label: "Grams (g)" },
     { value: "kg", label: "Kilograms (kg)" },
+    { value: "g", label: "Grams (g)" },
     { value: "mg", label: "Milligrams (mg)" },
     { value: "lb", label: "Pounds (lb)" },
     { value: "oz", label: "Ounces (oz)" },
@@ -290,7 +290,7 @@ function WeightForm({
             const weightData = response.data.data?.weight;
             setFormData({
               value: weightData?.value.toString() || "",
-              unit: weightData?.unit || "g",
+              unit: weightData?.unit || "kg",
             });
           } else {
             setError(response.data.message || "Failed to fetch weight details");
