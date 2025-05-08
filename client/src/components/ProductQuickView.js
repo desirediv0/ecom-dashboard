@@ -82,47 +82,42 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
             );
           }
 
-          // Get all available combinations from variants
-          const combinations = [];
-          if (productData.variants) {
-            productData.variants.forEach((variant) => {
-              if (variant.flavorId && variant.weightId) {
-                combinations.push({
-                  flavorId: variant.flavorId,
-                  weightId: variant.weightId,
-                });
-              }
-            });
-          }
-          setAvailableCombinations(combinations);
+          // Extract all available combinations from variants
+          if (productData.variants && productData.variants.length > 0) {
+            const combinations = productData.variants
+              .filter((v) => v.isActive && v.quantity > 0)
+              .map((variant) => ({
+                flavorId: variant.flavorId,
+                weightId: variant.weightId,
+                variant: variant,
+              }));
 
-          // Set default selections
-          if (productData.flavorOptions?.length > 0) {
-            const firstFlavor = productData.flavorOptions[0];
-            setSelectedFlavor(firstFlavor);
+            setAvailableCombinations(combinations);
 
-            // Find first available weight for this flavor
-            if (productData.weightOptions?.length > 0) {
-              const availableWeight = productData.weightOptions.find((weight) =>
-                combinations.some(
-                  (combo) =>
-                    combo.flavorId === firstFlavor.id &&
-                    combo.weightId === weight.id
-                )
+            // Set default selections
+            if (productData.flavorOptions?.length > 0) {
+              const firstFlavor = productData.flavorOptions[0];
+              setSelectedFlavor(firstFlavor);
+
+              // Find matching weights for this flavor
+              const matchingVariant = combinations.find(
+                (combo) => combo.flavorId === firstFlavor.id
               );
-              if (availableWeight) {
-                setSelectedWeight(availableWeight);
-              }
-            }
-          }
 
-          // If no flavor/weight options but variants exist, use the first variant
-          if (
-            productData.variants?.length > 0 &&
-            (!productData.flavorOptions?.length ||
-              !productData.weightOptions?.length)
-          ) {
-            setSelectedVariant(productData.variants[0]);
+              if (matchingVariant && productData.weightOptions) {
+                const matchingWeight = productData.weightOptions.find(
+                  (weight) => weight.id === matchingVariant.weightId
+                );
+
+                if (matchingWeight) {
+                  setSelectedWeight(matchingWeight);
+                  setSelectedVariant(matchingVariant.variant);
+                }
+              }
+            } else if (productData.variants.length > 0) {
+              // If no flavor/weight options but variants exist, use the first variant
+              setSelectedVariant(productData.variants[0]);
+            }
           }
         } else {
           setError("Product details not available");
@@ -139,41 +134,23 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
     fetchProductDetails();
   }, [product, open]);
 
-  // Fetch the variant when selections change
-  useEffect(() => {
-    const fetchVariant = async () => {
-      if (
-        !selectedFlavor ||
-        !selectedWeight ||
-        !productDetails ||
-        !productDetails.id
-      )
-        return;
+  // Get available weights for a specific flavor
+  const getAvailableWeightsForFlavor = (flavorId) => {
+    const availableWeights = availableCombinations
+      .filter((combo) => combo.flavorId === flavorId)
+      .map((combo) => combo.weightId);
 
-      try {
-        setLoading(true);
-        const response = await fetchApi(
-          `/public/product-variant?productId=${productDetails.id}&flavorId=${selectedFlavor.id}&weightId=${selectedWeight.id}`
-        );
+    return availableWeights;
+  };
 
-        if (response.data && response.data.variant) {
-          setSelectedVariant(response.data.variant);
-          setError(null);
-        } else {
-          setSelectedVariant(null);
-          setError("This combination is not available");
-        }
-      } catch (err) {
-        console.error("Error fetching variant:", err);
-        setError("Could not find this product variant");
-        setSelectedVariant(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Get available flavors for a specific weight
+  const getAvailableFlavorsForWeight = (weightId) => {
+    const availableFlavors = availableCombinations
+      .filter((combo) => combo.weightId === weightId)
+      .map((combo) => combo.flavorId);
 
-    fetchVariant();
-  }, [selectedFlavor, selectedWeight, productDetails]);
+    return availableFlavors;
+  };
 
   // Check if a combination is available
   const isCombinationAvailable = (flavorId, weightId) => {
@@ -186,16 +163,48 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
   const handleFlavorChange = (flavor) => {
     setSelectedFlavor(flavor);
 
-    // Find first available weight for this flavor
-    if (productDetails?.weightOptions?.length > 0) {
-      const availableWeight = productDetails.weightOptions.find((weight) =>
-        isCombinationAvailable(flavor.id, weight.id)
-      );
-      if (availableWeight) {
-        setSelectedWeight(availableWeight);
+    // Find available weights for this flavor
+    const availableWeightIds = getAvailableWeightsForFlavor(flavor.id);
+
+    if (
+      productDetails?.weightOptions?.length > 0 &&
+      availableWeightIds.length > 0
+    ) {
+      // Use currently selected weight if it's compatible with the new flavor
+      if (selectedWeight && availableWeightIds.includes(selectedWeight.id)) {
+        // Current weight is compatible, keep it selected
+        const matchingVariant = availableCombinations.find(
+          (combo) =>
+            combo.flavorId === flavor.id && combo.weightId === selectedWeight.id
+        );
+
+        if (matchingVariant) {
+          setSelectedVariant(matchingVariant.variant);
+        }
       } else {
-        setSelectedWeight(null);
+        // Current weight is not compatible, switch to first available
+        const firstAvailableWeight = productDetails.weightOptions.find(
+          (weight) => availableWeightIds.includes(weight.id)
+        );
+
+        if (firstAvailableWeight) {
+          setSelectedWeight(firstAvailableWeight);
+
+          // Find the corresponding variant
+          const matchingVariant = availableCombinations.find(
+            (combo) =>
+              combo.flavorId === flavor.id &&
+              combo.weightId === firstAvailableWeight.id
+          );
+
+          if (matchingVariant) {
+            setSelectedVariant(matchingVariant.variant);
+          }
+        }
       }
+    } else {
+      setSelectedWeight(null);
+      setSelectedVariant(null);
     }
   };
 
@@ -203,16 +212,48 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
   const handleWeightChange = (weight) => {
     setSelectedWeight(weight);
 
-    // Find first available flavor for this weight
-    if (productDetails?.flavorOptions?.length > 0) {
-      const availableFlavor = productDetails.flavorOptions.find((flavor) =>
-        isCombinationAvailable(flavor.id, weight.id)
-      );
-      if (availableFlavor) {
-        setSelectedFlavor(availableFlavor);
+    // Find available flavors for this weight
+    const availableFlavorIds = getAvailableFlavorsForWeight(weight.id);
+
+    if (
+      productDetails?.flavorOptions?.length > 0 &&
+      availableFlavorIds.length > 0
+    ) {
+      // Use currently selected flavor if it's compatible with the new weight
+      if (selectedFlavor && availableFlavorIds.includes(selectedFlavor.id)) {
+        // Current flavor is compatible, keep it selected
+        const matchingVariant = availableCombinations.find(
+          (combo) =>
+            combo.weightId === weight.id && combo.flavorId === selectedFlavor.id
+        );
+
+        if (matchingVariant) {
+          setSelectedVariant(matchingVariant.variant);
+        }
       } else {
-        setSelectedFlavor(null);
+        // Current flavor is not compatible, switch to first available
+        const firstAvailableFlavor = productDetails.flavorOptions.find(
+          (flavor) => availableFlavorIds.includes(flavor.id)
+        );
+
+        if (firstAvailableFlavor) {
+          setSelectedFlavor(firstAvailableFlavor);
+
+          // Find the corresponding variant
+          const matchingVariant = availableCombinations.find(
+            (combo) =>
+              combo.weightId === weight.id &&
+              combo.flavorId === firstAvailableFlavor.id
+          );
+
+          if (matchingVariant) {
+            setSelectedVariant(matchingVariant.variant);
+          }
+        }
       }
+    } else {
+      setSelectedFlavor(null);
+      setSelectedVariant(null);
     }
   };
 
@@ -428,10 +469,11 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {productDetails.flavorOptions.map((flavor) => {
-                        const isAvailable = productDetails.weightOptions?.some(
-                          (weight) =>
-                            isCombinationAvailable(flavor.id, weight.id)
+                        const availableWeightIds = getAvailableWeightsForFlavor(
+                          flavor.id
                         );
+                        const isAvailable = availableWeightIds.length > 0;
+
                         return (
                           <button
                             key={flavor.id}
@@ -463,10 +505,17 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {productDetails.weightOptions.map((weight) => {
-                        const isAvailable = productDetails.flavorOptions?.some(
-                          (flavor) =>
-                            isCombinationAvailable(flavor.id, weight.id)
+                        const availableFlavorIds = getAvailableFlavorsForWeight(
+                          weight.id
                         );
+                        const isAvailable = selectedFlavor
+                          ? availableCombinations.some(
+                              (combo) =>
+                                combo.flavorId === selectedFlavor.id &&
+                                combo.weightId === weight.id
+                            )
+                          : availableFlavorIds.length > 0;
+
                         return (
                           <button
                             key={weight.id}
