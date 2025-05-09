@@ -26,6 +26,7 @@ import {
   addReview,
   updateReview,
   deleteReview,
+  resendVerificationEmail,
 } from "../controllers/user.controller.js";
 import { verifyJWTToken } from "../middlewares/auth.middleware.js";
 import { uploadFiles } from "../middlewares/multer.middlerware.js";
@@ -38,6 +39,7 @@ router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/refresh-token", refreshAccessToken);
 router.get("/verify-email/:token", verifyEmail);
+router.post("/resend-verification", resendVerificationEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 router.post("/change-password", verifyJWTToken, changePassword);

@@ -4,7 +4,7 @@ export const getVerificationTemplate = (verificationLink) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Email - EcomSupplements</title>
+    <title>Verify Your Email - GenuineNutrition</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -95,14 +95,14 @@ export const getVerificationTemplate = (verificationLink) => `
 <body>
     <div class="container">
         <div class="header">
-            <h1>Welcome to EcomSupplements</h1>
+            <h1>Welcome to GenuineNutrition</h1>
         </div>
         <div class="content">
             <h2>Verify Your Email</h2>
             <p>Dear Valued Customer,</p>
-            <p>Welcome to EcomSupplements - your trusted source for premium quality supplements. Please verify your email address to access your account:</p>
+            <p>Welcome to GenuineNutrition - your trusted source for premium quality supplements. Please verify your email address to access your account:</p>
             <a href="${verificationLink}" class="button">Verify Email Now</a>
-            <p>If you didn't create an account with EcomSupplements, please disregard this email.</p>
+            <p>If you didn't create an account with GenuineNutrition, please disregard this email.</p>
             
             <div class="features">
                 <h3>What you can do after verification:</h3>
@@ -113,7 +113,7 @@ export const getVerificationTemplate = (verificationLink) => `
             </div>
         </div>
         <div class="footer">
-            © ${new Date().getFullYear()} EcomSupplements | Premium Health Supplements<br>
+            © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
             This is an automated message. Please do not reply to this email.
         </div>
     </div>
@@ -267,7 +267,7 @@ export const getResetTemplate = (resetLink) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Your Password - EcomSupplements</title>
+    <title>Reset Your Password - GenuineNutrition</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -344,13 +344,13 @@ export const getResetTemplate = (resetLink) => `
         <div class="content">
             <h2>Password Reset Request</h2>
             <p>Dear Valued Customer,</p>
-            <p>We received a request to reset the password for your EcomSupplements account. Click the button below to create a new password:</p>
+            <p>We received a request to reset the password for your GenuineNutrition account. Click the button below to create a new password:</p>
             <a href="${resetLink}" class="button">Reset Password</a>
-            <p>If you didn't request this password reset, please contact our support team immediately at support@ecomsupplements.com</p>
+            <p>If you didn't request this password reset, please contact our support team immediately at support@GenuineNutrition.com</p>
             <p>This link will expire in 15 minutes for security reasons.</p>
         </div>
         <div class="footer">
-            © ${new Date().getFullYear()} EcomSupplements | Premium Health Supplements<br>
+            © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
             This is an automated message. Please do not reply to this email.
         </div>
     </div>
@@ -1115,7 +1115,7 @@ export const getOrderConfirmationTemplate = (data) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmation - EcomSupplements</title>
+    <title>Order Confirmation - GenuineNutrition</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -1295,8 +1295,8 @@ export const getOrderConfirmationTemplate = (data) => `
             }/account/orders" class="button">Track Your Order</a>
         </div>
         <div class="footer">
-            © ${new Date().getFullYear()} EcomSupplements | Premium Health Supplements<br>
-            Questions? Contact our customer support at support@ecomsupplements.com
+            © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
+            Questions? Contact our customer support at support@GenuineNutrition.com
         </div>
     </div>
 </body>

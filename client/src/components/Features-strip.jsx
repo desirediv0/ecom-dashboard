@@ -76,9 +76,9 @@ export default function FeaturesSection() {
   };
 
   return (
-    <section className="bg-black relative py-12 overflow-hidden">
+    <section className="bg-[#1C4E80] relative py-12 overflow-hidden">
       {/* Background elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-900 to-black opacity-80"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#1C4E80]/80 to-[#1C4E80] opacity-80"></div>
       <div className="absolute inset-0 bg-[url('/api/placeholder/100/100')] bg-repeat opacity-5"></div>
 
       <motion.div
@@ -114,7 +114,7 @@ export default function FeaturesSection() {
                 transition={{ duration: 0.3 }}
               >
                 <div
-                  className="flex flex-col items-center text-center h-full p-6 rounded-xl border border-gray-800 bg-gray-900 relative z-10 overflow-hidden"
+                  className="flex flex-col items-center text-center h-full p-6 rounded-xl border border-white/20 bg-white/10 relative z-10 overflow-hidden"
                   style={{
                     backgroundImage:
                       hoveredFeature === index ? feature.bgPattern : "none",
@@ -132,7 +132,7 @@ export default function FeaturesSection() {
 
                   {/* Icon with animation */}
                   <motion.div
-                    className="relative mb-4 p-4 rounded-full bg-gray-800 border border-gray-700"
+                    className="relative mb-4 p-4 rounded-full bg-[#F47C20] border border-white/20"
                     variants={iconVariants}
                     initial="initial"
                     animate={hoveredFeature === index ? "hover" : "initial"}
@@ -163,15 +163,15 @@ export default function FeaturesSection() {
                   </motion.h3>
 
                   {/* Description */}
-                  <p className="text-sm text-gray-400">{feature.description}</p>
+                  <p className="text-sm text-white/80">{feature.description}</p>
 
                   {/* Animated bottom border */}
                   <motion.div
-                    className="absolute bottom-0 left-0 h-1 bg-white"
+                    className="absolute bottom-0 left-0 h-1 bg-[#F47C20]"
                     initial={{ width: 0 }}
                     animate={{
                       width: hoveredFeature === index ? "100%" : "0%",
-                      opacity: hoveredFeature === index ? 0.5 : 0,
+                      opacity: hoveredFeature === index ? 0.8 : 0,
                     }}
                     transition={{ duration: 0.3 }}
                   />
@@ -189,7 +189,7 @@ export default function FeaturesSection() {
           transition={{ delay: 0.8, duration: 0.5 }}
           viewport={{ once: true }}
         >
-          <div className="flex items-center gap-2 px-6 py-3 rounded-full bg-gray-800 border border-gray-700">
+          <div className="flex items-center gap-2 px-6 py-3 rounded-full bg-[#F47C20] border border-white/20">
             <Shield className="h-5 w-5 text-white" />
             <span className="text-sm text-white font-medium">
               Trusted by 10,000+ fitness enthusiasts

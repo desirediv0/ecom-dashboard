@@ -4,7 +4,7 @@ import ProductContent from "./ProductContent";
 
 export async function generateMetadata({ params }) {
   const { slug } = params;
-  let title = "Product Details | EcomSupplements";
+  let title = "Product Details | GenuineNutrition";
   let description =
     "Premium quality fitness supplements with lab-tested ingredients for maximum effectiveness. Free shipping on orders over ₹999.";
   let image = null;
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }) {
     const product = response.data.product;
 
     if (product) {
-      title = `${product.name} | EcomSupplements`;
+      title = `${product.name} | GenuineNutrition`;
       description =
         product.shortDescription ||
         (product.description

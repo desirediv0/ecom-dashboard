@@ -8,23 +8,25 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(uuid())
-  email              String         @unique
-  password           String?
-  phone              String?
-  role               UserRole       @default(CUSTOMER)
-  isActive           Boolean        @default(true)
-  emailVerified      Boolean        @default(false)
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  razorpayCustomerId String?
-  name               String?
-  accounts           Account[]
-  addresses          Address[]
-  cartItems          CartItem[]
-  orders             Order[]
-  reviews            Review[]
-  wishlistItems      WishlistItem[]
+  id                           String         @id @default(uuid())
+  email                        String         @unique
+  password                     String?
+  phone                        String?
+  role                         UserRole       @default(CUSTOMER)
+  isActive                     Boolean        @default(true)
+  emailVerified                Boolean        @default(false)
+  emailVerificationToken       String?
+  emailVerificationTokenExpiry DateTime?
+  createdAt                    DateTime       @default(now())
+  updatedAt                    DateTime       @updatedAt
+  razorpayCustomerId           String?
+  name                         String?
+  accounts                     Account[]
+  addresses                    Address[]
+  cartItems                    CartItem[]
+  orders                       Order[]
+  reviews                      Review[]
+  wishlistItems                WishlistItem[]
 }
 
 model Account {
@@ -53,9 +55,9 @@ model Admin {
   lastLogin   DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  permissions Permission[]
   BlogPost    BlogPost[]
   PageContent PageContent[]
+  permissions Permission[]
 }
 
 model Permission {
@@ -372,7 +374,6 @@ model ProductCategory {
   @@unique([productId, categoryId])
 }
 
-// Content related models
 model BlogPost {
   id          String         @id @default(uuid())
   title       String
@@ -385,14 +386,14 @@ model BlogPost {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   author      Admin?         @relation(fields: [authorId], references: [id])
-  categories  BlogCategory[]
+  categories  BlogCategory[] @relation("BlogCategoryToBlogPost")
 }
 
 model BlogCategory {
   id    String     @id @default(uuid())
   name  String
   slug  String     @unique
-  posts BlogPost[]
+  posts BlogPost[] @relation("BlogCategoryToBlogPost")
 }
 
 model PageContent {
@@ -425,7 +426,7 @@ model ContactSubmission {
   phone     String?
   subject   String?
   message   String
-  status    String   @default("NEW") // NEW, IN_PROGRESS, RESOLVED, SPAM
+  status    String   @default("NEW")
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

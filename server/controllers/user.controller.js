@@ -45,9 +45,11 @@ export const registerUser = asyncHandler(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   // Generate verification token
-  const verificationToken = crypto.randomBytes(32).toString("hex");
-  const verificationTokenExpiry = new Date();
-  verificationTokenExpiry.setHours(verificationTokenExpiry.getHours() + 24);
+  const emailVerificationToken = crypto.randomBytes(32).toString("hex");
+  const emailVerificationTokenExpiry = new Date();
+  emailVerificationTokenExpiry.setHours(
+    emailVerificationTokenExpiry.getHours() + 24
+  );
 
   // Create user
   const newUser = await prisma.user.create({
@@ -56,23 +58,22 @@ export const registerUser = asyncHandler(async (req, res, next) => {
       email,
       password: hashedPassword,
       phone: phone || "",
+      emailVerificationToken,
+      emailVerificationTokenExpiry,
     },
   });
-
-  // Store the verification token temporarily for email sending
-  const verificationTokenForEmail = verificationToken;
 
   // Remove sensitive data from response
   const userWithoutPassword = { ...newUser };
   delete userWithoutPassword.password;
 
   // Send verification email
-  const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+  const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
 
   try {
     await sendEmail({
       email,
-      subject: "Verify Your Email - EcomSupplements",
+      subject: "Verify Your Email - GenuineNutrition",
       html: getVerificationTemplate(verificationLink),
     });
 
@@ -233,63 +234,66 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
   const { token } = req.params;
 
   if (!token) {
-    throw new ApiError(400, "Verification token is required");
-  }
-
-  // Since we can't verify by token in database directly, we'll create a secure temporary solution
-  // We'll create a table to store these tokens as a proper solution later
-
-  // Get all unverified users
-  const unverifiedUsers = await prisma.user.findMany({
-    where: {
-      emailVerified: false,
-    },
-  });
-
-  // Check if the token matches our verification logic (normally we'd check the database)
-  // In a real implementation, we should store tokens in a separate table
-
-  // For now, we'll use the email from query params if available (backup method)
-  let userToVerify;
-
-  if (req.query.email) {
-    userToVerify = await prisma.user.findUnique({
-      where: { email: req.query.email },
+    return res.status(400).json({
+      success: false,
+      message: "Verification token is required",
     });
-  } else {
-    // Look through unverified users to find one that matches our validation logic
-    // This is a simplified approach - in production use a proper token storage system
-    // Here we're trying to find a user whose email would generate this token
-    // Not secure, but works for testing without database schema changes
-
-    // Find the first unverified user created within the last 24 hours
-    // This assumes they're trying to verify a recently created account
-    const recentDate = new Date();
-    recentDate.setHours(recentDate.getHours() - 24);
-
-    userToVerify = unverifiedUsers.find(
-      (user) => new Date(user.createdAt) > recentDate
-    );
   }
 
-  if (!userToVerify) {
-    throw new ApiError(
-      400,
-      "Verification failed. Please try registering again or contact support."
-    );
+  try {
+    // First, check if the email is already verified with this token
+    // This handles the case where the verification endpoint is hit multiple times
+    const alreadyVerifiedUser = await prisma.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerified: true,
+      },
+    });
+
+    if (alreadyVerifiedUser) {
+      return res
+        .status(200)
+        .json(new ApiResponsive(200, {}, "Email already verified"));
+    }
+
+    // Find user with matching verification token that hasn't expired
+    const user = await prisma.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerificationTokenExpiry: {
+          gte: new Date(), // Token must not be expired
+        },
+        emailVerified: false, // Only for unverified users
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification token",
+      });
+    }
+
+    // Update user verification status and clear the token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationTokenExpiry: null,
+      },
+    });
+
+    return res
+      .status(200)
+      .json(new ApiResponsive(200, {}, "Email verified successfully"));
+  } catch (error) {
+    console.error("Email verification error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to verify email. Please try again later.",
+    });
   }
-
-  // Update user verification status
-  await prisma.user.update({
-    where: { id: userToVerify.id },
-    data: {
-      emailVerified: true,
-    },
-  });
-
-  res
-    .status(200)
-    .json(new ApiResponsive(200, {}, "Email verified successfully"));
 });
 
 // Forgot password - request reset
@@ -323,19 +327,23 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
   const resetTokenExpiry = new Date();
   resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1);
 
-  // For now, we can't save the token to the database because the fields don't exist
-  // Instead, we'll use a temporary solution by encoding the user ID in the token
-  const temporaryEncodedToken = Buffer.from(
-    `${user.id}:${resetToken}`
-  ).toString("base64");
+  // Store the reset token in the emailVerificationToken field
+  // The special PREFIX "pwdreset:" will help us differentiate between email verification and password reset
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerificationToken: `pwdreset:${resetToken}`,
+      emailVerificationTokenExpiry: resetTokenExpiry,
+    },
+  });
 
   // Send password reset email
-  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${temporaryEncodedToken}`;
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
   try {
     await sendEmail({
       email,
-      subject: "Reset Your Password - EcomSupplements",
+      subject: "Reset Your Password - GenuineNutrition",
       html: getResetTemplate(resetLink),
     });
 
@@ -369,17 +377,15 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
   validatePassword(password);
 
   try {
-    // Decode the temporary token to get the user ID
-    const decodedToken = Buffer.from(token, "base64").toString();
-    const [userId, resetToken] = decodedToken.split(":");
-
-    if (!userId || !resetToken) {
-      throw new ApiError(400, "Invalid reset token");
-    }
-
-    // Find user by ID
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    // Find user with matching reset token that hasn't expired
+    // We stored the token with a "pwdreset:" prefix
+    const user = await prisma.user.findFirst({
+      where: {
+        emailVerificationToken: `pwdreset:${token}`,
+        emailVerificationTokenExpiry: {
+          gte: new Date(), // Token must not be expired
+        },
+      },
     });
 
     if (!user) {
@@ -389,11 +395,13 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     // Hash new password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Update user password
+    // Update user password and clear the token
     await prisma.user.update({
       where: { id: user.id },
       data: {
         password: hashedPassword,
+        emailVerificationToken: null,
+        emailVerificationTokenExpiry: null,
       },
     });
 
@@ -956,12 +964,14 @@ export const requestAccountDeletion = asyncHandler(async (req, res, next) => {
   const deletionTokenExpiry = new Date();
   deletionTokenExpiry.setHours(deletionTokenExpiry.getHours() + 24);
 
-  // Save token to database
+  // Save token to database - using emailVerificationToken field
   await prisma.user.update({
     where: { id: req.user.id },
     data: {
-      deletionToken,
-      deletionTokenExpiry,
+      emailVerificationToken: deletionToken,
+      emailVerificationTokenExpiry: deletionTokenExpiry,
+      // Mark that this is a deletion request, not an email verification
+      emailVerified: true, // We'll keep this true since the token is for deletion, not verification
     },
   });
 
@@ -976,7 +986,7 @@ export const requestAccountDeletion = asyncHandler(async (req, res, next) => {
   try {
     await sendEmail({
       email: user.email,
-      subject: "Confirm Account Deletion - EcomSupplements",
+      subject: "Confirm Account Deletion - GenuineNutrition",
       html: getDeleteTemplate(deletionLink),
     });
 
@@ -1005,13 +1015,14 @@ export const confirmAccountDeletion = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, "Deletion token is required");
   }
 
-  // Find user with the token
+  // Find user with the token using emailVerificationToken field
   const user = await prisma.user.findFirst({
     where: {
-      deletionToken: token,
-      deletionTokenExpiry: {
-        gte: new Date(),
+      emailVerificationToken: token,
+      emailVerificationTokenExpiry: {
+        gte: new Date(), // Token must not be expired
       },
+      emailVerified: true, // This ensures we're looking for deletion tokens, not verification tokens
     },
   });
 
@@ -1191,4 +1202,86 @@ export const deleteReview = asyncHandler(async (req, res, next) => {
   res
     .status(200)
     .json(new ApiResponsive(200, {}, "Review deleted successfully"));
+});
+
+// Resend verification email
+export const resendVerificationEmail = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new ApiError(400, "Email is required");
+  }
+
+  // Find user by email
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    // For security reasons, always return success even if user doesn't exist
+    return res
+      .status(200)
+      .json(
+        new ApiResponsive(
+          200,
+          {},
+          "If your email is registered, you will receive a verification email"
+        )
+      );
+  }
+
+  // If user is already verified, no need to send email
+  if (user.emailVerified) {
+    return res
+      .status(200)
+      .json(
+        new ApiResponsive(
+          200,
+          {},
+          "If your email is registered, you will receive a verification email"
+        )
+      );
+  }
+
+  // Generate new verification token
+  const emailVerificationToken = crypto.randomBytes(32).toString("hex");
+  const emailVerificationTokenExpiry = new Date();
+  emailVerificationTokenExpiry.setHours(
+    emailVerificationTokenExpiry.getHours() + 24
+  );
+
+  // Update user with new token
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerificationToken,
+      emailVerificationTokenExpiry,
+    },
+  });
+
+  // Send verification email
+  const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
+
+  try {
+    await sendEmail({
+      email,
+      subject: "Verify Your Email - GenuineNutrition",
+      html: getVerificationTemplate(verificationLink),
+    });
+
+    console.log("Verification email resent to:", email);
+  } catch (error) {
+    console.error("Error sending verification email:", error);
+    // Don't throw error, still return success
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponsive(
+        200,
+        {},
+        "If your email is registered, you will receive a verification email"
+      )
+    );
 });

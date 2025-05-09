@@ -10,6 +10,9 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Verification tracking - Keep track of tokens already attempted to be verified
+  const verifiedTokens = new Set();
+
   // Check if user is logged in on first load
   useEffect(() => {
     const checkAuth = async () => {
@@ -61,6 +64,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
+
     try {
       const res = await fetchApi("/users/login", {
         method: "POST",
@@ -74,12 +78,32 @@ export function AuthProvider({ children }) {
       // Create a local storage item as a backup
       if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
+
+        // Save a temporary copy of the user session
+        document.cookie = `user_session=${encodeURIComponent(
+          JSON.stringify({
+            isAuthenticated: true,
+            userId: res.data.user.id,
+            timestamp: new Date().getTime(),
+          })
+        )}; path=/; max-age=86400`;
       }
 
       return res.data;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      console.error("Login error:", err);
+
+      // Extract the error message from the error object
+      let errorMessage = "Failed to login. Please try again.";
+
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.data && err.data.message) {
+        errorMessage = err.data.message;
+      }
+
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -89,15 +113,42 @@ export function AuthProvider({ children }) {
   const register = async (userData) => {
     setLoading(true);
     setError(null);
+
     try {
+      console.log("Registering user...", userData);
       const res = await fetchApi("/users/register", {
         method: "POST",
         body: JSON.stringify(userData),
       });
-      return res.data;
+
+      console.log("Registration successful:", res);
+      return res;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      console.error("Registration error:", err);
+
+      // Extract the error message from the error object
+      let errorMessage = "Registration failed. Please try again.";
+
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.data && err.data.message) {
+        errorMessage = err.data.message;
+      }
+
+      // Check for specific error types and provide friendly messages
+      if (
+        errorMessage.toLowerCase().includes("email already registered") ||
+        errorMessage.toLowerCase().includes("already exists")
+      ) {
+        errorMessage =
+          "This email is already registered. Please try logging in instead.";
+      } else if (errorMessage.toLowerCase().includes("password")) {
+        errorMessage =
+          "Password doesn't meet requirements. Please use at least 8 characters with a mix of letters, numbers, and symbols.";
+      }
+
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -142,14 +193,73 @@ export function AuthProvider({ children }) {
   // Verify email
   const verifyEmail = async (token) => {
     setLoading(true);
+    setError(null);
     try {
+      // Check if this token has already been attempted to be verified
+      if (verifiedTokens.has(token)) {
+        console.log("Skipping verification - token already processed:", token);
+        throw new Error("Verification already attempted for this token");
+      }
+
+      // Mark this token as attempted
+      verifiedTokens.add(token);
+
       const res = await fetchApi(`/users/verify-email/${token}`, {
         method: "GET",
       });
+
+      // Log successful verification
+      console.log("Email verification successful:", res);
       return res;
     } catch (err) {
+      console.error("Email verification failed:", err);
       setError(err.message);
       throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend verification email
+  const resendVerification = async (email) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("Resending verification email to:", email);
+      const res = await fetchApi("/users/resend-verification", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+
+      console.log("Verification email resent successfully:", res);
+      return res;
+    } catch (err) {
+      console.error("Error resending verification email:", err);
+
+      // Extract the error message from the error object
+      let errorMessage =
+        "Failed to resend verification email. Please try again.";
+
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.data && err.data.message) {
+        errorMessage = err.data.message;
+      }
+
+      // Check for specific error cases
+      if (errorMessage.toLowerCase().includes("already verified")) {
+        errorMessage = "This email is already verified. Please try logging in.";
+      } else if (
+        errorMessage.toLowerCase().includes("not found") ||
+        errorMessage.toLowerCase().includes("no user")
+      ) {
+        errorMessage =
+          "Email address not found. Please check your email or register a new account.";
+      }
+
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -229,6 +339,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     verifyEmail,
+    resendVerification,
     forgotPassword,
     resetPassword,
     updateProfile,

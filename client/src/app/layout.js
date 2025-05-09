@@ -5,6 +5,8 @@ import { CartProvider } from "@/lib/cart-context";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
+import { RouteGuard } from "@/components/route-guard";
+import { ClientOnly } from "@/components/client-only";
 
 const jostFont = localFont({
   src: "./fonts/Jost-Regular.ttf",
@@ -21,7 +23,7 @@ const poppinsFont = localFont({
 });
 
 export const metadata = {
-  title: "EcomSupplements - Premium Supplements for Your Fitness Journey",
+  title: "Genuine Nutrition - Premium Supplements for Your Fitness Journey",
   description:
     "Get high-quality supplements at the best prices. Free shipping on orders over ₹999.",
 };
@@ -36,7 +38,11 @@ export default function RootLayout({ children }) {
           <CartProvider>
             <div className="flex min-h-screen flex-col">
               <Navbar />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1">
+                <ClientOnly>
+                  <RouteGuard>{children}</RouteGuard>
+                </ClientOnly>
+              </main>
               <Footer />
             </div>
             <Toaster position="top-right" />

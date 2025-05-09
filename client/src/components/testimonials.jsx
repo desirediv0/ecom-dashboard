@@ -11,7 +11,7 @@ export default function TestimonialsSection() {
       role: "Fitness Enthusiast",
       avatar: "RS",
       quote:
-        "I've tried many supplements, but EcomSupplements products have truly made a difference in my training and recovery.",
+        "I've tried many supplements, but GenuineNutrition products have truly made a difference in my training and recovery.",
       rating: 5,
     },
     {
@@ -57,7 +57,7 @@ export default function TestimonialsSection() {
   };
 
   return (
-    <section className="py-20 bg-black text-white relative overflow-hidden">
+    <section className="py-20 bg-[#1C4E80] text-white relative overflow-hidden">
       {/* Abstract background elements */}
       <div className="absolute top-0 left-0 w-full h-full">
         <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-white opacity-5"></div>
@@ -76,7 +76,7 @@ export default function TestimonialsSection() {
             <span className="relative inline-block">
               CUSTOMER TESTIMONIALS
               <motion.span
-                className="absolute bottom-0 left-0 h-1 bg-white"
+                className="absolute bottom-0 left-0 h-1 bg-[#F47C20]"
                 initial={{ width: 0 }}
                 whileInView={{ width: "100%" }}
                 transition={{ delay: 0.5, duration: 0.8 }}
@@ -84,7 +84,7 @@ export default function TestimonialsSection() {
               ></motion.span>
             </span>
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+          <p className="text-gray-200 max-w-2xl mx-auto text-lg">
             Real experiences from people who have transformed their fitness
             journey with our premium supplements
           </p>
@@ -106,49 +106,51 @@ export default function TestimonialsSection() {
               className="relative"
             >
               <motion.div
-                className={`bg-gray-900 p-8 rounded-lg border border-gray-800 h-full relative z-10 transition-all duration-300`}
+                className={`bg-white p-8 rounded-lg border border-gray-200 h-full relative z-10 transition-all duration-300`}
                 animate={{
                   scale: hoveredIndex === index ? 1.03 : 1,
                   boxShadow:
                     hoveredIndex === index
-                      ? "0 20px 25px -5px rgba(255, 255, 255, 0.05), 0 10px 10px -5px rgba(255, 255, 255, 0.04)"
+                      ? "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
                       : "0 0 0 rgba(0, 0, 0, 0)",
                 }}
               >
                 <div className="absolute -top-3 -left-3">
-                  <Quote className="w-8 h-8 text-gray-700" />
+                  <Quote className="w-8 h-8 text-[#1C4E80]" />
                 </div>
 
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center text-xl font-bold ring-2 ring-white ring-offset-2 ring-offset-gray-900">
+                  <div className="w-16 h-16 rounded-full bg-[#1C4E80] text-white flex items-center justify-center text-xl font-bold ring-2 ring-[#1C4E80] ring-offset-2 ring-offset-white">
                     {testimonial.avatar}
                   </div>
                   <div>
-                    <h3 className="font-bold text-xl">{testimonial.name}</h3>
-                    <p className="text-gray-400">{testimonial.role}</p>
+                    <h3 className="font-bold text-xl text-[#333333]">
+                      {testimonial.name}
+                    </h3>
+                    <p className="text-gray-600">{testimonial.role}</p>
                   </div>
                 </div>
 
-                <div className="flex text-yellow-400 mb-4">
+                <div className="flex text-[#F47C20] mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
                       size={18}
                       className={`${
                         i < testimonial.rating
-                          ? "fill-yellow-400"
-                          : "text-gray-700"
+                          ? "fill-[#F47C20]"
+                          : "text-gray-300"
                       }`}
                     />
                   ))}
                 </div>
 
-                <p className="text-gray-300 text-lg mb-4">
+                <p className="text-[#333333] text-lg mb-4">
                   &quot;{testimonial.quote}&quot;
                 </p>
 
                 <motion.div
-                  className="w-12 h-1 bg-white"
+                  className="w-12 h-1 bg-[#F47C20]"
                   initial={{ width: 0 }}
                   animate={{ width: hoveredIndex === index ? 48 : 24 }}
                   transition={{ duration: 0.3 }}
@@ -165,7 +167,7 @@ export default function TestimonialsSection() {
           viewport={{ once: true }}
           className="mt-16 text-center"
         >
-          <button className="px-8 py-3 bg-white text-black font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors rounded">
+          <button className="px-8 py-3 bg-[#F47C20] text-white font-bold uppercase tracking-wider hover:bg-[#1C4E80] transition-colors rounded">
             View All Reviews
           </button>
         </motion.div>

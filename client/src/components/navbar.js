@@ -121,7 +121,6 @@ export function Navbar() {
     categories,
     searchQuery,
     setSearchQuery,
-    handleSearch,
     isAuthenticated,
     handleLogout,
   }) => {
@@ -168,9 +167,13 @@ export function Navbar() {
               className="flex items-center"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span className="text-xl font-bold text-gray-900 flex items-center">
-                <span className="text-primary">Ecom</span>
-              </span>
+              <Image
+                src="/logo.jpeg"
+                alt="Logo"
+                width={120}
+                height={120}
+                className="ml-2 p-2 lg:p-0"
+              />
             </Link>
             <div className="flex items-center gap-2">
               <button
@@ -358,7 +361,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm" ref={navbarRef}>
       {/* Top bar */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white py-2 md:py-1.5 text-center text-xs md:text-sm font-medium">
+      <div className="bg-gradient-to-r from-orange-500 to-blue-500/80 text-white py-2 md:py-1.5 text-center text-xs md:text-sm font-medium">
         Free shipping on orders over ₹999 | Use code FIT10 for 10% off your
         first order
       </div>
@@ -422,16 +425,13 @@ export function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center">
-              <span className="text-xl md:text-2xl font-bold text-gray-900 flex items-center">
-                {/* <span className="text-primary">Ecom</span> */}
-                <Image
-                  src="/logo.png"
-                  alt="Logo"
-                  width={150}
-                  height={150}
-                  className="ml-2 p-2 lg:p-0"
-                />
-              </span>
+              <Image
+                src="/logo.jpeg"
+                alt="Logo"
+                width={150}
+                height={150}
+                className="ml-2 p-2 lg:p-0"
+              />
             </Link>
 
             {/* Desktop Navigation */}

@@ -38,12 +38,18 @@ app.use(
       "Pragma",
       "Origin",
       "Accept",
+      "X-Requested-With",
     ],
     exposedHeaders: ["Set-Cookie"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
+    maxAge: 86400, // 24 hours
   })
 );
+
+// Handle preflight OPTIONS requests explicitly
+app.options("*", cors());
+
 // Cache Control Headers
 app.use((req, res, next) => {
   res.header("Cache-Control", "no-store, no-cache, must-revalidate, private");
