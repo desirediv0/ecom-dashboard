@@ -65,7 +65,7 @@ export default function ResendVerificationPage() {
           {(status === "idle" || status === "error") && (
             <div>
               <p className="mb-4 text-gray-600">
-                Enter your email address below and we'll send you a new
+                Enter your email address below and we&apos;ll send you a new
                 verification link.
               </p>
 
