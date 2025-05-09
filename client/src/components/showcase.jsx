@@ -141,19 +141,6 @@ export default function GymSupplementBanner() {
                   className="max-h-full max-w-full object-contain"
                 />
               </motion.div>
-
-              {/* Light Beam Effect */}
-              <motion.div
-                className="absolute -top-20 -left-20 w-40 h-[150%] bg-[#F47C20]/20 rotate-45 blur-md"
-                animate={{
-                  x: [0, 200, 0],
-                }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 10,
-                  ease: "easeInOut",
-                }}
-              />
             </div>
           </motion.div>
         </motion.div>

@@ -750,15 +750,7 @@ const NewsletterSection = () => {
                 <div className="flex flex-col gap-4 mb-6">
                   <div className="flex items-center">
                     <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
-                      <motion.div
-                        className="h-6 w-6 text-primary"
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      >
+                      <div className="h-6 w-6 text-primary">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
@@ -770,7 +762,7 @@ const NewsletterSection = () => {
                         >
                           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
                         </svg>
-                      </motion.div>
+                      </div>
                     </div>
                     <span className="text-sm">Weekly fitness newsletter</span>
                   </div>
