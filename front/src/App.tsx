@@ -22,6 +22,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import ProductCreatePage from "./pages/ProductCreatePage";
+import FeaturedProductsPage from "./pages/FeaturedProducts";
 import { useAuth } from "./context/AuthContext";
 import { Resource, Action } from "./types/admin";
 import { PermissionGuard } from "./components/PermissionGuard";
@@ -377,6 +378,18 @@ const App = () => {
             element={
               <ProtectedRoute resource={Resource.CONTACT} action={Action.READ}>
                 <ContactManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="featured-products"
+            element={
+              <ProtectedRoute
+                resource={Resource.PRODUCTS}
+                action={Action.UPDATE}
+              >
+                <FeaturedProductsPage />
               </ProtectedRoute>
             }
           />

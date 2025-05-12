@@ -60,6 +60,7 @@ interface ProductFormData {
     benefits: string;
     howToUse: string;
   };
+  featured: boolean;
 }
 
 interface CategoryType {
@@ -108,6 +109,7 @@ export default function ProductForm() {
         benefits: "",
         howToUse: "",
       },
+      featured: false,
     },
   });
 
@@ -165,6 +167,7 @@ export default function ProductForm() {
               setValue("hasSale", productData.price > productData.salePrice);
               setValue("stock", String(productData.quantity || ""));
               setValue("isVeg", productData.isVeg ?? true);
+              setValue("featured", productData.featured ?? false);
 
               // Set category
               if (productData.categories && productData.categories[0]) {
@@ -399,6 +402,10 @@ export default function ProductForm() {
       formData.append("name", data.name);
       formData.append("description", data.description || "");
       formData.append("isActive", String(data.isActive));
+      formData.append("featured", String(data.featured));
+
+      // Log the featured value for debugging
+      console.log("Featured product status:", data.featured);
 
       // Map form categories to API expected format
       if (data.categoryId) {
@@ -799,6 +806,27 @@ export default function ProductForm() {
                         )}
                       />
                       <Label htmlFor="isVeg">Vegetarian</Label>
+                    </div>
+                  </div>
+
+                  {/* Featured Product Checkbox - Made more visible */}
+                  <div className="mt-2 p-3 border border-primary/20 rounded-md bg-primary/5">
+                    <div className="flex items-center space-x-2">
+                      <Controller
+                        control={control}
+                        name="featured"
+                        render={({ field }) => (
+                          <Checkbox
+                            id="featured"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="h-5 w-5 border-primary"
+                          />
+                        )}
+                      />
+                      <Label htmlFor="featured" className="font-medium">
+                        Featured Product (Highlighted on Homepage)
+                      </Label>
                     </div>
                   </div>
                 </CardContent>

@@ -17,6 +17,7 @@ import {
   Ticket,
   FileText,
   Mail,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SafeRender } from "@/components/SafeRender";
@@ -138,6 +139,16 @@ export default function DashboardLayout() {
                   admin,
                   Resource.PRODUCTS,
                   Action.READ
+                )}
+              />
+              <NavItem
+                href="/featured-products"
+                icon={<Star className="h-5 w-5" />}
+                title="Featured Products"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.PRODUCTS,
+                  Action.UPDATE
                 )}
               />
               <NavItem
@@ -301,6 +312,17 @@ export default function DashboardLayout() {
                   admin,
                   Resource.PRODUCTS,
                   Action.READ
+                )}
+              />
+              <NavItem
+                href="/featured-products"
+                icon={<Star className="h-5 w-5" />}
+                title="Featured Products"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.PRODUCTS,
+                  Action.UPDATE
                 )}
               />
               <NavItem
