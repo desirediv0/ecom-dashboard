@@ -6,7 +6,7 @@ const DEBUG_API = true;
 
 // Create axios instance with baseURL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4005",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000",
   headers: {
     "Content-Type": "application/json",
   },

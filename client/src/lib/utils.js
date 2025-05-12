@@ -7,7 +7,7 @@ export function cn(...inputs) {
 
 // API URL
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4005/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 // Track in-flight requests to prevent duplicates
 const pendingRequests = {};
