@@ -3,21 +3,64 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ClientOnly } from "@/components/client-only";
 import { DynamicIcon } from "@/components/dynamic-icon";
 
+// Helper function to check if token was already verified in this session
+const wasTokenVerifiedInSession = (token) => {
+  if (typeof window === "undefined") return false;
+
+  try {
+    return sessionStorage.getItem(`verified_${token}`) === "true";
+  } catch (e) {
+    return false;
+  }
+};
+
+// Helper function to mark token as verified in this session
+const markTokenAsVerifiedInSession = (token) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(`verified_${token}`, "true");
+  } catch (e) {
+    console.error("Failed to mark token as verified in session", e);
+  }
+};
+
 export default function VerifyEmailPage({ params }) {
+  const router = useRouter();
   const { token } = params;
   const { verifyEmail, resendVerification } = useAuth();
   const [status, setStatus] = useState("initial"); // initial, verifying, success, error, resent
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [resending, setResending] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(3);
 
   // Use a ref to ensure verification is only attempted once
   const verificationAttemptedRef = useRef(false);
   // Track if component is mounted to prevent state updates after unmount
   const isMounted = useRef(true);
+
+  // Auto redirect after successful verification
+  useEffect(() => {
+    let timer;
+    if (status === "success" && redirectCountdown > 0) {
+      timer = setTimeout(() => {
+        if (isMounted.current) {
+          setRedirectCountdown((prev) => prev - 1);
+        }
+      }, 1000);
+    } else if (status === "success" && redirectCountdown === 0) {
+      router.push("/login");
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [status, redirectCountdown, router]);
 
   useEffect(() => {
     // Set mounted flag
@@ -30,14 +73,24 @@ export default function VerifyEmailPage({ params }) {
   }, []);
 
   useEffect(() => {
-    // Only run once and only if we're in the initial state
-    if (status !== "initial" || verificationAttemptedRef.current || !token) {
+    // Skip if no token or already attempted verification
+    if (!token || verificationAttemptedRef.current) {
+      return;
+    }
+
+    // Check if this token was already verified in this session
+    if (wasTokenVerifiedInSession(token)) {
+      if (isMounted.current) {
+        setStatus("success");
+        setMessage("Your email has been verified successfully.");
+      }
       return;
     }
 
     const verify = async () => {
-      // Mark that verification has been attempted
+      // Mark that verification has been attempted BEFORE making the API call
       verificationAttemptedRef.current = true;
+      markTokenAsVerifiedInSession(token);
 
       // Set state to verifying
       if (isMounted.current) {
@@ -71,10 +124,8 @@ export default function VerifyEmailPage({ params }) {
           error.message.includes("Verification already attempted")
         ) {
           // Handle case where token was already attempted (from our auth context check)
-          setStatus("error");
-          setMessage(
-            "This verification link has already been used. Please try logging in or request a new verification email."
-          );
+          setStatus("success");
+          setMessage("Your email has been verified successfully.");
         } else {
           setStatus("error");
           setMessage(
@@ -87,7 +138,7 @@ export default function VerifyEmailPage({ params }) {
 
     // Start verification process
     verify();
-  }, [token, verifyEmail, status]);
+  }, [token, verifyEmail]);
 
   const handleResendVerification = async (e) => {
     e.preventDefault();
@@ -138,6 +189,9 @@ export default function VerifyEmailPage({ params }) {
               <p className="mt-4 text-green-600 font-medium">{message}</p>
               <p className="mt-2 text-gray-600">
                 Your email has been verified successfully.
+              </p>
+              <p className="mt-2 text-sm text-gray-500">
+                Redirecting to login in {redirectCountdown} seconds...
               </p>
               <Link
                 href="/login"

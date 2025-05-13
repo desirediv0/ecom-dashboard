@@ -24,16 +24,40 @@ export const getRazorpayKey = asyncHandler(async (req, res) => {
 // Create Razorpay order
 export const checkout = asyncHandler(async (req, res) => {
   const { amount, currency = "INR" } = req.body;
+  const userId = req.user.id;
 
   if (!amount || amount < 1) {
     throw new ApiError(400, "Valid amount is required");
   }
 
   try {
+    // Check if user has any previous canceled orders that might cause issues
+    const existingCanceledOrders = await prisma.order.findMany({
+      where: {
+        userId,
+        status: "CANCELLED",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 1,
+    });
+
+    if (existingCanceledOrders.length > 0) {
+      // Log information about canceled orders
+      console.log("User has canceled orders, proceeding with clean checkout");
+    }
+
+    // Generate a short receipt ID (must be ≤ 40 chars for Razorpay)
+    // Use a short timestamp and last 4 chars of userId
+    const shortUserId = userId.slice(-4);
+    const timestamp = Date.now().toString().slice(-10);
+    const receipt = `rcpt_${timestamp}_${shortUserId}`;
+
     const options = {
       amount: Number(amount) * 100, // Razorpay takes amount in paise
       currency,
-      receipt: `receipt_${Date.now()}`,
+      receipt: receipt,
     };
 
     const order = await razorpay.orders.create(options);
@@ -47,7 +71,18 @@ export const checkout = asyncHandler(async (req, res) => {
       .json(new ApiResponsive(200, order, "Order created successfully"));
   } catch (error) {
     console.error("Razorpay order creation error:", error);
-    throw new ApiError(500, "Error creating Razorpay order", [error.message]);
+
+    // Format error response properly
+    let errorMessage = "Error creating Razorpay order";
+    let errorDetails = [];
+
+    if (error.error && error.error.description) {
+      errorMessage = error.error.description;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    throw new ApiError(500, errorMessage, errorDetails);
   }
 });
 
@@ -97,6 +132,29 @@ export const paymentVerification = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Payment already processed");
     }
 
+    // Check for cancelled orders with this Razorpay order ID
+    const cancelledOrder = await prisma.razorpayPayment.findFirst({
+      where: {
+        razorpayOrderId: razorpay_order_id,
+        order: {
+          status: "CANCELLED",
+        },
+      },
+      include: {
+        order: true,
+      },
+    });
+
+    if (cancelledOrder) {
+      console.log(
+        `Detected payment for previously cancelled order: ${cancelledOrder.order.orderNumber}`
+      );
+      throw new ApiError(
+        400,
+        "This order was previously cancelled. Please start a new checkout process."
+      );
+    }
+
     if (!razorpay_signature) {
       throw new ApiError(400, "Razorpay signature is missing");
     }
@@ -127,6 +185,17 @@ export const paymentVerification = asyncHandler(async (req, res) => {
       throw new ApiError(400, "No items in cart");
     }
 
+    // Check if user has an active coupon
+    const userCoupon = await prisma.userCoupon.findFirst({
+      where: {
+        userId,
+        isActive: true,
+      },
+      include: {
+        coupon: true,
+      },
+    });
+
     // Verify shipping address
     const shippingAddress = await prisma.address.findFirst({
       where: {
@@ -141,9 +210,11 @@ export const paymentVerification = asyncHandler(async (req, res) => {
 
     // Calculate order totals
     let subTotal = 0;
-    let tax = 0;
-    const shippingCost = 99; // Fixed shipping cost (could be made dynamic)
+    let tax = 0; // Tax is now set to 0
+    const shippingCost = 0; // Fixed shipping cost at 0
     let discount = 0;
+    let couponCode = null;
+    let couponId = null;
 
     // Check inventory and calculate totals
     for (const item of cartItems) {
@@ -158,8 +229,32 @@ export const paymentVerification = asyncHandler(async (req, res) => {
       }
     }
 
-    // Calculate tax (5% of subtotal)
-    tax = subTotal * 0.05;
+    // Apply coupon discount if available
+    if (userCoupon && userCoupon.coupon) {
+      couponCode = userCoupon.coupon.code;
+      couponId = userCoupon.coupon.id;
+
+      // Calculate discount based on coupon type
+      if (userCoupon.coupon.discountType === "PERCENTAGE") {
+        // Calculate percentage discount with cap if needed
+        let discountPercentage = parseFloat(userCoupon.coupon.discountValue);
+
+        if (discountPercentage > 90 || userCoupon.coupon.isDiscountCapped) {
+          discountPercentage = Math.min(discountPercentage, 90);
+        }
+
+        discount = (subTotal * discountPercentage) / 100;
+      } else {
+        // Fixed amount discount, not exceeding subtotal
+        discount = Math.min(
+          parseFloat(userCoupon.coupon.discountValue),
+          subTotal
+        );
+      }
+    }
+
+    // Tax is 0% now
+    tax = 0;
 
     // Generate order number
     const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -181,7 +276,7 @@ export const paymentVerification = asyncHandler(async (req, res) => {
           tax: tax.toFixed(2),
           shippingCost,
           discount,
-          total: (subTotal + tax + shippingCost - discount).toFixed(2),
+          total: (subTotal - discount).toFixed(2),
           shippingAddressId,
           billingAddressSameAsShipping,
           billingAddress: !billingAddressSameAsShipping
@@ -189,6 +284,8 @@ export const paymentVerification = asyncHandler(async (req, res) => {
             : undefined,
           notes,
           status: "PAID",
+          couponCode,
+          couponId,
         },
       });
 
@@ -300,9 +397,12 @@ export const paymentVerification = asyncHandler(async (req, res) => {
             paymentMethod: result.payment.paymentMethod || "Online",
             items: emailItems,
             subtotal: parseFloat(result.order.subTotal).toFixed(2),
-            shipping: parseFloat(result.order.shippingCost).toFixed(2),
-            tax: parseFloat(result.order.tax).toFixed(2),
-            total: parseFloat(result.order.total).toFixed(2),
+            shipping: "0.00", // Set shipping to 0
+            tax: "0.00", // Set tax to 0
+            total: (
+              parseFloat(result.order.subTotal) -
+              parseFloat(result.order.discount || 0)
+            ).toFixed(2), // Calculate total without tax/shipping
             shippingAddress: shippingAddress,
           }),
         });
@@ -398,7 +498,7 @@ export const getOrderHistory = asyncHandler(async (req, res) => {
       orderNumber: order.orderNumber,
       date: order.createdAt,
       status: order.status,
-      total: parseFloat(order.total),
+      total: parseFloat(order.subTotal) - parseFloat(order.discount), // Recalculated total
       paymentMethod: order.razorpayPayment?.paymentMethod || "ONLINE",
       paymentStatus: order.razorpayPayment?.status || order.status,
       items: order.items.map((item) => ({
@@ -499,14 +599,16 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
     date: order.createdAt,
     status: order.status,
     subTotal: parseFloat(order.subTotal),
-    tax: parseFloat(order.tax),
-    shippingCost: parseFloat(order.shippingCost),
+    tax: 0, // Always return tax as 0
+    shippingCost: 0, // Always return shipping as 0
     discount: parseFloat(order.discount),
-    total: parseFloat(order.total),
+    total: parseFloat(order.subTotal) - parseFloat(order.discount), // Recalculate total
     paymentMethod: order.razorpayPayment?.paymentMethod || "ONLINE",
     paymentId: order.razorpayPayment?.razorpayPaymentId,
     paymentStatus: order.razorpayPayment?.status || order.status,
     notes: order.notes,
+    couponCode: order.couponCode,
+    couponId: order.couponId,
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,

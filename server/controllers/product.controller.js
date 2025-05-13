@@ -484,3 +484,30 @@ export const getAllWeights = asyncHandler(async (req, res) => {
       )
     );
 });
+
+// Get maximum product price for price range slider
+export const getMaxPrice = asyncHandler(async (req, res) => {
+  // Find the highest priced active variant
+  const highestPriceVariant = await prisma.productVariant.findFirst({
+    where: {
+      isActive: true,
+      product: {
+        isActive: true,
+      },
+    },
+    orderBy: {
+      price: "desc",
+    },
+  });
+
+  // If no variants found, return a default max price
+  const maxPrice = highestPriceVariant
+    ? parseFloat(highestPriceVariant.price)
+    : 1000;
+
+  res
+    .status(200)
+    .json(
+      new ApiResponsive(200, { maxPrice }, "Maximum price fetched successfully")
+    );
+});

@@ -413,7 +413,7 @@ const FeaturedProducts = ({
 
               {(product.flavors || 0) > 1 && (
                 <span className="text-xs text-gray-500 block">
-                  {product.flavors} flavors available
+                  {product.flavors} variants
                 </span>
               )}
             </div>

@@ -290,7 +290,10 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm font-medium">
-                        {formatCurrency(order.total)}
+                        {formatCurrency(
+                          parseFloat(order.subTotal) -
+                            parseFloat(order.discount || 0)
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">

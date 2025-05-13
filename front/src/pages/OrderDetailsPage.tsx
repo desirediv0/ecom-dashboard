@@ -538,12 +538,12 @@ export default function OrderDetailsPage() {
                   <span>{formatCurrency(orderDetails.subTotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax:</span>
-                  <span>{formatCurrency(orderDetails.tax)}</span>
+                  <span>Tax (0%):</span>
+                  <span>{formatCurrency(0)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping:</span>
-                  <span>{formatCurrency(orderDetails.shippingCost)}</span>
+                  <span>{formatCurrency(0)}</span>
                 </div>
                 {parseFloat(orderDetails.discount || 0) > 0 && (
                   <div className="flex justify-between text-green-600">
@@ -551,9 +551,19 @@ export default function OrderDetailsPage() {
                     <span>-{formatCurrency(orderDetails.discount)}</span>
                   </div>
                 )}
+                {orderDetails.couponCode && (
+                  <div className="text-xs text-green-600 mt-1 italic">
+                    Coupon applied: {orderDetails.couponCode}
+                  </div>
+                )}
                 <div className="flex justify-between border-t pt-2 font-medium">
                   <span>Total:</span>
-                  <span>{formatCurrency(orderDetails.total)}</span>
+                  <span>
+                    {formatCurrency(
+                      parseFloat(orderDetails.subTotal) -
+                        parseFloat(orderDetails.discount || 0)
+                    )}
+                  </span>
                 </div>
               </div>
             </CardContent>

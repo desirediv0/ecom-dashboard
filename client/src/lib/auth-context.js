@@ -5,13 +5,36 @@ import { fetchApi } from "./utils";
 
 const AuthContext = createContext();
 
+// Create a persistent verification token tracker using localStorage
+const getVerifiedTokens = () => {
+  if (typeof window === "undefined") return new Set();
+
+  try {
+    const tokens = JSON.parse(localStorage.getItem("verifiedTokens") || "[]");
+    return new Set(tokens);
+  } catch (e) {
+    return new Set();
+  }
+};
+
+const saveVerifiedToken = (token) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    const tokens = JSON.parse(localStorage.getItem("verifiedTokens") || "[]");
+    if (!tokens.includes(token)) {
+      tokens.push(token);
+      localStorage.setItem("verifiedTokens", JSON.stringify(tokens));
+    }
+  } catch (e) {
+    console.error("Failed to save verified token", e);
+  }
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Verification tracking - Keep track of tokens already attempted to be verified
-  const verifiedTokens = new Set();
 
   // Check if user is logged in on first load
   useEffect(() => {
@@ -115,13 +138,10 @@ export function AuthProvider({ children }) {
     setError(null);
 
     try {
-      console.log("Registering user...", userData);
       const res = await fetchApi("/users/register", {
         method: "POST",
         body: JSON.stringify(userData),
       });
-
-      console.log("Registration successful:", res);
       return res;
     } catch (err) {
       console.error("Registration error:", err);
@@ -195,21 +215,18 @@ export function AuthProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      // Check if this token has already been attempted to be verified
+      // Check if this token has already been attempted to be verified using the persistent storage
+      const verifiedTokens = getVerifiedTokens();
       if (verifiedTokens.has(token)) {
-        console.log("Skipping verification - token already processed:", token);
         throw new Error("Verification already attempted for this token");
       }
 
-      // Mark this token as attempted
-      verifiedTokens.add(token);
+      // Mark this token as attempted in persistent storage
+      saveVerifiedToken(token);
 
       const res = await fetchApi(`/users/verify-email/${token}`, {
         method: "GET",
       });
-
-      // Log successful verification
-      console.log("Email verification successful:", res);
       return res;
     } catch (err) {
       console.error("Email verification failed:", err);

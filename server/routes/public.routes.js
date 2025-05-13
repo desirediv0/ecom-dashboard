@@ -9,6 +9,7 @@ import {
   getProductVariant,
   getAllFlavors,
   getAllWeights,
+  getMaxPrice,
 } from "../controllers/product.controller.js";
 
 const router = express.Router();
@@ -19,6 +20,7 @@ router.get("/categories/:slug/products", getProductsByCategory);
 
 // Products
 router.get("/products", getAllProducts);
+router.get("/products/max-price", getMaxPrice);
 router.get("/products/:slug", getProductBySlug);
 router.get("/product-variant", getProductVariant);
 

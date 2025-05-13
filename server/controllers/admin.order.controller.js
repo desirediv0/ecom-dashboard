@@ -49,7 +49,7 @@ export const getOrders = asyncHandler(async (req, res, next) => {
     where: filterConditions,
   });
 
-  // Get orders with sorting
+  // Get orders with pagination
   const orders = await prisma.order.findMany({
     where: filterConditions,
     include: {
@@ -101,11 +101,21 @@ export const getOrders = asyncHandler(async (req, res, next) => {
     take: parseInt(limit),
   });
 
+  // Modify the orders to adjust tax, shipping, and totals
+  const modifiedOrders = orders.map((order) => ({
+    ...order,
+    tax: "0.00",
+    shippingCost: "0.00",
+    total: (
+      parseFloat(order.subTotal) - parseFloat(order.discount || 0)
+    ).toFixed(2),
+  }));
+
   res.status(200).json(
     new ApiResponsive(
       200,
       {
-        orders,
+        orders: modifiedOrders,
         pagination: {
           total: totalOrders,
           page: parseInt(page),
@@ -171,10 +181,24 @@ export const getOrderById = asyncHandler(async (req, res, next) => {
     throw new ApiError(404, "Order not found");
   }
 
+  // Normalize values for tax and shipping
+  const modifiedOrder = {
+    ...order,
+    tax: "0.00", // Always set tax to 0
+    shippingCost: "0.00", // Always set shipping to 0
+    total: (
+      parseFloat(order.subTotal) - parseFloat(order.discount || 0)
+    ).toFixed(2), // Recalculate total
+  };
+
   res
     .status(200)
     .json(
-      new ApiResponsive(200, { order }, "Order details fetched successfully")
+      new ApiResponsive(
+        200,
+        { order: modifiedOrder },
+        "Order details fetched successfully"
+      )
     );
 });
 
@@ -539,10 +563,10 @@ export const createOrder = asyncHandler(async (req, res, next) => {
   }
 
   // Calculate tax and total
-  const taxAmount = (parseFloat(taxRate) || 0) * subTotal;
-  const shippingAmount = parseFloat(shippingCost) || 0;
+  const taxAmount = 0; // Set tax to 0
+  const shippingAmount = 0; // Set shipping to 0
   const discountAmount = parseFloat(discount) || 0;
-  const total = subTotal + taxAmount + shippingAmount - discountAmount;
+  const total = subTotal - discountAmount; // Calculate total without tax and shipping
 
   // Create order with transaction to handle inventory
   const order = await prisma.$transaction(async (tx) => {

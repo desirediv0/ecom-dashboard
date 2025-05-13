@@ -15,7 +15,6 @@ import {
   ShoppingBag,
   AlertCircle,
   Loader2,
-  CheckCircle,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
@@ -393,18 +392,18 @@ export default function CartPage() {
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{formatCurrency(totals.shipping)}</span>
+                  <span>{formatCurrency(0)}</span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (5%)</span>
-                  <span>{formatCurrency(totals.tax)}</span>
+                  <span className="text-gray-600">Tax (0%)</span>
+                  <span>{formatCurrency(0)}</span>
                 </div>
               </div>
 
               <div className="flex justify-between font-bold text-lg mt-4 pt-4 border-t">
                 <span>Total</span>
-                <span>{formatCurrency(totals.total)}</span>
+                <span>{formatCurrency(totals.subtotal - totals.discount)}</span>
               </div>
             </div>
 

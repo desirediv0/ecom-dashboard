@@ -203,7 +203,7 @@ export default function CheckoutPage() {
 
     try {
       // Get checkout amount
-      const amount = totals.total;
+      const amount = totals.subtotal - totals.discount;
 
       if (paymentMethod === "RAZORPAY") {
         // Step 1: Create Razorpay order
@@ -232,14 +232,12 @@ export default function CheckoutPage() {
           throw new Error("Razorpay SDK failed to load");
         }
 
-        // Step 3: Initialize Razorpay checkout
-        console.log("Initializing Razorpay with key:", razorpayKey);
         const options = {
           key: razorpayKey,
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
-          name: "Gym Supplements",
-          description: "Payment for your order",
+          name: "Genuine Nutrition - Premium Supplements for Your Fitness Journey",
+          description: "Get high-quality supplements at the best prices.",
           order_id: razorpayOrder.id,
           prefill: {
             name: user?.name || "",
@@ -277,11 +275,31 @@ export default function CheckoutPage() {
               }
             } catch (error) {
               console.error("Payment verification error:", error);
-              setError(error.message || "Payment verification failed");
+
+              // If the error is about a previously cancelled order, guide the user
+              if (
+                error.message &&
+                error.message.includes("previously cancelled")
+              ) {
+                setError(
+                  "Your previous order was cancelled. Please refresh the page and try again."
+                );
+                toast.error("Please refresh the page to start a new checkout", {
+                  duration: 6000,
+                });
+              } else {
+                setError(error.message || "Payment verification failed");
+              }
             }
           },
           theme: {
-            color: "#3399cc",
+            color: "#F47C20",
+          },
+          modal: {
+            ondismiss: function () {
+              // When Razorpay modal is dismissed
+              setProcessing(false);
+            },
           },
         };
 
@@ -291,8 +309,22 @@ export default function CheckoutPage() {
       // Add COD implementation here if required
     } catch (error) {
       console.error("Checkout error:", error);
-      setError(error.message || "Checkout failed");
-      toast.error(error.message || "Checkout failed");
+
+      if (
+        error.message &&
+        error.message.includes("order was previously cancelled")
+      ) {
+        // Clear local state and guide the user
+        setError(
+          "This order was previously cancelled. Please refresh the page to start a new checkout."
+        );
+        toast.error("Please refresh the page to start a new checkout", {
+          duration: 6000,
+        });
+      } else {
+        setError(error.message || "Checkout failed");
+        toast.error(error.message || "Checkout failed");
+      }
     } finally {
       setProcessing(false);
     }
@@ -605,19 +637,21 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{formatCurrency(totals.shipping)}</span>
+                  <span>{formatCurrency(0)}</span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (5%)</span>
-                  <span>{formatCurrency(totals.tax)}</span>
+                  <span className="text-gray-600">Tax (0%)</span>
+                  <span>{formatCurrency(0)}</span>
                 </div>
               </div>
 
               <div className="pt-4">
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>{formatCurrency(totals.total)}</span>
+                  <span>
+                    {formatCurrency(totals.subtotal - totals.discount)}
+                  </span>
                 </div>
               </div>
             </div>
