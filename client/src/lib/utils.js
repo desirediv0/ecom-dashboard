@@ -14,7 +14,13 @@ const pendingRequests = {};
 
 // API request helper with error handling
 export async function fetchApi(endpoint, options = {}) {
-  const url = `${API_URL}${endpoint}`;
+  // Ensure endpoint doesn't duplicate /api if it's already in API_URL
+  const fixedEndpoint =
+    API_URL.endsWith("/api") && endpoint.startsWith("/api")
+      ? endpoint.replace("/api", "")
+      : endpoint;
+
+  const url = `${API_URL}${fixedEndpoint}`;
 
   // For GET requests to verification endpoints, implement request deduplication
   if (options.method === "GET" || !options.method) {

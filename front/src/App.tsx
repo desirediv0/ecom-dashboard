@@ -18,6 +18,9 @@ import BlogManagementPage from "./pages/BlogManagementPage";
 import CreateBlogPostPage from "./pages/CreateBlogPostPage";
 import EditBlogPostPage from "./pages/EditBlogPostPage";
 import ContactManagementPage from "./pages/ContactManagementPage";
+import ReviewsManagementPage from "./pages/ReviewsManagementPage";
+import FAQManagementPage from "./pages/FAQManagementPage";
+import FAQCreatePage from "./pages/FAQCreatePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ProductDetailPage from "./pages/ProductDetailPage";
@@ -383,6 +386,15 @@ const App = () => {
           />
 
           <Route
+            path="reviews-management"
+            element={
+              <ProtectedRoute resource={Resource.REVIEWS} action={Action.READ}>
+                <ReviewsManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="featured-products"
             element={
               <ProtectedRoute
@@ -390,6 +402,24 @@ const App = () => {
                 action={Action.UPDATE}
               >
                 <FeaturedProductsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="faq-management"
+            element={
+              <ProtectedRoute resource={Resource.FAQS} action={Action.READ}>
+                <FAQManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="faq-management/create"
+            element={
+              <ProtectedRoute resource={Resource.FAQS} action={Action.CREATE}>
+                <FAQCreatePage />
               </ProtectedRoute>
             }
           />

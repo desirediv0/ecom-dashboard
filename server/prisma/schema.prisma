@@ -185,17 +185,21 @@ model CartItem {
 }
 
 model Review {
-  id        String       @id @default(uuid())
-  userId    String
-  productId String
-  rating    Int          @db.SmallInt
-  title     String?
-  comment   String?
-  status    ReviewStatus @default(PENDING)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String       @id @default(uuid())
+  userId         String
+  productId      String
+  rating         Int          @db.SmallInt
+  title          String?
+  comment        String?
+  status         ReviewStatus @default(PENDING)
+  featured       Boolean      @default(false)
+  adminComment   String?
+  adminReply     String?
+  adminReplyDate DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
 }

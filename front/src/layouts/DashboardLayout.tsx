@@ -18,6 +18,8 @@ import {
   FileText,
   Mail,
   Star,
+  MessageSquare,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SafeRender } from "@/components/SafeRender";
@@ -222,6 +224,26 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
+                href="/reviews-management"
+                icon={<MessageSquare className="h-5 w-5" />}
+                title="Reviews Management"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.REVIEWS,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/faq-management"
+                icon={<HelpCircle className="h-5 w-5" />}
+                title="FAQ Management"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.FAQS,
+                  Action.READ
+                )}
+              />
+              <NavItem
                 href="/admins"
                 icon={<Users className="h-5 w-5" />}
                 title="Admins"
@@ -399,6 +421,28 @@ export default function DashboardLayout() {
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.CONTACT,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/reviews-management"
+                icon={<MessageSquare className="h-5 w-5" />}
+                title="Reviews Management"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.REVIEWS,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/faq-management"
+                icon={<HelpCircle className="h-5 w-5" />}
+                title="FAQ Management"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.FAQS,
                   Action.READ
                 )}
               />

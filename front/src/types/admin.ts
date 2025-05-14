@@ -42,6 +42,7 @@ export enum Resource {
   COUPONS = "coupons",
   CONTENT = "content",
   CONTACT = "contact",
+  FAQS = "faqs",
 }
 
 export enum Action {

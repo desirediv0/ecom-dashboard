@@ -570,7 +570,8 @@ export default function OrderDetailsPage() {
           </Card>
 
           {/* Tracking Info */}
-          {orderDetails.tracking && (
+          {orderDetails.status === "SHIPPED" ||
+          orderDetails.status === "DELIVERED" ? (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -579,75 +580,98 @@ export default function OrderDetailsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <p>
-                    <span className="font-medium">Carrier:</span>{" "}
-                    {orderDetails.tracking.carrier}
-                  </p>
-                  <p>
-                    <span className="font-medium">Tracking Number:</span>{" "}
-                    <span className="font-mono">
-                      {orderDetails.tracking.trackingNumber}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="font-medium">Status:</span>{" "}
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(
-                        orderDetails.tracking.status
-                      )}`}
-                    >
-                      {orderDetails.tracking.status}
-                    </span>
-                  </p>
-                  {orderDetails.tracking.estimatedDelivery && (
+                {orderDetails.tracking ? (
+                  <div className="space-y-2">
                     <p>
-                      <span className="font-medium">Estimated Delivery:</span>{" "}
-                      {formatDate(orderDetails.tracking.estimatedDelivery)}
+                      <span className="font-medium">Carrier:</span>{" "}
+                      {orderDetails.tracking.carrier || "Not specified"}
                     </p>
-                  )}
-
-                  {/* Tracking Updates */}
-                  {orderDetails.tracking.updates &&
-                    orderDetails.tracking.updates.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="mb-2 font-medium">Tracking Updates</h4>
-                        <div className="space-y-3">
-                          {orderDetails.tracking.updates.map(
-                            (update: any, index: number) => (
-                              <div
-                                key={index}
-                                className="rounded-md border border-muted bg-muted/40 p-3"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Clock className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm text-muted-foreground">
-                                    {formatDate(update.timestamp)}
-                                  </span>
-                                </div>
-                                <p className="mt-1 font-medium">
-                                  {update.status}
-                                </p>
-                                {update.location && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {update.location}
-                                  </p>
-                                )}
-                                {update.description && (
-                                  <p className="text-sm">
-                                    {update.description}
-                                  </p>
-                                )}
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
+                    <p>
+                      <span className="font-medium">Tracking Number:</span>{" "}
+                      <span className="font-mono">
+                        {orderDetails.tracking.trackingNumber ||
+                          "Not available"}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="font-medium">Status:</span>{" "}
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(
+                          orderDetails.tracking?.status || orderDetails.status
+                        )}`}
+                      >
+                        {orderDetails.tracking?.status || orderDetails.status}
+                      </span>
+                    </p>
+                    {orderDetails.tracking.estimatedDelivery && (
+                      <p>
+                        <span className="font-medium">Estimated Delivery:</span>{" "}
+                        {formatDate(orderDetails.tracking.estimatedDelivery)}
+                      </p>
                     )}
-                </div>
+
+                    {/* Tracking Updates */}
+                    {orderDetails.tracking.updates &&
+                      orderDetails.tracking.updates.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="mb-2 font-medium">Tracking Updates</h4>
+                          <div className="space-y-3">
+                            {orderDetails.tracking.updates.map(
+                              (update: any, index: number) => (
+                                <div
+                                  key={index}
+                                  className="rounded-md border border-muted bg-muted/40 p-3"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm text-muted-foreground">
+                                      {formatDate(update.timestamp)}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 font-medium">
+                                    {update.status}
+                                  </p>
+                                  {update.location && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {update.location}
+                                    </p>
+                                  )}
+                                  {update.description && (
+                                    <p className="text-sm">
+                                      {update.description}
+                                    </p>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex flex-col items-center justify-center py-4 text-center">
+                      <Truck className="h-10 w-10 text-muted-foreground mb-2" />
+                      <p className="font-medium">Shipping in progress</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {orderDetails.status === "DELIVERED"
+                          ? "This order has been marked as delivered, but no detailed tracking information is available."
+                          : "This order has been shipped, but detailed tracking information is not yet available."}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-4">
+                        Status:{" "}
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(orderDetails.status)}`}
+                        >
+                          {orderDetails.status}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

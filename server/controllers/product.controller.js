@@ -151,7 +151,11 @@ export const getAllProducts = asyncHandler(async (req, res) => {
       },
       _count: {
         select: {
-          reviews: true,
+          reviews: {
+            where: {
+              status: "APPROVED",
+            },
+          },
           variants: true,
         },
       },
@@ -258,7 +262,11 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
       },
       _count: {
         select: {
-          reviews: true,
+          reviews: {
+            where: {
+              status: "APPROVED",
+            },
+          },
         },
       },
     },
@@ -352,7 +360,11 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
           },
           _count: {
             select: {
-              reviews: true,
+              reviews: {
+                where: {
+                  status: "APPROVED",
+                },
+              },
             },
           },
         },

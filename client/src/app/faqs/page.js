@@ -18,14 +18,49 @@ export default function FAQsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredFaqs, setFilteredFaqs] = useState([]);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [categories, setCategories] = useState(["all"]);
 
   useEffect(() => {
     async function fetchFAQs() {
       setLoading(true);
       try {
-        const response = await fetchApi("/content/faqs");
-        setFaqs(response.data.faqs || []);
-        setFilteredFaqs(response.data.faqs || []);
+        const response = await fetchApi("/faqs");
+
+        // Handle various possible response formats
+        let faqsData = [];
+        if (response?.data?.faqs && Array.isArray(response.data.faqs)) {
+          // Format: { data: { faqs: [...] } }
+          faqsData = response.data.faqs;
+        } else if (Array.isArray(response?.data)) {
+          // Format: { data: [...] }
+          faqsData = response.data;
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          // Format: { statusCode, data: [...], message, success }
+          faqsData = response.data.data;
+        }
+
+        setFaqs(faqsData);
+        setFilteredFaqs(faqsData);
+
+        // Fetch categories
+        const categoriesResponse = await fetchApi("/faqs/categories");
+
+        // Handle categories response format
+        let categoriesData = [];
+        if (categoriesResponse?.data?.categories) {
+          categoriesData = categoriesResponse.data.categories;
+        } else if (Array.isArray(categoriesResponse?.data)) {
+          categoriesData = categoriesResponse.data;
+        } else if (
+          categoriesResponse?.data?.data &&
+          Array.isArray(categoriesResponse.data.data)
+        ) {
+          categoriesData = categoriesResponse.data.data;
+        }
+
+        if (categoriesData.length) {
+          setCategories(["all", ...categoriesData.map((cat) => cat.name)]);
+        }
       } catch (error) {
         console.error("Failed to fetch FAQs:", error);
       } finally {
@@ -57,13 +92,11 @@ export default function FAQsPage() {
       );
     }
 
+    // Sort by order (ascending)
+    filtered = [...filtered].sort((a, b) => a.order - b.order);
+
     setFilteredFaqs(filtered);
   }, [searchQuery, activeCategory, faqs]);
-
-  // Extract unique categories
-  const categories = faqs.length
-    ? ["all", ...new Set(faqs.map((faq) => faq.category).filter(Boolean))]
-    : ["all"];
 
   // Handle search input change
   const handleSearchChange = (e) => {

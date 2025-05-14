@@ -510,6 +510,45 @@ export const coupons = {
   },
 };
 
+// Reviews Management
+export const reviews = {
+  getReviews: (
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      productId?: string;
+      rating?: number;
+      sortBy?: string;
+      order?: "asc" | "desc";
+    } = {}
+  ) => {
+    return api.get("/api/admin/reviews", { params });
+  },
+  getReviewById: (reviewId: string) => {
+    return api.get(`/api/admin/reviews/${reviewId}`);
+  },
+  updateReview: (
+    reviewId: string,
+    data: {
+      status?: "APPROVED" | "REJECTED" | "PENDING";
+      featured?: boolean;
+      adminComment?: string;
+    }
+  ) => {
+    return api.patch(`/api/admin/reviews/${reviewId}`, data);
+  },
+  deleteReview: (reviewId: string) => {
+    return api.delete(`/api/admin/reviews/${reviewId}`);
+  },
+  replyToReview: (reviewId: string, comment: string) => {
+    return api.post(`/api/admin/reviews/${reviewId}/reply`, { comment });
+  },
+  getReviewStats: () => {
+    return api.get("/api/admin/review-stats");
+  },
+};
+
 // Settings Management
 export const settings = {
   getSettings: () => {
