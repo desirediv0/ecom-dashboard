@@ -42,7 +42,7 @@ export class SafeRender extends Component<SafeRenderProps, SafeRenderState> {
           <div className="text-sm font-medium">
             Something went wrong rendering this component
           </div>
-          {this.state.error && process.env.NODE_ENV === "development" && (
+          {this.state.error && import.meta.env.MODE === "development" && (
             <div className="mt-2 text-xs overflow-auto max-w-full">
               <p>{this.state.error.message}</p>
             </div>

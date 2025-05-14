@@ -371,9 +371,26 @@ export const inventory = {
   },
   getInventoryAlerts: async (threshold = 5) => {
     try {
+      console.log("Calling inventory alerts API endpoint");
       const response = await api.get(
         `/api/admin/inventory-alerts?threshold=${threshold}`
       );
+      console.log("Raw inventory alerts API response:", response);
+
+      // Check if data is nested in a success response wrapper
+      if (response.data.success && response.data.data) {
+        // Return the data in the expected format for direct use
+        return {
+          data: response.data.data,
+        };
+      } else if (response.data.statusCode === 200 && response.data.data) {
+        // Handle alternative format with statusCode
+        return {
+          data: response.data.data,
+        };
+      }
+
+      // If no special structure, just return the original response
       return response.data;
     } catch (error) {
       console.error("Error fetching inventory alerts:", error);
@@ -456,8 +473,31 @@ export const orders = {
   updateOrderStatus: (orderId: string, data: { status: string }) => {
     return api.patch(`/api/admin/orders/${orderId}/status`, data);
   },
-  getOrderStats: () => {
-    return api.get("/api/admin/orders-stats");
+  getOrderStats: async () => {
+    console.log("Calling order stats API endpoint");
+    try {
+      const response = await api.get("/api/admin/orders-stats");
+      console.log("Raw order stats API response:", response);
+
+      // Check if data is nested in a success response wrapper
+      if (response.data.success && response.data.data) {
+        // Return the data in the expected format for direct use
+        return {
+          data: response.data.data,
+        };
+      } else if (response.data.statusCode === 200 && response.data.data) {
+        // Handle alternative format with statusCode
+        return {
+          data: response.data.data,
+        };
+      }
+
+      // If no special structure, just return the original response
+      return response;
+    } catch (error) {
+      console.error("Error getting order stats:", error);
+      throw error;
+    }
   },
 };
 

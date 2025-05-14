@@ -26,9 +26,28 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
+// Helper function to get proper image URL
+const getImageUrl = (image: string | undefined | null): string => {
+  if (!image) return "/images/blog-placeholder.jpg";
+  if (image.startsWith("http")) return image;
+  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+};
+
+// Define types for API data
+interface OrderStats {
+  totalOrders?: number;
+  totalSales?: number;
+  orderGrowth?: number;
+  revenueGrowth?: number;
+  statusCounts?: Record<string, number>;
+  topProducts?: Array<any>;
+  monthlySales?: Array<{ month: string; revenue: number }>;
+  [key: string]: any;
+}
+
 export default function DashboardPage() {
   const { admin } = useAuth();
-  const [orderStats, setOrderStats] = useState<any>(null);
+  const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
   const [inventoryAlerts, setInventoryAlerts] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,14 +61,82 @@ export default function DashboardPage() {
 
         // Load order stats
         const orderStatsData = await orders.getOrderStats();
-        setOrderStats(orderStatsData.data);
+
+        // Handle different response structures
+        let actualData: OrderStats = {};
+        if (orderStatsData?.data?.success && orderStatsData?.data?.data) {
+          // Structure: { data: { success: true, data: {...} } }
+          actualData = orderStatsData.data.data;
+        } else if (
+          orderStatsData?.data?.statusCode === 200 &&
+          orderStatsData?.data?.data
+        ) {
+          // Structure: { data: { statusCode: 200, data: {...} } }
+          actualData = orderStatsData.data.data;
+        } else if (orderStatsData?.data) {
+          // Direct data structure: { data: {...} }
+          actualData = orderStatsData.data;
+        }
+
+        // Keep the actual sales data without generating fake data
+        let monthlySales = actualData.monthlySales || [];
+
+        // Create default status counts if missing
+        let statusCounts = actualData.statusCounts || {};
+        if (!statusCounts || Object.keys(statusCounts).length === 0) {
+          statusCounts = {};
+        }
+
+        // Keep only real product data
+        let topProducts = actualData.topProducts || [];
+
+        // Initialize missing properties to prevent rendering errors
+        const processedData = {
+          ...actualData,
+          totalOrders: actualData.totalOrders || 0,
+          totalSales: actualData.totalSales || 0,
+          statusCounts: statusCounts,
+          topProducts: topProducts,
+          monthlySales: monthlySales,
+          // Add default values for growth stats if missing
+          orderGrowth: actualData.orderGrowth || 0,
+          revenueGrowth: actualData.revenueGrowth || 0,
+        };
+        setOrderStats(processedData);
 
         // Load inventory alerts
         const inventoryAlertsData = await inventory.getInventoryAlerts();
-        setInventoryAlerts(inventoryAlertsData.data);
+
+        // Extract the actual inventory data from the nested structure
+        let actualInventoryData = {};
+        if (
+          inventoryAlertsData?.data?.success &&
+          inventoryAlertsData?.data?.data
+        ) {
+          actualInventoryData = inventoryAlertsData.data.data;
+        } else if (
+          inventoryAlertsData?.data?.statusCode === 200 &&
+          inventoryAlertsData?.data?.data
+        ) {
+          actualInventoryData = inventoryAlertsData.data.data;
+        } else if (inventoryAlertsData?.data) {
+          actualInventoryData = inventoryAlertsData.data;
+        }
+
+        setInventoryAlerts(actualInventoryData);
       } catch (error: any) {
         console.error("Error fetching dashboard data:", error);
         setError("Failed to load dashboard data. Please try again.");
+        // Set default values for orderStats to prevent rendering errors
+        setOrderStats({
+          totalOrders: 0,
+          totalSales: 0,
+          statusCounts: {},
+          topProducts: [],
+          monthlySales: [],
+          orderGrowth: 0,
+          revenueGrowth: 0,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -151,7 +238,7 @@ export default function DashboardPage() {
                   className="h-12 w-12 rounded-md mr-3 flex-shrink-0 bg-gray-100"
                   style={{
                     backgroundImage: alert.image
-                      ? `url(${alert.image})`
+                      ? `url(${getImageUrl(alert.image)})`
                       : "none",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
@@ -214,11 +301,11 @@ export default function DashboardPage() {
             <p className="text-2xl font-bold">{orderStats?.totalOrders || 0}</p>
           </div>
           <div className="mt-2 flex items-center text-xs">
-            {orderStats?.orderGrowth > 0 ? (
+            {(orderStats?.orderGrowth ?? 0) > 0 ? (
               <>
                 <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
                 <span className="text-green-500">
-                  {orderStats?.orderGrowth}% increase
+                  {orderStats?.orderGrowth || 0}% increase
                 </span>
               </>
             ) : (
@@ -243,15 +330,18 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3">
             <p className="text-2xl font-bold">
-              ₹{orderStats?.totalSales?.toLocaleString() || 0}
+              ₹
+              {orderStats?.totalSales
+                ? orderStats.totalSales.toLocaleString()
+                : "0"}
             </p>
           </div>
           <div className="mt-2 flex items-center text-xs">
-            {orderStats?.revenueGrowth > 0 ? (
+            {(orderStats?.revenueGrowth ?? 0) > 0 ? (
               <>
                 <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
                 <span className="text-green-500">
-                  {orderStats?.revenueGrowth}% increase
+                  {orderStats?.revenueGrowth || 0}% increase
                 </span>
               </>
             ) : (
@@ -287,11 +377,7 @@ export default function DashboardPage() {
                   style={{
                     backgroundImage:
                       product.images && product.images[0]
-                        ? `url(${
-                            product.images[0].url.startsWith("http")
-                              ? product.images[0].url
-                              : `${process.env.REACT_APP_API_URL || ""}/${product.images[0].url}`
-                          })`
+                        ? `url(${getImageUrl(product.images[0].url || product.images[0])})`
                         : "none",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
@@ -310,21 +396,18 @@ export default function DashboardPage() {
                         </span>
                         <span>
                           <span className="font-medium text-foreground">
-                            ₹{parseFloat(product.revenue).toLocaleString() || 0}
+                            ₹
+                            {typeof product.revenue === "string"
+                              ? product.revenue
+                              : parseFloat(
+                                  product.revenue || 0
+                                ).toLocaleString()}
                           </span>{" "}
                           revenue
                         </span>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs h-8"
-                        asChild
-                      >
-                        <Link to={`/products/${product.id}`}>Edit</Link>
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -413,13 +496,18 @@ export default function DashboardPage() {
                 <XAxis
                   dataKey="month"
                   tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => value.substring(0, 3)}
+                  tickFormatter={(value) => value?.substring(0, 3) || value}
                 />
                 <YAxis
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => `₹${value / 1000}k`}
                 />
-                <Tooltip />
+                <Tooltip
+                  formatter={(value) => [
+                    `₹${Number(value).toLocaleString()}`,
+                    "Revenue",
+                  ]}
+                />
                 <Line
                   type="monotone"
                   dataKey="revenue"
