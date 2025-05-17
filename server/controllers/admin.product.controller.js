@@ -197,6 +197,10 @@ export const getProductById = asyncHandler(async (req, res, next) => {
           }
         : null,
     })),
+    // Include SEO fields
+    metaTitle: product.metaTitle || product.name,
+    metaDescription: product.metaDescription || product.description,
+    keywords: product.keywords || "",
   };
 
   res
@@ -229,6 +233,9 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     isActive,
     hasVariants,
     variants: variantsJson,
+    metaTitle,
+    metaDescription,
+    keywords,
   } = req.body;
 
   // Validation checks with better error handling
@@ -341,6 +348,9 @@ export const createProduct = asyncHandler(async (req, res, next) => {
           nutritionInfo: parsedNutritionInfo,
           featured: featured === "true" || featured === true,
           isActive: isActive === "true" || isActive === true || true,
+          metaTitle: metaTitle || cleanName,
+          metaDescription: metaDescription || description,
+          keywords,
         },
       });
 
@@ -697,6 +707,9 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
     price,
     salePrice,
     quantity,
+    metaTitle,
+    metaDescription,
+    keywords,
   } = req.body;
 
   // Check if product exists
@@ -825,6 +838,9 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           ...(isActive !== undefined && {
             isActive: isActive === "true" || isActive === true,
           }),
+          ...(metaTitle !== undefined && { metaTitle }),
+          ...(metaDescription !== undefined && { metaDescription }),
+          ...(keywords !== undefined && { keywords }),
         },
       });
 

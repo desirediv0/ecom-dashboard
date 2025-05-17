@@ -328,6 +328,10 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
           ).toFixed(1)
         : null,
     reviewCount: product._count.reviews,
+    // Include SEO fields
+    metaTitle: product.metaTitle || product.name,
+    metaDescription: product.metaDescription || product.description,
+    keywords: product.keywords || "",
   };
 
   // Add related products

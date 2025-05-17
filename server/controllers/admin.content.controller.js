@@ -13,7 +13,16 @@ import slugify from "slugify";
  * Create a new blog post
  */
 const createBlogPost = asyncHandler(async (req, res) => {
-  const { title, summary, content, isPublished, categories } = req.body;
+  const {
+    title,
+    summary,
+    content,
+    isPublished,
+    categories,
+    metaTitle,
+    metaDescription,
+    keywords,
+  } = req.body;
   const authorId = req.admin.id;
 
   // Validate required fields
@@ -62,6 +71,9 @@ const createBlogPost = asyncHandler(async (req, res) => {
         coverImage,
         isPublished: isPublished === "true" || isPublished === true,
         authorId,
+        metaTitle: metaTitle || title,
+        metaDescription: metaDescription || summary,
+        keywords,
         ...(parsedCategories &&
           parsedCategories.length > 0 && {
             categories: {
@@ -108,8 +120,17 @@ const createBlogPost = asyncHandler(async (req, res) => {
  */
 const updateBlogPost = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, summary, content, isPublished, categories, removeCoverImage } =
-    req.body;
+  const {
+    title,
+    summary,
+    content,
+    isPublished,
+    categories,
+    removeCoverImage,
+    metaTitle,
+    metaDescription,
+    keywords,
+  } = req.body;
 
   // Validate required fields
   if (!title || !content) {
@@ -190,6 +211,9 @@ const updateBlogPost = asyncHandler(async (req, res) => {
         content,
         coverImage,
         isPublished: isPublished === "true" || isPublished === true,
+        metaTitle: metaTitle || title,
+        metaDescription: metaDescription || summary,
+        keywords,
         categories: {
           disconnect: existingPost.categories.map((c) => ({ id: c.id })),
           ...(parsedCategories &&
