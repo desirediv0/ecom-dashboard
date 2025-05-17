@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ export default function LoginPage() {
 
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,9 +36,16 @@ export default function LoginPage() {
       // Show success message
       toast.success("Logged in successfully");
 
+      // Get redirect URL from query parameters if available
+      const redirect = searchParams.get("redirect");
+
       // Redirect after a small delay to allow toast to be seen
       setTimeout(() => {
-        router.push("/");
+        if (redirect) {
+          router.push(`/${redirect}`);
+        } else {
+          router.push("/");
+        }
       }, 500);
     } catch (error) {
       const errorMessage =

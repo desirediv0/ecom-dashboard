@@ -126,6 +126,13 @@ export default function OrderDetailsPage() {
     }
   };
 
+  // Get image URL helper
+  const getImageUrl = (image: string | undefined) => {
+    if (!image) return "/images/product-placeholder.jpg";
+    if (image.startsWith("http")) return image;
+    return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+  };
+
   // Loading state
   if (isLoading && !orderDetails) {
     return (
@@ -248,9 +255,8 @@ export default function OrderDetailsPage() {
             orderDetails.status !== "CANCELLED" &&
             orderDetails.status !== "REFUNDED" && (
               <div className="flex flex-wrap gap-2">
-                {/* Processing button - show for PENDING, SHIPPED */}
-                {(orderDetails.status === "PENDING" ||
-                  orderDetails.status === "SHIPPED") && (
+                {/* Processing button - show for PENDING only */}
+                {orderDetails.status === "PENDING" && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -335,15 +341,15 @@ export default function OrderDetailsPage() {
                       <tr key={item.id} className="border-b">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
-                            {item.product?.images?.[0]?.url && (
-                              <div className="h-12 w-12 rounded-md bg-muted/50 object-cover">
-                                <img
-                                  src={item.product.images[0]?.url}
-                                  alt={item.product.name}
-                                  className="h-full w-full rounded-md object-cover"
-                                />
-                              </div>
-                            )}
+                            <div className="h-12 w-12 rounded-md bg-muted/50 overflow-hidden">
+                              <img
+                                src={getImageUrl(
+                                  item.product?.images?.[0]?.url
+                                )}
+                                alt={item.product?.name || "Product"}
+                                className="h-full w-full object-contain"
+                              />
+                            </div>
                             <div>
                               <p className="font-medium">
                                 {item.product?.name}

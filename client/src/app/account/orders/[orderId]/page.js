@@ -394,11 +394,7 @@ export default function OrderDetailsPage({ params }) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping:</span>
-                    <span>{formatCurrency(order.shippingCost)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax (0%):</span>
-                    <span>{formatCurrency(order.tax)}</span>
+                    <span className="text-green-600 font-medium">FREE</span>
                   </div>
                   {order.discount > 0 && (
                     <div className="flex justify-between text-green-600">

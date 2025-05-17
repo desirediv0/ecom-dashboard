@@ -61,18 +61,25 @@ export function RouteGuard({ children }) {
 
       if (isPrivateRoute && !isAuthenticated) {
         setAuthorized(false);
+
+        // Save current path for redirect after login (except for cart which redirects to home)
+        const redirectPath = pathname === "/cart" ? "/" : pathname;
+
         // Show toast only if it's not the first run (to prevent showing on initial page load)
         if (!firstRun) {
           toast.error("Please log in to access this page");
         }
-        router.push("/login");
+
+        router.push(
+          `/login?redirect=${encodeURIComponent(redirectPath.substring(1))}`
+        );
       } else if (isAuthRoute && isAuthenticated) {
         setAuthorized(false);
         // Only show notification if not first run
         if (!firstRun) {
           toast.info("You are already logged in");
         }
-        router.push("/account");
+        router.push("/");
       } else {
         setAuthorized(true);
       }

@@ -603,3 +603,239 @@ const getDefaultPermissionsForRole = (role) => {
 
   return permissions;
 };
+
+// Get users with pagination and search
+export const getUsers = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 15, search = "" } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const whereClause = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      }
+    : {};
+
+  const [users, totalUsers] = await Promise.all([
+    prisma.user.findMany({
+      where: whereClause,
+      skip,
+      take: parseInt(limit),
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        isActive: true,
+        emailVerified: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.user.count({ where: whereClause }),
+  ]);
+
+  const totalPages = Math.ceil(totalUsers / parseInt(limit));
+
+  res.status(200).json(
+    new ApiResponsive(
+      200,
+      {
+        users,
+        pagination: {
+          total: totalUsers,
+          pages: totalPages,
+          page: parseInt(page),
+          limit: parseInt(limit),
+        },
+      },
+      "Users fetched successfully"
+    )
+  );
+});
+
+// Get user by ID
+export const getUserById = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      isActive: true,
+      emailVerified: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponsive(200, { user }, "User fetched successfully"));
+});
+
+// Update user status (active/inactive)
+export const updateUserStatus = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { isActive } = req.body;
+
+  if (isActive === undefined) {
+    throw new ApiError(400, "isActive field is required");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { isActive },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      isActive: true,
+    },
+  });
+
+  res
+    .status(200)
+    .json(
+      new ApiResponsive(
+        200,
+        { user: updatedUser },
+        `User ${isActive ? "activated" : "deactivated"} successfully`
+      )
+    );
+});
+
+// Verify user email
+export const verifyUserEmail = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (user.emailVerified) {
+    return res
+      .status(200)
+      .json(new ApiResponsive(200, {}, "Email is already verified"));
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { emailVerified: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      emailVerified: true,
+    },
+  });
+
+  res
+    .status(200)
+    .json(
+      new ApiResponsive(
+        200,
+        { user: updatedUser },
+        "User email verified successfully"
+      )
+    );
+});
+
+// Update user details
+export const updateUserDetails = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { name, email, phone } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Check if email is being changed and already exists
+  if (email && email !== user.email) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw new ApiError(409, "Email is already in use by another account");
+    }
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(name && { name }),
+      ...(email && { email }),
+      ...(phone && { phone }),
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      isActive: true,
+      emailVerified: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  res
+    .status(200)
+    .json(
+      new ApiResponsive(
+        200,
+        { user: updatedUser },
+        "User details updated successfully"
+      )
+    );
+});
+
+// Delete user
+export const deleteUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Delete user - in a real application, consider soft delete or archiving
+  await prisma.user.delete({
+    where: { id: userId },
+  });
+
+  res.status(200).json(new ApiResponsive(200, {}, "User deleted successfully"));
+});

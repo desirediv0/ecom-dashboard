@@ -136,6 +136,33 @@ export const adminUsers = {
   },
 };
 
+// Customer Users Management
+export const customerUsers = {
+  getUsers: (
+    params: { page?: number; limit?: number; search?: string } = {}
+  ) => {
+    return api.get("/api/admin/users", { params });
+  },
+  getUserById: (userId: string) => {
+    return api.get(`/api/admin/users/${userId}`);
+  },
+  updateUserStatus: (userId: string, isActive: boolean) => {
+    return api.patch(`/api/admin/users/${userId}/status`, { isActive });
+  },
+  verifyUserEmail: (userId: string) => {
+    return api.post(`/api/admin/users/${userId}/verify-email`);
+  },
+  deleteUser: (userId: string) => {
+    return api.delete(`/api/admin/users/${userId}`);
+  },
+  updateUserDetails: (
+    userId: string,
+    data: { name?: string; phone?: string; email?: string }
+  ) => {
+    return api.patch(`/api/admin/users/${userId}`, data);
+  },
+};
+
 // Product Management
 export const products = {
   getProducts: (params: ProductQueryParams = {}) => {

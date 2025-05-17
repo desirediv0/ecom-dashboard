@@ -262,7 +262,7 @@ const FeaturedCategoriesSection = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          <Link href="/products">
+          <Link href="/categories">
             <button className="group relative inline-flex items-center  -mt-20 lg:mt-0 justify-center px-8 py-3 font-medium overflow-hidden">
               <span className="relative z-10 px-3 lg:px-5 py-2 lg:py-3 bg-[#1C4E80] text-nowrap text-white hover:bg-white hover:text-[#1C4E80] border border-[#1C4E80] rounded-full flex items-center">
                 VIEW ALL CATEGORIES

@@ -31,6 +31,7 @@ import { Resource, Action } from "./types/admin";
 import { PermissionGuard } from "./components/PermissionGuard";
 import { AlertCircle } from "lucide-react";
 import { Card, CardContent } from "./components/ui/card";
+import UserManagementPage from "./pages/UserManagementPage";
 
 // Protected Route Component
 const ProtectedRoute = ({
@@ -339,6 +340,15 @@ const App = () => {
             element={
               <ProtectedRoute superAdminOnly={true}>
                 <AdminPermissionsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="users"
+            element={
+              <ProtectedRoute resource={Resource.USERS} action={Action.READ}>
+                <UserManagementPage />
               </ProtectedRoute>
             }
           />

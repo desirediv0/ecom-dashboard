@@ -244,6 +244,16 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
+                href="/users"
+                icon={<Users className="h-5 w-5" />}
+                title="Users"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.USERS,
+                  Action.READ
+                )}
+              />
+              <NavItem
                 href="/admins"
                 icon={<Users className="h-5 w-5" />}
                 title="Admins"
@@ -452,6 +462,17 @@ export default function DashboardLayout() {
                 title="Admins"
                 onClick={toggleMobileMenu}
                 hasPermission={admin?.role === "SUPER_ADMIN"}
+              />
+              <NavItem
+                href="/users"
+                icon={<Users className="h-5 w-5" />}
+                title="Users"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.USERS,
+                  Action.READ
+                )}
               />
             </div>
           </SafeRender>

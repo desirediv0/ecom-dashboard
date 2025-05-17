@@ -312,9 +312,80 @@ export default function ProductContent({ slug }) {
     }
   };
 
-  // Handle image change
-  const handleImageChange = (image) => {
-    setMainImage(image);
+  // Render product images
+  const renderImages = () => {
+    if (!product || !product.images || product.images.length === 0) {
+      return (
+        <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
+          <Image
+            src="/images/product-placeholder.jpg"
+            alt={product?.name || "Product"}
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+      );
+    }
+
+    // If there's only one image
+    if (product.images.length === 1) {
+      return (
+        <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
+          <Image
+            src={getImageUrl(product.images[0].url)}
+            alt={product?.name || "Product"}
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+      );
+    }
+
+    // Main image display
+    return (
+      <div className="space-y-4">
+        <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
+          <Image
+            src={getImageUrl(mainImage?.url || product.images[0].url)}
+            alt={product?.name || "Product"}
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+
+        {/* Thumbnail grid for multiple images */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {product.images.map((image, index) => (
+            <div
+              key={index}
+              className={`relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-2 ${
+                mainImage?.url === image.url
+                  ? "border-primary"
+                  : "border-transparent"
+              }`}
+              onClick={() => setMainImage(image)}
+            >
+              <Image
+                src={getImageUrl(image.url)}
+                alt={`${product.name} - Image ${index + 1}`}
+                fill
+                className="object-contain"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Get image URL helper
+  const getImageUrl = (image) => {
+    if (!image) return "/images/product-placeholder.jpg";
+    if (image.startsWith("http")) return image;
+    return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
   };
 
   // Format price display
@@ -474,38 +545,45 @@ export default function ProductContent({ slug }) {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm mb-6">
+      <div className="flex items-center text-sm mb-8">
         <Link href="/" className="text-gray-500 hover:text-primary">
           Home
         </Link>
-        <ChevronRight className="h-3 w-3 mx-2 text-gray-400" />
+        <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
         <Link href="/products" className="text-gray-500 hover:text-primary">
           Products
         </Link>
-        {product?.category && (
+        {product?.categories?.[0] && (
           <>
-            <ChevronRight className="h-3 w-3 mx-2 text-gray-400" />
+            <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
             <Link
-              href={`/category/${product.category.slug}`}
+              href={`/category/${product.categories[0].slug}`}
               className="text-gray-500 hover:text-primary"
             >
-              {product.category.name}
+              {product.categories[0].name}
             </Link>
           </>
         )}
-        <ChevronRight className="h-3 w-3 mx-2 text-gray-400" />
-        <span className="text-gray-900 font-medium">{product?.name}</span>
+        <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
+        <span className="text-primary">{product?.name}</span>
       </div>
 
-      {/* Main product section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        {/* Left Column - Product Images */}
+      {/* Product Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Product Images */}
         <div>
-          <ProductCarousel
-            images={product?.images || []}
-            productName={product?.name || "Product"}
-            showSaleBadge={selectedVariant && selectedVariant.salePrice}
-          />
+          {loading ? (
+            <div className="aspect-square w-full bg-gray-100 rounded-lg animate-pulse"></div>
+          ) : error ? (
+            <div className="aspect-square w-full bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="text-center p-6">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <p className="text-red-600">{error}</p>
+              </div>
+            </div>
+          ) : (
+            renderImages()
+          )}
         </div>
 
         {/* Right Column - Product Details */}

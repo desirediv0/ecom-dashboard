@@ -485,7 +485,7 @@ export function Navbar() {
                   ))}
                   <div className="pt-2 mt-2 border-t border-gray-100">
                     <Link
-                      href="/products"
+                      href="/categories"
                       className="block px-4 py-2.5 text-primary font-medium hover:bg-primary/5 transition-all duration-200"
                       onClick={() => setActiveDropdown(null)}
                     >

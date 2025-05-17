@@ -203,7 +203,13 @@ export default function CheckoutPage() {
 
     try {
       // Get checkout amount
-      const amount = totals.subtotal - totals.discount;
+      const calculatedAmount = totals.subtotal - totals.discount;
+      const amount = Math.max(Math.round(calculatedAmount), 1);
+
+      // Show warning if original amount was less than 1
+      if (calculatedAmount < 1) {
+        toast.info("Minimum order amount is ₹1. Your total has been adjusted.");
+      }
 
       if (paymentMethod === "RAZORPAY") {
         // Step 1: Create Razorpay order
@@ -637,13 +643,10 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{formatCurrency(0)}</span>
+                  <span className="text-green-600 font-medium">FREE</span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (0%)</span>
-                  <span>{formatCurrency(0)}</span>
-                </div>
+                {/* Tax removed */}
               </div>
 
               <div className="pt-4">

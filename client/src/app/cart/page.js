@@ -196,16 +196,23 @@ export default function CartPage() {
     toast.success("Coupon removed");
   }, [removeCoupon]);
 
+  // Memoize cart totals to prevent re-renders
+  const totals = useMemo(() => getCartTotals(), [getCartTotals, cart, coupon]);
+
   const handleCheckout = useCallback(() => {
+    // Ensure minimum amount is 1
+    const calculatedAmount = totals.subtotal - totals.discount;
+    if (calculatedAmount < 1) {
+      toast.info("Minimum order amount is ₹1");
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push("/login?redirect=checkout");
     } else {
       router.push("/checkout");
     }
-  }, [isAuthenticated, router]);
-
-  // Memoize cart totals to prevent re-renders
-  const totals = useMemo(() => getCartTotals(), [getCartTotals, cart, coupon]);
+  }, [isAuthenticated, router, totals]);
 
   // Display loading state
   if (loading && !cart.items.length) {
@@ -392,12 +399,7 @@ export default function CartPage() {
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{formatCurrency(0)}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (0%)</span>
-                  <span>{formatCurrency(0)}</span>
+                  <span className="text-green-600 font-medium">FREE</span>
                 </div>
               </div>
 

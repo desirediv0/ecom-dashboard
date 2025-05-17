@@ -296,16 +296,15 @@ export function CartProvider({ children }) {
   const getCartTotals = () => {
     const subtotal = parseFloat(cart.subtotal || 0);
     const discount = coupon ? parseFloat(coupon.discountAmount || 0) : 0;
-    const shipping = cart.items.length > 0 ? 99 : 0; // Fixed shipping cost
-    const tax = (subtotal - discount) * 0.05; // 5% tax
-    const total = subtotal - discount + shipping + tax;
+    const shipping = 0; // Free shipping
+    const tax = 0; // No tax
 
     return {
       subtotal,
       discount,
       shipping,
       tax,
-      total,
+      total: subtotal - discount + shipping + tax,
     };
   };
 

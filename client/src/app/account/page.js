@@ -131,8 +131,8 @@ export default function AccountPage() {
               )}
 
               {isEditing ? (
-                <form onSubmit={handleSubmit}>
-                  <div className="space-y-4 ">
+                <form onSubmit={handleSubmit} className="mt-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                       <label
                         htmlFor="name"
@@ -143,27 +143,10 @@ export default function AccountPage() {
                       <Input
                         id="name"
                         name="name"
+                        type="text"
                         value={formData.name}
                         onChange={handleChange}
-                        required
                       />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Email Address
-                      </label>
-                      <Input
-                        id="email"
-                        value={user?.email || ""}
-                        disabled
-                        className="bg-gray-50"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Email cannot be changed
-                      </p>
                     </div>
                     <div>
                       <label
@@ -175,39 +158,12 @@ export default function AccountPage() {
                       <Input
                         id="phone"
                         name="phone"
+                        type="tel"
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder="Enter your phone number (optional)"
                       />
                     </div>
-                    <div>
-                      <label
-                        htmlFor="profileImage"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Profile Picture
-                      </label>
-                      <Input
-                        id="profileImage"
-                        name="profileImage"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleChange}
-                        className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                      />
-                      {preview && (
-                        <div className="mt-2">
-                          <Image
-                            width={96}
-                            height={96}
-                            src={preview}
-                            alt="Profile preview"
-                            className="h-20 w-20 rounded-full object-cover"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex space-x-3 pt-4">
+                    <div className="lg:col-span-2 flex gap-2 justify-end mt-4">
                       <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? "Saving..." : "Save Changes"}
                       </Button>
@@ -230,26 +186,8 @@ export default function AccountPage() {
                   </div>
                 </form>
               ) : (
-                <div className="flex-col lg:flex-row space-x-4 lg:space-x-8 flex items-start">
-                  <div className="flex-shrink-0">
-                    {user?.profileImageUrl ? (
-                      <Image
-                        width={96}
-                        height={96}
-                        src={user.profileImageUrl}
-                        alt={user.name}
-                        className="h-24 w-24 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
-                        <DynamicIcon
-                          name="User"
-                          className="h-12 w-12 text-primary/40"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-3">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">
                         Full Name

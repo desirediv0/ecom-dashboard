@@ -317,31 +317,31 @@ export function AuthProvider({ children }) {
   };
 
   // Update profile
-  const updateProfile = async (userData) => {
+  const updateProfile = async (data) => {
     setLoading(true);
-    try {
-      const formData = new FormData();
+    setError(null);
 
-      // Add each key-value pair to formData
-      Object.keys(userData).forEach((key) => {
-        if (userData[key] !== undefined) {
-          formData.append(key, userData[key]);
-        }
-      });
+    try {
+      // Create the request data
+      const formData = new FormData();
+      formData.append("name", data.name);
+
+      if (data.phone) {
+        formData.append("phone", data.phone);
+      }
 
       const res = await fetchApi("/users/update-profile", {
         method: "PATCH",
         credentials: "include",
-        headers: {
-          // Don't set Content-Type as it's set automatically for FormData
-        },
         body: formData,
       });
 
+      // Update the user data in state
       setUser(res.data.user);
       return res.data;
     } catch (err) {
-      setError(err.message);
+      console.error("Profile update error:", err);
+      setError(err.message || "Failed to update profile");
       throw err;
     } finally {
       setLoading(false);

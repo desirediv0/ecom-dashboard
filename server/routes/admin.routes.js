@@ -10,6 +10,11 @@ import {
   deleteAdmin,
   updateAdminPermissions,
   getLowStockAlerts,
+  getUsers,
+  getUserById,
+  verifyUserEmail,
+  deleteUser,
+  updateUserDetails,
 } from "../controllers/admin.controller.js";
 import {
   verifyAdminJWT,
@@ -61,6 +66,37 @@ router.post(
   verifyAdminJWT,
   hasRole("SUPER_ADMIN"),
   updateAdminPermissions
+);
+
+// User Management Routes
+router.get("/users", verifyAdminJWT, hasPermission("users", "read"), getUsers);
+
+router.get(
+  "/users/:userId",
+  verifyAdminJWT,
+  hasPermission("users", "read"),
+  getUserById
+);
+
+router.post(
+  "/users/:userId/verify-email",
+  verifyAdminJWT,
+  hasPermission("users", "update"),
+  verifyUserEmail
+);
+
+router.patch(
+  "/users/:userId",
+  verifyAdminJWT,
+  hasPermission("users", "update"),
+  updateUserDetails
+);
+
+router.delete(
+  "/users/:userId",
+  verifyAdminJWT,
+  hasPermission("users", "delete"),
+  deleteUser
 );
 
 export default router;
