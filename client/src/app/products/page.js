@@ -7,7 +7,6 @@ import { useSearchParams } from "next/navigation";
 import { fetchApi, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import {
   Star,
   Filter,
@@ -88,21 +87,11 @@ function ProductsContent() {
   const [selectedFlavors, setSelectedFlavors] = useState([]);
   const [selectedWeights, setSelectedWeights] = useState([]);
 
-  // Add a state to track available combinations of flavor and weight
-  const [availableCombinations, setAvailableCombinations] = useState([]);
-
   // Add a function to apply all filters at once
   const applyAllFilters = () => {
     // Force a re-fetch by resetting the page
     setPagination((prev) => ({ ...prev, page: 1 }));
     setLoading(true);
-  };
-
-  // Handle price slider change
-  const handlePriceChange = (values) => {
-    const [min, max] = values;
-    handleFilterChange("minPrice", min.toString());
-    handleFilterChange("maxPrice", max.toString());
   };
 
   // IMPORTANT: Group all useEffect hooks together in the same order on every render
@@ -348,14 +337,6 @@ function ProductsContent() {
     }
   };
 
-  // Handle clearing all multi-select filters
-  const clearAllMultiFilters = () => {
-    setSelectedFlavors([]);
-    setSelectedWeights([]);
-    handleFilterChange("flavor", "");
-    handleFilterChange("weight", "");
-  };
-
   // Handle clearing filters
   const clearFilters = () => {
     setFilters({
@@ -374,13 +355,6 @@ function ProductsContent() {
     setSelectedWeights([]);
 
     setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  // Handle search submission
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const searchInput = e.target.elements.search.value;
-    handleFilterChange("search", searchInput);
   };
 
   // Handle sort change
@@ -654,115 +628,6 @@ function ProductsContent() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Price Range Filter - updated to use Slider */}
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium uppercase">Price Range</h3>
-                <ChevronDown className="h-4 w-4" />
-              </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  // Force a re-fetch by changing page
-                  setPagination((prev) => ({
-                    ...prev,
-                    page: prev.page === 1 ? 1 : 1,
-                  }));
-                }}
-                className="space-y-4"
-              >
-                {/* Add slider component */}
-                <div className="pt-4 px-2">
-                  <Slider
-                    defaultValue={priceRange}
-                    min={0}
-                    max={maxPossiblePrice}
-                    step={10}
-                    value={priceRange}
-                    onValueChange={(values) => {
-                      setPriceRange(values);
-                    }}
-                    onValueCommit={handlePriceChange}
-                    disabled={loading}
-                    className="my-7"
-                  />
-                </div>
-
-                {/* Display min-max values with manual input option */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="w-full">
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      Min
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
-                        ₹
-                      </span>
-                      <Input
-                        type="number"
-                        min="0"
-                        max={priceRange[1]}
-                        value={priceRange[0]}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value) || 0;
-                          const newPriceRange = [
-                            Math.min(value, priceRange[1]),
-                            priceRange[1],
-                          ];
-                          setPriceRange(newPriceRange);
-                          handlePriceChange(newPriceRange);
-                        }}
-                        className="pl-6 border-gray-300"
-                      />
-                    </div>
-                  </div>
-                  <span className="text-gray-400 mt-5">-</span>
-                  <div className="w-full">
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      Max
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">
-                        ₹
-                      </span>
-                      <Input
-                        type="number"
-                        min={priceRange[0]}
-                        max={maxPossiblePrice}
-                        value={priceRange[1]}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value) || 0;
-                          const newPriceRange = [
-                            priceRange[0],
-                            Math.max(value, priceRange[0]),
-                          ];
-                          setPriceRange(newPriceRange);
-                          handlePriceChange(newPriceRange);
-                        }}
-                        className="pl-6 border-gray-300"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-xs text-gray-500">
-                  Price range: ₹{priceRange[0]} - ₹{priceRange[1]}
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="outline"
-                    className="text-xs"
-                    disabled={loading}
-                  >
-                    Apply
-                  </Button>
-                </div>
-              </form>
             </div>
 
             {/* Flavors Filter - updated for single-selection only */}
