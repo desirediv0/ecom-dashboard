@@ -2,17 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { orders, inventory } from "@/api/adminService";
 import { Card } from "@/components/ui/card";
+
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  BarChart3,
   AlertTriangle,
   ShoppingCart,
   TrendingUp,
@@ -21,10 +12,19 @@ import {
   AlertCircle,
   Package2,
   ExternalLink,
+  PieChart as PieChartIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 // Helper function to get proper image URL
 const getImageUrl = (image: string | undefined | null): string => {
@@ -288,7 +288,7 @@ export default function DashboardPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1">
         {/* Total Orders */}
         <Card className="flex flex-col p-6">
           <div className="flex items-center justify-between">
@@ -313,42 +313,6 @@ export default function DashboardPage() {
                 <TrendingDown className="mr-1 h-3 w-3 text-destructive" />
                 <span className="text-destructive">
                   {Math.abs(orderStats?.orderGrowth || 0)}% decrease
-                </span>
-              </>
-            )}
-            <span className="ml-1 text-muted-foreground">vs. last month</span>
-          </div>
-        </Card>
-
-        {/* Total Revenue */}
-        <Card className="flex flex-col p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">
-              Total Revenue
-            </p>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold">
-              ₹
-              {orderStats?.totalSales
-                ? orderStats.totalSales.toLocaleString()
-                : "0"}
-            </p>
-          </div>
-          <div className="mt-2 flex items-center text-xs">
-            {(orderStats?.revenueGrowth ?? 0) > 0 ? (
-              <>
-                <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
-                <span className="text-green-500">
-                  {orderStats?.revenueGrowth || 0}% increase
-                </span>
-              </>
-            ) : (
-              <>
-                <TrendingDown className="mr-1 h-3 w-3 text-destructive" />
-                <span className="text-destructive">
-                  {Math.abs(orderStats?.revenueGrowth || 0)}% decrease
                 </span>
               </>
             )}
@@ -435,93 +399,104 @@ export default function DashboardPage() {
                 Current status of orders
               </p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.entries(orderStats.statusCounts).map(
-                ([status, count]) => {
-                  // Define colors for different statuses
-                  const getStatusColor = (status: string) => {
-                    switch (status) {
-                      case "PENDING":
-                        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-                      case "PROCESSING":
-                        return "bg-blue-100 text-blue-800 border-blue-200";
-                      case "PAID":
-                        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-                      case "SHIPPED":
-                        return "bg-indigo-100 text-indigo-800 border-indigo-200";
-                      case "DELIVERED":
-                        return "bg-green-100 text-green-800 border-green-200";
-                      case "CANCELLED":
-                        return "bg-red-100 text-red-800 border-red-200";
-                      case "REFUNDED":
-                        return "bg-purple-100 text-purple-800 border-purple-200";
-                      default:
-                        return "bg-gray-100 text-gray-800 border-gray-200";
-                    }
-                  };
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(orderStats.statusCounts).map(
+                  ([status, count]) => {
+                    // Define colors for different statuses
+                    const getStatusColor = (status: string) => {
+                      switch (status) {
+                        case "PENDING":
+                          return "bg-yellow-100 text-yellow-800 border-yellow-200";
+                        case "PROCESSING":
+                          return "bg-blue-100 text-blue-800 border-blue-200";
+                        case "PAID":
+                          return "bg-emerald-100 text-emerald-800 border-emerald-200";
+                        case "SHIPPED":
+                          return "bg-indigo-100 text-indigo-800 border-indigo-200";
+                        case "DELIVERED":
+                          return "bg-green-100 text-green-800 border-green-200";
+                        case "CANCELLED":
+                          return "bg-red-100 text-red-800 border-red-200";
+                        case "REFUNDED":
+                          return "bg-purple-100 text-purple-800 border-purple-200";
+                        default:
+                          return "bg-gray-100 text-gray-800 border-gray-200";
+                      }
+                    };
 
-                  return (
-                    <div
-                      key={status}
-                      className={`border rounded-lg p-3 ${getStatusColor(status)}`}
-                    >
-                      <div className="text-sm font-medium">{status}</div>
-                      <div className="text-xl font-bold mt-1">
-                        {count as number}
+                    return (
+                      <div
+                        key={status}
+                        className={`border rounded-lg p-3 ${getStatusColor(status)}`}
+                      >
+                        <div className="text-sm font-medium">{status}</div>
+                        <div className="text-xl font-bold mt-1">
+                          {count as number}
+                        </div>
                       </div>
-                    </div>
-                  );
-                }
-              )}
+                    );
+                  }
+                )}
+              </div>
+
+              {/* Pie Chart */}
+              <div className="flex flex-col items-center">
+                <div className="flex items-center mb-2">
+                  <PieChartIcon className="h-4 w-4 mr-2 text-primary" />
+                  <span className="font-medium">Visual Distribution</span>
+                </div>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(orderStats.statusCounts).map(
+                          ([status, count]) => ({
+                            name: status,
+                            value: count as number,
+                          })
+                        )}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        nameKey="name"
+                        label={({ name, percent }) =>
+                          `${name}: ${(percent * 100).toFixed(0)}%`
+                        }
+                      >
+                        {Object.entries(orderStats.statusCounts).map(
+                          ([_], index) => {
+                            const COLORS = [
+                              "#ffc107", // PENDING - yellow
+                              "#3b82f6", // PROCESSING - blue
+                              "#10b981", // PAID - emerald
+                              "#6366f1", // SHIPPED - indigo
+                              "#22c55e", // DELIVERED - green
+                              "#ef4444", // CANCELLED - red
+                              "#a855f7", // REFUNDED - purple
+                              "#94a3b8", // default - gray
+                            ];
+                            return (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            );
+                          }
+                        )}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           </Card>
         )}
-
-      {/* Revenue Chart */}
-      {orderStats?.monthlySales && orderStats.monthlySales.length > 0 && (
-        <Card className="p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-medium">Revenue Over Time</h3>
-            <p className="text-sm text-muted-foreground">
-              Monthly revenue for the past 6 months
-            </p>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={orderStats.monthlySales}
-                margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => value?.substring(0, 3) || value}
-                />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `₹${value / 1000}k`}
-                />
-                <Tooltip
-                  formatter={(value) => [
-                    `₹${Number(value).toLocaleString()}`,
-                    "Revenue",
-                  ]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Revenue"
-                  stroke="var(--chart-1)"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

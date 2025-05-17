@@ -843,6 +843,113 @@ export const getOrderStats = asyncHandler(async (req, res, next) => {
       ? totalSales._sum.total / totalOrders
       : 0;
 
+  // Get monthly sales data for the last 6 months
+  const monthlyRevenueStartDate = new Date();
+  monthlyRevenueStartDate.setMonth(monthlyRevenueStartDate.getMonth() - 5);
+  monthlyRevenueStartDate.setDate(1);
+  monthlyRevenueStartDate.setHours(0, 0, 0, 0);
+
+  const orders = await prisma.order.findMany({
+    where: {
+      createdAt: {
+        gte: monthlyRevenueStartDate,
+      },
+      status: {
+        in: ["PAID", "SHIPPED", "DELIVERED"],
+      },
+    },
+    select: {
+      total: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  // Group orders by month
+  const monthlyData = {};
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  orders.forEach((order) => {
+    const date = new Date(order.createdAt);
+    const monthYear = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+    if (!monthlyData[monthYear]) {
+      monthlyData[monthYear] = 0;
+    }
+
+    monthlyData[monthYear] += parseFloat(order.total);
+  });
+
+  // Convert to array format needed for the chart
+  const monthlySales = Object.entries(monthlyData).map(([month, revenue]) => ({
+    month,
+    revenue: parseFloat(revenue).toFixed(2),
+  }));
+
+  // Calculate growth percentages
+  // For orders: Compare current period vs previous same-length period
+  const previousPeriodStartDate = new Date(startDate);
+  const periodLength = endDate.getTime() - startDate.getTime();
+  previousPeriodStartDate.setTime(
+    previousPeriodStartDate.getTime() - periodLength
+  );
+
+  const previousPeriodOrders = await prisma.order.count({
+    where: {
+      createdAt: {
+        gte: previousPeriodStartDate,
+        lt: startDate,
+      },
+    },
+  });
+
+  const previousPeriodSales = await prisma.order.aggregate({
+    _sum: {
+      total: true,
+    },
+    where: {
+      createdAt: {
+        gte: previousPeriodStartDate,
+        lt: startDate,
+      },
+      status: {
+        in: ["PAID", "SHIPPED", "DELIVERED"],
+      },
+    },
+  });
+
+  // Calculate growth percentages
+  let orderGrowth = 0;
+  if (previousPeriodOrders > 0) {
+    orderGrowth = Math.round(
+      ((totalOrders - previousPeriodOrders) / previousPeriodOrders) * 100
+    );
+  }
+
+  let revenueGrowth = 0;
+  if (previousPeriodSales._sum.total) {
+    revenueGrowth = Math.round(
+      ((totalSales._sum.total - previousPeriodSales._sum.total) /
+        previousPeriodSales._sum.total) *
+        100
+    );
+  }
+
   // Get top selling products
   const topProducts = await prisma.orderItem.groupBy({
     by: ["productId"],
@@ -907,6 +1014,9 @@ export const getOrderStats = asyncHandler(async (req, res, next) => {
         averageOrderValue,
         statusCounts,
         topProducts: topProductsDetails,
+        monthlySales,
+        orderGrowth,
+        revenueGrowth,
       },
       "Order statistics fetched successfully"
     )
