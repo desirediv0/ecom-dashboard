@@ -101,15 +101,78 @@ export const deleteFaq = async (id: string) => {
 };
 
 // Bulk update FAQ order
-export const updateFaqOrder = async (faqs: { id: string; order: number }[]) => {
+export const updateFaqOrder = async (
+  faqs: { id: string; order: number }[],
+  allFaqs?: FAQ[]
+) => {
   try {
-    console.log("Sending update order request with data:", { faqs });
+    console.log("Preparing to update FAQ order");
 
-    const response = await api.put("/api/admin/faqs/bulk-update-order", {
-      faqs,
+    // First, we need to get all FAQs if not provided
+    let faqsData: FAQ[] = allFaqs || [];
+    if (faqsData.length === 0) {
+      console.log("No FAQ data provided, fetching all FAQs");
+      try {
+        const response = await getAllFaqs();
+
+        if (response?.data?.faqs && Array.isArray(response.data.faqs)) {
+          faqsData = response.data.faqs;
+        } else if (Array.isArray(response?.data)) {
+          faqsData = response.data;
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          faqsData = response.data.data;
+        } else {
+          console.error("Could not get FAQ data for order update");
+          throw new Error("Failed to retrieve FAQ data for ordering");
+        }
+      } catch (fetchError) {
+        console.error("Error fetching FAQs for order update:", fetchError);
+        throw fetchError;
+      }
+    }
+
+    // Create a map of all FAQs by ID for quick lookup
+    const faqMap = new Map();
+    faqsData.forEach((faq) => {
+      faqMap.set(faq.id, faq);
     });
 
-    console.log("Update order response:", response.data);
+    // Create payload with complete FAQ objects including required fields
+    const completePayload = faqs
+      .map((item) => {
+        const originalFaq = faqMap.get(item.id);
+        if (!originalFaq) {
+          console.error(`FAQ with ID ${item.id} not found in data`);
+          return null;
+        }
+
+        // Return complete object with all required fields
+        return {
+          id: item.id,
+          order: item.order,
+          question: originalFaq.question,
+          answer: originalFaq.answer,
+          category: originalFaq.category,
+          isPublished: originalFaq.isPublished,
+        };
+      })
+      .filter(Boolean) as Omit<FAQ, "createdAt" | "updatedAt">[]; // Remove any null entries
+
+    if (completePayload.length === 0) {
+      throw new Error("No valid FAQs to update order");
+    }
+
+    console.log(
+      "Sending complete FAQ payload for order update:",
+      completePayload
+    );
+
+    // Make the actual API request with complete objects
+    const response = await api.put("/api/admin/faqs/bulk-update-order", {
+      faqs: completePayload,
+    });
+
+    console.log("Order update successful:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("Error updating FAQ order:", error);
