@@ -195,8 +195,24 @@ export default function OrdersPage() {
                           {order.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(order.total)}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 font-medium">
+                          {formatCurrency(order.total)}
+                        </div>
+                        {order.discount > 0 && (
+                          <div className="text-xs text-green-600">
+                            {order.couponCode ? (
+                              <span>
+                                Saved {formatCurrency(order.discount)} with{" "}
+                                {order.couponCode}
+                              </span>
+                            ) : (
+                              <span>
+                                Saved {formatCurrency(order.discount)}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center text-sm text-gray-900">

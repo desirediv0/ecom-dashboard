@@ -219,6 +219,10 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             amount,
             currency: "INR",
+            // Include coupon information for proper tracking
+            couponCode: coupon?.code || null,
+            couponId: coupon?.id || null,
+            discountAmount: totals.discount || 0,
           }),
         });
 
@@ -265,8 +269,13 @@ export default function CheckoutPage() {
                   razorpayOrderId: response.razorpay_order_id,
                   razorpayPaymentId: response.razorpay_payment_id,
                   razorpaySignature: response.razorpay_signature,
+                  // Include shipping and coupon information
                   shippingAddressId: selectedAddressId,
                   billingAddressSameAsShipping: true,
+                  // Also pass coupon information again to ensure it's included
+                  couponCode: coupon?.code || null,
+                  couponId: coupon?.id || null,
+                  discountAmount: totals.discount || 0,
                   notes: "",
                 }),
               });

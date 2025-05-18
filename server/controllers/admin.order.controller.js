@@ -93,6 +93,14 @@ export const getOrders = asyncHandler(async (req, res, next) => {
           razorpayPaymentId: true,
         },
       },
+      coupon: {
+        select: {
+          id: true,
+          code: true,
+          discountType: true,
+          discountValue: true,
+        },
+      },
     },
     orderBy: {
       [sort]: order,
@@ -101,21 +109,31 @@ export const getOrders = asyncHandler(async (req, res, next) => {
     take: parseInt(limit),
   });
 
-  // Modify the orders to adjust tax, shipping, and totals
-  const modifiedOrders = orders.map((order) => ({
+  // Keep the original order data and preserve historical pricing information
+  const formattedOrders = orders.map((order) => ({
     ...order,
-    tax: "0.00",
-    shippingCost: "0.00",
-    total: (
-      parseFloat(order.subTotal) - parseFloat(order.discount || 0)
-    ).toFixed(2),
+    subTotal: parseFloat(order.subTotal),
+    tax: parseFloat(order.tax),
+    shippingCost: parseFloat(order.shippingCost),
+    discount: parseFloat(order.discount) || 0,
+    total: parseFloat(order.total), // Use the exact total that was recorded at time of order
+    couponDetails: order.coupon
+      ? {
+          id: order.coupon.id,
+          code: order.coupon.code,
+          discountType: order.coupon.discountType,
+          discountValue: parseFloat(order.coupon.discountValue),
+        }
+      : order.couponCode
+      ? { code: order.couponCode }
+      : null,
   }));
 
   res.status(200).json(
     new ApiResponsive(
       200,
       {
-        orders: modifiedOrders,
+        orders: formattedOrders,
         pagination: {
           total: totalOrders,
           page: parseInt(page),
@@ -174,6 +192,15 @@ export const getOrderById = asyncHandler(async (req, res, next) => {
         },
       },
       shippingAddress: true,
+      coupon: {
+        select: {
+          id: true,
+          code: true,
+          description: true,
+          discountType: true,
+          discountValue: true,
+        },
+      },
     },
   });
 
@@ -189,6 +216,18 @@ export const getOrderById = asyncHandler(async (req, res, next) => {
     total: (
       parseFloat(order.subTotal) - parseFloat(order.discount || 0)
     ).toFixed(2), // Recalculate total
+    // Add detailed coupon information
+    couponDetails: order.coupon
+      ? {
+          id: order.coupon.id,
+          code: order.coupon.code,
+          description: order.coupon.description,
+          discountType: order.coupon.discountType,
+          discountValue: parseFloat(order.coupon.discountValue),
+        }
+      : order.couponCode
+      ? { code: order.couponCode }
+      : null,
   };
 
   res
@@ -494,6 +533,7 @@ export const createOrder = asyncHandler(async (req, res, next) => {
     taxRate,
     discount,
     couponCode,
+    couponId,
     notes,
   } = req.body;
 
@@ -521,6 +561,17 @@ export const createOrder = asyncHandler(async (req, res, next) => {
 
     if (!address) {
       throw new ApiError(404, "Shipping address not found for this user");
+    }
+  }
+
+  // If couponCode is provided but not couponId, try to find the coupon
+  let finalCouponId = couponId;
+  if (couponCode && !couponId) {
+    const coupon = await prisma.coupon.findUnique({
+      where: { code: couponCode },
+    });
+    if (coupon) {
+      finalCouponId = coupon.id;
     }
   }
 
@@ -581,6 +632,7 @@ export const createOrder = asyncHandler(async (req, res, next) => {
         shippingCost: shippingAmount,
         discount: discountAmount,
         couponCode,
+        couponId: finalCouponId,
         total,
         shippingAddressId,
         notes,

@@ -23,7 +23,13 @@ export const getRazorpayKey = asyncHandler(async (req, res) => {
 
 // Create Razorpay order
 export const checkout = asyncHandler(async (req, res) => {
-  const { amount, currency = "INR" } = req.body;
+  const {
+    amount,
+    currency = "INR",
+    couponCode,
+    couponId,
+    discountAmount,
+  } = req.body;
   const userId = req.user.id;
 
   if (!amount || amount < 1) {
@@ -54,10 +60,23 @@ export const checkout = asyncHandler(async (req, res) => {
     const timestamp = Date.now().toString().slice(-10);
     const receipt = `rcpt_${timestamp}_${shortUserId}`;
 
+    // Store coupon information in the receipt notes
+    const notes = {};
+    if (couponCode) {
+      notes.couponCode = couponCode;
+    }
+    if (couponId) {
+      notes.couponId = couponId;
+    }
+    if (discountAmount && discountAmount > 0) {
+      notes.discountAmount = discountAmount;
+    }
+
     const options = {
       amount: Number(amount) * 100, // Razorpay takes amount in paise
       currency,
       receipt: receipt,
+      notes: Object.keys(notes).length > 0 ? notes : undefined,
     };
 
     const order = await razorpay.orders.create(options);
@@ -66,9 +85,15 @@ export const checkout = asyncHandler(async (req, res) => {
       throw new ApiError(500, "Error creating Razorpay order");
     }
 
+    // Store the coupon information in the response
+    const responseData = {
+      ...order,
+      couponData: Object.keys(notes).length > 0 ? notes : null,
+    };
+
     res
       .status(200)
-      .json(new ApiResponsive(200, order, "Order created successfully"));
+      .json(new ApiResponsive(200, responseData, "Order created successfully"));
   } catch (error) {
     console.error("Razorpay order creation error:", error);
 
@@ -99,6 +124,9 @@ export const paymentVerification = asyncHandler(async (req, res) => {
     shippingAddressId,
     billingAddressSameAsShipping = true,
     billingAddress,
+    couponCode: requestCouponCode,
+    couponId: requestCouponId,
+    discountAmount: requestDiscount,
     notes,
   } = req.body;
 
@@ -251,6 +279,62 @@ export const paymentVerification = asyncHandler(async (req, res) => {
           subTotal
         );
       }
+
+      // After successful order, deactivate the coupon for this user
+      // We'll do this in the transaction to ensure it only happens if order is created
+    }
+    // If no userCoupon but we have coupon info stored in the Razorpay order, use that
+    else {
+      try {
+        // First check if direct coupon info was provided in the request
+        if (requestCouponCode || requestCouponId || requestDiscount) {
+          if (requestCouponCode) couponCode = requestCouponCode;
+          if (requestCouponId) couponId = requestCouponId;
+          if (requestDiscount) discount = parseFloat(requestDiscount);
+        }
+        // Fallback to Razorpay order notes
+        else {
+          // Fetch the Razorpay order to get notes
+          const razorpayOrderDetails = await razorpay.orders.fetch(
+            razorpay_order_id
+          );
+
+          if (razorpayOrderDetails.notes) {
+            // Get coupon information from notes
+            if (razorpayOrderDetails.notes.couponCode) {
+              couponCode = razorpayOrderDetails.notes.couponCode;
+            }
+
+            if (razorpayOrderDetails.notes.couponId) {
+              couponId = razorpayOrderDetails.notes.couponId;
+            }
+
+            if (razorpayOrderDetails.notes.discountAmount) {
+              discount = parseFloat(razorpayOrderDetails.notes.discountAmount);
+            }
+          }
+        }
+
+        // If we have couponId but no couponCode or vice versa, try to get the missing information
+        if (couponId && !couponCode) {
+          const coupon = await prisma.coupon.findUnique({
+            where: { id: couponId },
+          });
+          if (coupon) {
+            couponCode = coupon.code;
+          }
+        } else if (couponCode && !couponId) {
+          const coupon = await prisma.coupon.findUnique({
+            where: { code: couponCode },
+          });
+          if (coupon) {
+            couponId = coupon.id;
+          }
+        }
+      } catch (err) {
+        console.log("Error processing coupon information:", err);
+        // Continue with the process, just without coupon info
+      }
     }
 
     // Tax is 0% now
@@ -264,6 +348,24 @@ export const paymentVerification = asyncHandler(async (req, res) => {
       razorpay_payment_id
     );
     const paymentMethod = mapRazorpayMethod(razorpayPaymentDetails.method);
+
+    // Debug coupon information
+    console.log("Coupon information before creating order:", {
+      couponCode,
+      couponId,
+      discount,
+      userCoupon: userCoupon
+        ? {
+            id: userCoupon.id,
+            coupon: userCoupon.coupon
+              ? {
+                  id: userCoupon.coupon.id,
+                  code: userCoupon.coupon.code,
+                }
+              : null,
+          }
+        : null,
+    });
 
     // Create order and process payment in a transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -285,9 +387,33 @@ export const paymentVerification = asyncHandler(async (req, res) => {
           notes,
           status: "PAID",
           couponCode,
-          couponId,
+          couponId: couponId,
         },
       });
+
+      // If a coupon was used, mark it as inactive for this user
+      if (userCoupon && userCoupon.coupon) {
+        await tx.userCoupon.update({
+          where: {
+            id: userCoupon.id,
+          },
+          data: {
+            isActive: false,
+          },
+        });
+
+        // Update the coupon's used count
+        await tx.coupon.update({
+          where: {
+            id: userCoupon.coupon.id,
+          },
+          data: {
+            usedCount: {
+              increment: 1,
+            },
+          },
+        });
+      }
 
       // 2. Create the Razorpay payment record
       const payment = await tx.razorpayPayment.create({
@@ -485,6 +611,13 @@ export const getOrderHistory = asyncHandler(async (req, res) => {
           razorpayPaymentId: true,
         },
       },
+      coupon: {
+        select: {
+          code: true,
+          discountType: true,
+          discountValue: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
     skip,
@@ -493,12 +626,26 @@ export const getOrderHistory = asyncHandler(async (req, res) => {
 
   // Format response
   const formattedOrders = orders.map((order) => {
+    // Ensure we use the original total without modifying it
+    const originalTotal = parseFloat(order.total);
+
     return {
       id: order.id,
       orderNumber: order.orderNumber,
       date: order.createdAt,
       status: order.status,
-      total: parseFloat(order.subTotal) - parseFloat(order.discount), // Recalculated total
+      // Use the original stored total
+      total: originalTotal,
+      subTotal: parseFloat(order.subTotal),
+      discount: parseFloat(order.discount) || 0,
+      couponCode: order.couponCode || null,
+      couponDetails: order.coupon
+        ? {
+            code: order.coupon.code,
+            discountType: order.coupon.discountType,
+            discountValue: parseFloat(order.coupon.discountValue),
+          }
+        : null,
       paymentMethod: order.razorpayPayment?.paymentMethod || "ONLINE",
       paymentStatus: order.razorpayPayment?.status || order.status,
       items: order.items.map((item) => ({
@@ -585,6 +732,14 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
         },
       },
       razorpayPayment: true,
+      coupon: {
+        select: {
+          code: true,
+          description: true,
+          discountType: true,
+          discountValue: true,
+        },
+      },
     },
   });
 
@@ -592,23 +747,33 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Order not found");
   }
 
-  // Format response
+  // Format response - use original values to maintain historical pricing
   const formattedOrder = {
     id: order.id,
     orderNumber: order.orderNumber,
     date: order.createdAt,
     status: order.status,
     subTotal: parseFloat(order.subTotal),
-    tax: 0, // Always return tax as 0
-    shippingCost: 0, // Always return shipping as 0
-    discount: parseFloat(order.discount),
-    total: parseFloat(order.subTotal) - parseFloat(order.discount), // Recalculate total
+    tax: parseFloat(order.tax),
+    shippingCost: parseFloat(order.shippingCost),
+    discount: parseFloat(order.discount) || 0,
+    // Use the original total stored in the database to preserve historical pricing
+    total: parseFloat(order.total),
     paymentMethod: order.razorpayPayment?.paymentMethod || "ONLINE",
     paymentId: order.razorpayPayment?.razorpayPaymentId,
     paymentStatus: order.razorpayPayment?.status || order.status,
     notes: order.notes,
     couponCode: order.couponCode,
     couponId: order.couponId,
+    // Add detailed coupon information
+    couponDetails: order.coupon
+      ? {
+          code: order.coupon.code,
+          description: order.coupon.description,
+          discountType: order.coupon.discountType,
+          discountValue: parseFloat(order.coupon.discountValue),
+        }
+      : null,
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,

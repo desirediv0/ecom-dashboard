@@ -558,8 +558,31 @@ export default function OrderDetailsPage() {
                   </div>
                 )}
                 {orderDetails.couponCode && (
-                  <div className="text-xs text-green-600 mt-1 italic">
-                    Coupon applied: {orderDetails.couponCode}
+                  <div className="mt-1 p-2 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20 rounded-md">
+                    <div className="flex items-center text-green-700 dark:text-green-500 font-medium mb-1">
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Coupon applied: {orderDetails.couponCode}
+                    </div>
+                    {orderDetails.coupon && (
+                      <div className="text-sm text-green-600 dark:text-green-500">
+                        {orderDetails.coupon.discountType === "PERCENTAGE" ? (
+                          <span>
+                            {orderDetails.coupon.discountValue}% off the order
+                            total
+                          </span>
+                        ) : (
+                          <span>
+                            {formatCurrency(orderDetails.coupon.discountValue)}{" "}
+                            off the order total
+                          </span>
+                        )}
+                        {orderDetails.coupon.description && (
+                          <p className="text-xs mt-1 text-green-500 dark:text-green-400">
+                            {orderDetails.coupon.description}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-between border-t pt-2 font-medium">
