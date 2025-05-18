@@ -33,18 +33,33 @@ export default function LoginPage() {
     try {
       await login(email, password);
 
+      // Set a flag in sessionStorage to prevent duplicate toast from AuthRedirect
+      sessionStorage.setItem("justLoggedIn", "true");
+
       // Show success message
       toast.success("Logged in successfully");
 
-      // Get redirect URL from query parameters if available
-      const redirect = searchParams.get("redirect");
+      // Get returnUrl URL from query parameters if available
+      const returnUrl = searchParams.get("returnUrl");
 
       // Redirect after a small delay to allow toast to be seen
       setTimeout(() => {
-        if (redirect) {
-          router.push(`/${redirect}`);
+        if (returnUrl) {
+          // Decode the URL if it's URL encoded
+          const decodedUrl = decodeURIComponent(returnUrl);
+          router.push(decodedUrl);
+
+          // Force reload after redirection
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         } else {
           router.push("/");
+
+          // Force reload after redirection
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         }
       }, 500);
     } catch (error) {

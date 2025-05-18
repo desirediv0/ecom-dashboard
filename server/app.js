@@ -19,6 +19,7 @@ import paymentRoutes from "./routes/payment.routes.js";
 import couponRoutes from "./routes/coupon.routes.js";
 import contentRoutes from "./routes/content.routes.js";
 import faqRoutes from "./routes/faq.routes.js";
+import { trackPageView } from "./middlewares/tracking.middleware.js";
 
 const app = express();
 
@@ -67,6 +68,10 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+// Add page view tracking middleware
+app.use(trackPageView);
+
 // Static Files
 app.use(express.static("public/upload"));
 

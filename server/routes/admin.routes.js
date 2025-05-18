@@ -21,6 +21,12 @@ import {
   hasPermission,
   hasRole,
 } from "../middlewares/admin.middleware.js";
+import {
+  getMostViewedPages,
+  getMostViewedProducts,
+  getUsersWithProductsInCart,
+  getAnalyticsDashboard,
+} from "../controllers/analytics.controller.js";
 
 const router = express.Router();
 
@@ -97,6 +103,32 @@ router.delete(
   verifyAdminJWT,
   hasPermission("users", "delete"),
   deleteUser
+);
+
+// Analytics routes
+router.get(
+  "/analytics/dashboard",
+  verifyAdminJWT,
+  hasPermission("analytics", "read"),
+  getAnalyticsDashboard
+);
+router.get(
+  "/analytics/pages",
+  verifyAdminJWT,
+  hasPermission("analytics", "read"),
+  getMostViewedPages
+);
+router.get(
+  "/analytics/products",
+  verifyAdminJWT,
+  hasPermission("analytics", "read"),
+  getMostViewedProducts
+);
+router.get(
+  "/analytics/carts",
+  verifyAdminJWT,
+  hasPermission("analytics", "read"),
+  getUsersWithProductsInCart
 );
 
 export default router;

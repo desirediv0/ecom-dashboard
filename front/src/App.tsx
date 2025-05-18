@@ -32,6 +32,7 @@ import { PermissionGuard } from "./components/PermissionGuard";
 import { AlertCircle } from "lucide-react";
 import { Card, CardContent } from "./components/ui/card";
 import UserManagementPage from "./pages/UserManagementPage";
+import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
 
 // Protected Route Component
 const ProtectedRoute = ({
@@ -118,6 +119,18 @@ const App = () => {
                 action={Action.READ}
               >
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="dashboard/analytics"
+            element={
+              <ProtectedRoute
+                resource={Resource.ANALYTICS}
+                action={Action.READ}
+              >
+                <AnalyticsDashboard />
               </ProtectedRoute>
             }
           />

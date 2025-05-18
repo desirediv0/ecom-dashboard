@@ -70,15 +70,26 @@ export function RouteGuard({ children }) {
           toast.error("Please log in to access this page");
         }
 
-        router.push(
-          `/login?redirect=${encodeURIComponent(redirectPath.substring(1))}`
-        );
+        router.push(`/login?returnUrl=${encodeURIComponent(redirectPath)}`);
       } else if (isAuthRoute && isAuthenticated) {
         setAuthorized(false);
-        // Only show notification if not first run
-        if (!firstRun) {
+
+        // Check if user just logged in (to prevent double toast message)
+        const justLoggedIn =
+          typeof window !== "undefined"
+            ? sessionStorage.getItem("justLoggedIn")
+            : null;
+
+        // Only show notification if not first run and not just logged in
+        if (!firstRun && !justLoggedIn) {
           toast.info("You are already logged in");
         }
+
+        // Clear the justLoggedIn flag if it exists
+        if (justLoggedIn) {
+          sessionStorage.removeItem("justLoggedIn");
+        }
+
         router.push("/");
       } else {
         setAuthorized(true);

@@ -28,6 +28,8 @@ model User {
   reviews                      Review[]
   wishlistItems                WishlistItem[]
   userCoupons                  UserCoupon[]
+  PageView                     PageView[]
+  ProductView                  ProductView[]
 }
 
 model Account {
@@ -125,6 +127,7 @@ model Product {
   variants          ProductVariant[]
   reviews           Review[]
   wishlistItems     WishlistItem[]
+  ProductView       ProductView[]
 }
 
 model ProductImage {
@@ -458,6 +461,33 @@ model ContactSubmission {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Analytics model for page views
+model PageView {
+  id        String   @id @default(uuid())
+  path      String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  sessionId String?
+  timestamp DateTime @default(now())
+
+  @@index([path])
+  @@index([userId])
+}
+
+// Analytics model for product views
+model ProductView {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  sessionId String?
+  timestamp DateTime @default(now())
+
+  @@index([productId])
+  @@index([userId])
 }
 
 enum UserRole {
