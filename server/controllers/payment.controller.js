@@ -349,24 +349,6 @@ export const paymentVerification = asyncHandler(async (req, res) => {
     );
     const paymentMethod = mapRazorpayMethod(razorpayPaymentDetails.method);
 
-    // Debug coupon information
-    console.log("Coupon information before creating order:", {
-      couponCode,
-      couponId,
-      discount,
-      userCoupon: userCoupon
-        ? {
-            id: userCoupon.id,
-            coupon: userCoupon.coupon
-              ? {
-                  id: userCoupon.coupon.id,
-                  code: userCoupon.coupon.code,
-                }
-              : null,
-          }
-        : null,
-    });
-
     // Create order and process payment in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create the order
