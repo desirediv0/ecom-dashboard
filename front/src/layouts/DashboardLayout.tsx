@@ -206,7 +206,7 @@ export default function DashboardLayout() {
               <NavItem
                 href="/blog-management"
                 icon={<FileText className="h-5 w-5" />}
-                title="Blog Management"
+                title="Blog"
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.CONTENT,
@@ -216,7 +216,7 @@ export default function DashboardLayout() {
               <NavItem
                 href="/contact-management"
                 icon={<Mail className="h-5 w-5" />}
-                title="Contact Submissions"
+                title="Contact"
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.CONTACT,
@@ -226,7 +226,7 @@ export default function DashboardLayout() {
               <NavItem
                 href="/reviews-management"
                 icon={<MessageSquare className="h-5 w-5" />}
-                title="Reviews Management"
+                title="Reviews"
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.REVIEWS,
@@ -236,7 +236,7 @@ export default function DashboardLayout() {
               <NavItem
                 href="/faq-management"
                 icon={<HelpCircle className="h-5 w-5" />}
-                title="FAQ Management"
+                title="FAQ"
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.FAQS,
