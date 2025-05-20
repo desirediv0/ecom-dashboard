@@ -336,7 +336,10 @@ export default function OrderDetailsPage({ params }) {
                       key={item.id}
                       className="flex border-b pb-4 last:border-0 last:pb-0"
                     >
-                      <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-4">
+                      <Link
+                        href={`/products/${item.slug}`}
+                        className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-4"
+                      >
                         {item.image ? (
                           <Image
                             width={80}
@@ -353,7 +356,7 @@ export default function OrderDetailsPage({ params }) {
                             />
                           </div>
                         )}
-                      </div>
+                      </Link>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-base font-medium truncate">
                           {item.name}

@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import { AuthRedirect } from "@/components/auth-redirect";
 
 export default function RegisterPage() {
@@ -77,7 +77,7 @@ export default function RegisterPage() {
         password: formData.password,
       });
 
-      // Show success message
+      // Show success message with longer duration
       toast.success(
         "Registration successful! Please check your email to verify your account.",
         {
@@ -99,8 +99,8 @@ export default function RegisterPage() {
 
       // Redirect to login after a delay
       setTimeout(() => {
-        router.push("/login");
-      }, 3000);
+        window.location.href = "/login";
+      }, 2000);
     } catch (error) {
       toast.error(error.message || "Registration failed. Please try again.");
     } finally {
@@ -111,6 +111,7 @@ export default function RegisterPage() {
   return (
     <AuthRedirect>
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <Toaster position="top-center" />
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
           <div className="text-center">
             <h1 className="text-3xl font-extrabold text-gray-900">

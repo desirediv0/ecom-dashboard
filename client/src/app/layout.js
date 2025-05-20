@@ -45,7 +45,7 @@ export default function RootLayout({ children }) {
               </main>
               <Footer />
             </div>
-            <Toaster position="top-right" />
+            <Toaster position="top-center" richColors closeButton />
           </CartProvider>
         </AuthProvider>
       </body>

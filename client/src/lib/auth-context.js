@@ -98,11 +98,8 @@ export function AuthProvider({ children }) {
       // Set user data from response
       setUser(res.data.user);
 
-      // Create a local storage item as a backup
+      // Save user session to cookie with 1 day expiration
       if (typeof window !== "undefined") {
-        localStorage.setItem("isLoggedIn", "true");
-
-        // Save a temporary copy of the user session
         document.cookie = `user_session=${encodeURIComponent(
           JSON.stringify({
             isAuthenticated: true,
@@ -180,11 +177,6 @@ export function AuthProvider({ children }) {
     try {
       // First perform client-side logout regardless of API success
       setUser(null);
-
-      // Clear local storage
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("isLoggedIn");
-      }
 
       // Manually clear cookies on the client side
       document.cookie =
@@ -360,10 +352,30 @@ export function AuthProvider({ children }) {
     forgotPassword,
     resetPassword,
     updateProfile,
-    isAuthenticated:
-      !!user ||
-      (typeof window !== "undefined" &&
-        localStorage.getItem("isLoggedIn") === "true"),
+    isAuthenticated: (() => {
+      // First check cookie
+      if (typeof window !== "undefined") {
+        const userSessionCookie = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("user_session="));
+
+        if (userSessionCookie) {
+          try {
+            const sessionData = JSON.parse(
+              decodeURIComponent(userSessionCookie.split("=")[1])
+            );
+            if (sessionData.isAuthenticated) {
+              return true;
+            }
+          } catch (e) {
+            console.error("Failed to parse user session cookie", e);
+          }
+        }
+      }
+
+      // Fallback to user state
+      return !!user;
+    })(),
     // Add helper methods
     isCustomer: user?.role === "CUSTOMER",
     userId: user?.id,

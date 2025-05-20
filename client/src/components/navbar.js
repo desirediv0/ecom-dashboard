@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Phone,
   MapPin,
+  LogIn,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -21,6 +22,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { fetchApi } from "@/lib/utils";
 import { ClientOnly } from "./client-only";
 import Image from "next/image";
+import { toast, Toaster } from "sonner";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -91,7 +93,10 @@ export function Navbar() {
 
   const handleLogout = async () => {
     await logout();
-    router.push("/");
+    // Show logout toast notification
+    toast.success("Logged out successfully");
+    // Force reload to ensure UI updates correctly
+    window.location.href = "/";
   };
 
   const toggleDropdown = (dropdown) => {
@@ -360,6 +365,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm" ref={navbarRef}>
+      <Toaster position="top-center" />
       {/* Top bar */}
       <div className="bg-gradient-to-r from-orange-500 to-blue-500/80 text-white py-2 md:py-1.5 text-center text-xs md:text-sm font-medium">
         Free shipping on orders over ₹999 | Use code FIT10 for 10% off your
@@ -666,7 +672,11 @@ export function Navbar() {
                     onClick={() => toggleDropdown("account")}
                     aria-expanded={activeDropdown === "account"}
                   >
-                    <User className="h-5 w-5" />
+                    {isAuthenticated ? (
+                      <User className="h-5 w-5" />
+                    ) : (
+                      <LogIn className="h-5 w-5" />
+                    )}
                     <ChevronDown
                       className={`ml-1 h-4 w-4 transition-transform duration-200 ${
                         activeDropdown === "account" ? "rotate-180" : ""

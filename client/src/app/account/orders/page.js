@@ -106,6 +106,39 @@ export default function OrdersPage() {
         </div>
       )}
 
+      {/* Highlighted Order Card */}
+      {orders.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 shadow-sm p-5 mb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+            <div>
+              <div className="text-lg font-medium text-blue-800 mb-1">
+                Recent Order: #{orders[0].orderNumber}
+              </div>
+              <p className="text-sm text-gray-600 mb-3">
+                Placed on {formatDate(orders[0].date)} •{" "}
+                {orders[0].items.length}{" "}
+                {orders[0].items.length === 1 ? "item" : "items"} •{" "}
+                {formatCurrency(orders[0].total)}
+              </p>
+              <span
+                className={`px-2.5 py-1 ${getStatusColor(
+                  orders[0].status
+                )} text-xs font-medium rounded-full inline-block`}
+              >
+                {orders[0].status}
+              </span>
+            </div>
+            <Button
+              className="mt-4 md:mt-0"
+              onClick={() => router.push(`/account/orders/${orders[0].id}`)}
+            >
+              <DynamicIcon name="Eye" className="mr-2 h-4 w-4" />
+              View Order Details
+            </Button>
+          </div>
+        </div>
+      )}
+
       {loadingOrders ? (
         <div className="bg-white rounded-lg shadow p-8 flex justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -171,7 +204,11 @@ export default function OrdersPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
+                    <tr
+                      key={order.id}
+                      className="hover:bg-gray-50 cursor-pointer transition-all"
+                      onClick={() => router.push(`/account/orders/${order.id}`)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           #{order.orderNumber}
@@ -227,6 +264,7 @@ export default function OrdersPage() {
                         <Link
                           href={`/account/orders/${order.id}`}
                           className="text-primary hover:text-primary/80"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           View Details
                         </Link>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthRedirect } from "@/components/auth-redirect";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,37 +31,23 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
+      // Attempt login
       await login(email, password);
 
-      // Set a flag in sessionStorage to prevent duplicate toast from AuthRedirect
+      // Set flag to prevent redirect from AuthRedirect and RouteGuard
       sessionStorage.setItem("justLoggedIn", "true");
 
-      // Show success message
-      toast.success("Logged in successfully");
+      // Show success toast
+      toast.success("Login successful! Redirecting...");
 
-      // Get returnUrl URL from query parameters if available
+      // Get return URL from query parameters if available
       const returnUrl = searchParams.get("returnUrl");
 
-      // Redirect after a small delay to allow toast to be seen
+      // Add a small delay to allow the toast to be seen (300ms)
       setTimeout(() => {
-        if (returnUrl) {
-          // Decode the URL if it's URL encoded
-          const decodedUrl = decodeURIComponent(returnUrl);
-          router.push(decodedUrl);
-
-          // Force reload after redirection
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
-        } else {
-          router.push("/");
-
-          // Force reload after redirection
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
-        }
-      }, 500);
+        // Navigate to homepage or return URL after successful login
+        window.location.href = returnUrl ? decodeURIComponent(returnUrl) : "/";
+      }, 300);
     } catch (error) {
       const errorMessage =
         error.message || "Login failed. Please check your credentials.";
@@ -93,6 +79,7 @@ export default function LoginPage() {
   return (
     <AuthRedirect>
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <Toaster position="top-center" />
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
           <div className="text-center">
             <h1 className="text-3xl font-extrabold text-gray-900">Login</h1>

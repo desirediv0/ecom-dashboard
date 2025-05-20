@@ -642,6 +642,7 @@ export const getOrderHistory = asyncHandler(async (req, res) => {
         image: item.product.images[0]
           ? getFileUrl(item.product.images[0].url)
           : null,
+        slug: item.product.slug,
         flavor: item.variant.flavor?.name,
         weight: item.variant.weight
           ? `${item.variant.weight.value}${item.variant.weight.unit}`
@@ -768,6 +769,7 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
       image: item.product.images[0]
         ? getFileUrl(item.product.images[0].url)
         : null,
+      slug: item.product.slug,
       flavor: item.variant.flavor?.name,
       weight: item.variant.weight
         ? `${item.variant.weight.value}${item.variant.weight.unit}`
