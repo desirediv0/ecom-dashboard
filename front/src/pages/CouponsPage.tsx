@@ -329,11 +329,21 @@ function CouponForm({
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target as HTMLInputElement;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
+
+    // Special handling for coupon code - convert to uppercase immediately
+    if (name === "code") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value.toUpperCase(),
+      }));
+    } else {
+      // Normal handling for other fields
+      setFormData((prev) => ({
+        ...prev,
+        [name]:
+          type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+      }));
+    }
 
     // Clear error when user changes input
     if (error) {
@@ -416,6 +426,8 @@ function CouponForm({
     try {
       const data = {
         ...formData,
+        // Make sure code is uppercase when submitting to backend
+        code: formData.code.toUpperCase(),
         discountType: formData.discountType as "PERCENTAGE" | "FIXED_AMOUNT",
         discountValue: parseFloat(formData.discountValue),
         minOrderAmount: formData.minOrderAmount
@@ -524,7 +536,7 @@ function CouponForm({
                 id="code"
                 name="code"
                 placeholder="e.g., SUMMER2023, WELCOME10"
-                value={formData.code.toUpperCase()}
+                value={formData.code}
                 onChange={handleInputChange}
                 required
                 className={

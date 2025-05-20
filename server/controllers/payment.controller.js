@@ -72,8 +72,13 @@ export const checkout = asyncHandler(async (req, res) => {
       notes.discountAmount = discountAmount;
     }
 
+    // Ensure amount has 2 decimal places for precise calculation
+    // Then convert to paise (multiply by 100) and ensure it's an integer
+    const decimalAmount = parseFloat(parseFloat(amount).toFixed(2));
+    const amountInPaise = Math.round(decimalAmount * 100);
+
     const options = {
-      amount: Number(amount) * 100, // Razorpay takes amount in paise
+      amount: amountInPaise, // Razorpay takes amount in paise as integer
       currency,
       receipt: receipt,
       notes: Object.keys(notes).length > 0 ? notes : undefined,

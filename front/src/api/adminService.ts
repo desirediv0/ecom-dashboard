@@ -398,11 +398,9 @@ export const inventory = {
   },
   getInventoryAlerts: async (threshold = 5) => {
     try {
-      console.log("Calling inventory alerts API endpoint");
       const response = await api.get(
         `/api/admin/inventory-alerts?threshold=${threshold}`
       );
-      console.log("Raw inventory alerts API response:", response);
 
       // Check if data is nested in a success response wrapper
       if (response.data.success && response.data.data) {

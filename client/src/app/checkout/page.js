@@ -204,7 +204,8 @@ export default function CheckoutPage() {
     try {
       // Get checkout amount
       const calculatedAmount = totals.subtotal - totals.discount;
-      const amount = Math.max(Math.round(calculatedAmount), 1);
+      // Fix: Keep 2 decimal places instead of rounding to preserve exact amount
+      const amount = Math.max(parseFloat(calculatedAmount.toFixed(2)), 1);
 
       // Show warning if original amount was less than 1
       if (calculatedAmount < 1) {

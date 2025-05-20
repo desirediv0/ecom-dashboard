@@ -151,10 +151,18 @@ export function getAuthToken() {
 
 // Format currency
 export function formatCurrency(amount) {
+  // Ensure we have a valid number and properly format with 2 decimal places
+  const parseAmount =
+    amount !== undefined && amount !== null ? parseFloat(amount) : 0;
+  // Use toFixed(2) before passing to NumberFormat to ensure 2 decimal places
+  const fixedAmount = parseFloat(parseAmount.toFixed(2));
+
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-  }).format(amount);
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(fixedAmount);
 }
 
 // Format date
