@@ -1200,16 +1200,19 @@ export const getOrderConfirmationTemplate = (data) => `
             font-weight: bold;
             border-top: 2px solid #dee2e6;
         }
+        .button-container {
+            text-align: center;
+            margin-top: 25px;
+        }
         .button {
             display: inline-block;
             padding: 12px 25px;
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            color: #ffffff;
+            background-color: #2563eb;
+            color: #ffffff !important;
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
             text-align: center;
-            margin-top: 20px;
         }
     </style>
 </head>
@@ -1292,9 +1295,14 @@ export const getOrderConfirmationTemplate = (data) => `
             </div>
             
             <p>You can track your order status in your account dashboard:</p>
-            <a href="${
+            <div class="button-container">
+                <a href="${
+                  process.env.FRONTEND_URL
+                }/account/orders" class="button">Track Your Order</a>
+            </div>
+            <p>If you can't click the button, copy and paste this link in your browser: <br>${
               process.env.FRONTEND_URL
-            }/account/orders" class="button">Track Your Order</a>
+            }/account/orders</p>
         </div>
         <div class="footer">
             © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
