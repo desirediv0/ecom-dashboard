@@ -12,8 +12,10 @@ const wasTokenVerifiedInSession = (token) => {
   if (typeof window === "undefined") return false;
 
   try {
-    return sessionStorage.getItem(`verified_${token}`) === "true";
+    const verified = localStorage.getItem(`verified_${token}`);
+    return verified === "true";
   } catch (e) {
+    console.error("Error checking token verification status:", e);
     return false;
   }
 };
@@ -23,7 +25,7 @@ const markTokenAsVerifiedInSession = (token) => {
   if (typeof window === "undefined") return;
 
   try {
-    sessionStorage.setItem(`verified_${token}`, "true");
+    localStorage.setItem(`verified_${token}`, "true");
   } catch (e) {
     console.error("Failed to mark token as verified in session", e);
   }
@@ -78,9 +80,13 @@ export default function VerifyEmailPage({ params }) {
       return;
     }
 
+    // Set verification attempted flag to prevent multiple attempts
+    verificationAttemptedRef.current = true;
+
     // Check if this token was already verified in this session
     if (wasTokenVerifiedInSession(token)) {
       if (isMounted.current) {
+        console.log("Token already verified in this session");
         setStatus("success");
         setMessage("Your email has been verified successfully.");
       }
@@ -88,10 +94,6 @@ export default function VerifyEmailPage({ params }) {
     }
 
     const verify = async () => {
-      // Mark that verification has been attempted BEFORE making the API call
-      verificationAttemptedRef.current = true;
-      markTokenAsVerifiedInSession(token);
-
       // Set state to verifying
       if (isMounted.current) {
         setStatus("verifying");
@@ -99,6 +101,9 @@ export default function VerifyEmailPage({ params }) {
 
       try {
         const response = await verifyEmail(token);
+
+        // Mark token as verified AFTER successful verification
+        markTokenAsVerifiedInSession(token);
 
         // Only update state if component is still mounted
         if (isMounted.current) {
@@ -112,20 +117,15 @@ export default function VerifyEmailPage({ params }) {
         if (!isMounted.current) return;
 
         // Special case: If the error is that the email was already verified,
-        // treat it as a success
+        // treat it as a success and mark as verified in session
         if (
           error.message &&
-          error.message.toLowerCase().includes("already verified")
+          (error.message.toLowerCase().includes("already verified") ||
+            error.message.includes("Verification already attempted"))
         ) {
+          markTokenAsVerifiedInSession(token);
           setStatus("success");
           setMessage("Your email has already been verified");
-        } else if (
-          error.message &&
-          error.message.includes("Verification already attempted")
-        ) {
-          // Handle case where token was already attempted (from our auth context check)
-          setStatus("success");
-          setMessage("Your email has been verified successfully.");
         } else {
           setStatus("error");
           setMessage(

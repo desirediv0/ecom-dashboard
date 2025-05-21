@@ -47,22 +47,21 @@ export const getVerificationTemplate = (verificationLink) => `
             font-size: 16px;
             color: #333333;
         }
+        .button-container {
+            text-align: center;
+            margin: 25px 0;
+        }
         .button {
             display: inline-block;
             padding: 15px 35px;
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            color: #ffffff;
+            background-color: #2563eb;
+            color: #ffffff !important;
             text-decoration: none;
             border-radius: 50px;
             font-weight: bold;
             font-size: 18px;
             text-align: center;
-            transition: all 0.3s ease;
             box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
         }
         .features {
             background-color: #f8f9fa;
@@ -101,7 +100,10 @@ export const getVerificationTemplate = (verificationLink) => `
             <h2>Verify Your Email</h2>
             <p>Dear Valued Customer,</p>
             <p>Welcome to GenuineNutrition - your trusted source for premium quality supplements. Please verify your email address to access your account:</p>
-            <a href="${verificationLink}" class="button">Verify Email Now</a>
+            <div class="button-container">
+                <a href="${verificationLink}" class="button">Verify Email Now</a>
+            </div>
+            <p>If you can't click the button, copy and paste this link in your browser: <br>${verificationLink}</p>
             <p>If you didn't create an account with GenuineNutrition, please disregard this email.</p>
             
             <div class="features">
