@@ -419,7 +419,7 @@ export function Navbar() {
                 <Menu className="h-6 w-6" />
               </button>
             </div>
-
+  
             {/* Logo */}
             <Link href="/" className="flex items-center">
               <span className="text-xl md:text-2xl font-bold text-gray-900 flex items-center">
