@@ -18,15 +18,21 @@ import BlogManagementPage from "./pages/BlogManagementPage";
 import CreateBlogPostPage from "./pages/CreateBlogPostPage";
 import EditBlogPostPage from "./pages/EditBlogPostPage";
 import ContactManagementPage from "./pages/ContactManagementPage";
+import ReviewsManagementPage from "./pages/ReviewsManagementPage";
+import FAQManagementPage from "./pages/FAQManagementPage";
+import FAQCreatePage from "./pages/FAQCreatePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import ProductCreatePage from "./pages/ProductCreatePage";
+import FeaturedProductsPage from "./pages/FeaturedProducts";
 import { useAuth } from "./context/AuthContext";
 import { Resource, Action } from "./types/admin";
 import { PermissionGuard } from "./components/PermissionGuard";
 import { AlertCircle } from "lucide-react";
 import { Card, CardContent } from "./components/ui/card";
+import UserManagementPage from "./pages/UserManagementPage";
+import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
 
 // Protected Route Component
 const ProtectedRoute = ({
@@ -113,6 +119,18 @@ const App = () => {
                 action={Action.READ}
               >
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="dashboard/analytics"
+            element={
+              <ProtectedRoute
+                resource={Resource.ANALYTICS}
+                action={Action.READ}
+              >
+                <AnalyticsDashboard />
               </ProtectedRoute>
             }
           />
@@ -340,6 +358,15 @@ const App = () => {
           />
 
           <Route
+            path="users"
+            element={
+              <ProtectedRoute resource={Resource.USERS} action={Action.READ}>
+                <UserManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="blog-management"
             element={
               <ProtectedRoute resource={Resource.CONTENT} action={Action.READ}>
@@ -377,6 +404,45 @@ const App = () => {
             element={
               <ProtectedRoute resource={Resource.CONTACT} action={Action.READ}>
                 <ContactManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="reviews-management"
+            element={
+              <ProtectedRoute resource={Resource.REVIEWS} action={Action.READ}>
+                <ReviewsManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="featured-products"
+            element={
+              <ProtectedRoute
+                resource={Resource.PRODUCTS}
+                action={Action.UPDATE}
+              >
+                <FeaturedProductsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="faq-management"
+            element={
+              <ProtectedRoute resource={Resource.FAQS} action={Action.READ}>
+                <FAQManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="faq-management/create"
+            element={
+              <ProtectedRoute resource={Resource.FAQS} action={Action.CREATE}>
+                <FAQCreatePage />
               </ProtectedRoute>
             }
           />

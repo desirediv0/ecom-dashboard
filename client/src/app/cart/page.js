@@ -15,7 +15,6 @@ import {
   ShoppingBag,
   AlertCircle,
   Loader2,
-  CheckCircle,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
@@ -197,16 +196,23 @@ export default function CartPage() {
     toast.success("Coupon removed");
   }, [removeCoupon]);
 
+  // Memoize cart totals to prevent re-renders
+  const totals = useMemo(() => getCartTotals(), [getCartTotals, cart, coupon]);
+
   const handleCheckout = useCallback(() => {
+    // Ensure minimum amount is 1
+    const calculatedAmount = totals.subtotal - totals.discount;
+    if (calculatedAmount < 1) {
+      toast.info("Minimum order amount is ₹1");
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push("/login?redirect=checkout");
     } else {
       router.push("/checkout");
     }
-  }, [isAuthenticated, router]);
-
-  // Memoize cart totals to prevent re-renders
-  const totals = useMemo(() => getCartTotals(), [getCartTotals, cart, coupon]);
+  }, [isAuthenticated, router, totals]);
 
   // Display loading state
   if (loading && !cart.items.length) {
@@ -393,18 +399,13 @@ export default function CartPage() {
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{formatCurrency(totals.shipping)}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (5%)</span>
-                  <span>{formatCurrency(totals.tax)}</span>
+                  <span className="text-green-600 font-medium">FREE</span>
                 </div>
               </div>
 
               <div className="flex justify-between font-bold text-lg mt-4 pt-4 border-t">
                 <span>Total</span>
-                <span>{formatCurrency(totals.total)}</span>
+                <span>{formatCurrency(totals.subtotal - totals.discount)}</span>
               </div>
             </div>
 

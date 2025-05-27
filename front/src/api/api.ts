@@ -6,12 +6,12 @@ const DEBUG_API = true;
 
 // Create axios instance with baseURL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4005",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000",
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  timeout: 10000, // 10 second timeout
+  timeout: 60000, // 60 second timeout
 });
 
 // Add a request interceptor to include authentication token
@@ -23,18 +23,6 @@ api.interceptors.request.use(
     // If token exists, add it to the authorization header
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    // Debug logging for requests
-    if (DEBUG_API) {
-      console.log(
-        `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
-        {
-          headers: config.headers,
-          params: config.params,
-          data: config.data,
-        }
-      );
     }
 
     return config;

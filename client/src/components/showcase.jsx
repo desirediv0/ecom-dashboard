@@ -10,7 +10,7 @@ export default function GymSupplementBanner() {
   }, []);
 
   return (
-    <div className="w-full bg-black text-white overflow-hidden">
+    <div className="w-full bg-[#1C4E80] text-white overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <motion.div
           className="flex flex-col md:flex-row"
@@ -30,17 +30,17 @@ export default function GymSupplementBanner() {
               animate={isVisible ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.4 }}
             >
-              <h2 className="text-lg font-bold text-gray-400 tracking-widest uppercase">
+              <h2 className="text-lg font-bold text-white/80 tracking-widest uppercase">
                 Premium Collection
               </h2>
               <h1 className="text-4xl md:text-5xl font-extrabold mt-2 tracking-tight">
-                MAX <span className="text-gray-400">POWER</span>
+                MAX <span className="text-[#F47C20]">POWER</span>
               </h1>
-              <div className="h-1 w-16 bg-white mt-4 mb-6"></div>
+              <div className="h-1 w-16 bg-[#F47C20] mt-4 mb-6"></div>
             </motion.div>
 
             <motion.p
-              className="text-gray-300 leading-relaxed max-w-lg mb-6"
+              className="text-white/80 leading-relaxed max-w-lg mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={isVisible ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.6 }}
@@ -60,7 +60,7 @@ export default function GymSupplementBanner() {
                 (feature, index) => (
                   <div
                     key={index}
-                    className="border border-gray-700 bg-gray-900 px-4 py-2 rounded-full text-sm font-medium"
+                    className="border border-white/20 bg-white/10 px-4 py-2 rounded-full text-sm font-medium"
                   >
                     {feature}
                   </div>
@@ -75,7 +75,7 @@ export default function GymSupplementBanner() {
               transition={{ delay: 0.8 }}
             >
               <motion.button
-                className="bg-white text-black hover:bg-gray-200 font-bold py-3 px-8 rounded-none shadow-lg"
+                className="bg-[#F47C20] text-white hover:bg-[#F47C20]/80 font-bold py-3 px-8 rounded-none shadow-lg"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
@@ -99,10 +99,10 @@ export default function GymSupplementBanner() {
             animate={isVisible ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.3 }}
           >
-            <div className="h-full min-h-[400px] relative overflow-hidden bg-gradient-to-b from-gray-950 to-black">
+            <div className="h-full min-h-[400px] relative overflow-hidden bg-gradient-to-b from-[#1C4E80]/80 to-[#1C4E80]">
               {/* Geometric Shapes */}
               <motion.div
-                className="absolute top-1/4 left-1/4 w-32 h-32 border border-gray-700 rotate-45"
+                className="absolute top-1/4 left-1/4 w-32 h-32 border border-white/30 rotate-45"
                 animate={{
                   rotate: [45, 90, 45],
                   scale: [1, 1.1, 1],
@@ -115,7 +115,7 @@ export default function GymSupplementBanner() {
               />
 
               <motion.div
-                className="absolute bottom-1/3 right-1/3 w-40 h-40 border border-gray-800 rounded-full"
+                className="absolute bottom-1/3 right-1/3 w-40 h-40 border border-white/30 rounded-full"
                 animate={{
                   scale: [1, 1.2, 1],
                 }}
@@ -141,19 +141,6 @@ export default function GymSupplementBanner() {
                   className="max-h-full max-w-full object-contain"
                 />
               </motion.div>
-
-              {/* Light Beam Effect */}
-              <motion.div
-                className="absolute -top-20 -left-20 w-40 h-[150%]  rotate-45 blur-md"
-                animate={{
-                  x: [0, 200, 0],
-                }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 10,
-                  ease: "easeInOut",
-                }}
-              />
             </div>
           </motion.div>
         </motion.div>

@@ -49,7 +49,7 @@ export const getOrders = asyncHandler(async (req, res, next) => {
     where: filterConditions,
   });
 
-  // Get orders with sorting
+  // Get orders with pagination
   const orders = await prisma.order.findMany({
     where: filterConditions,
     include: {
@@ -93,6 +93,14 @@ export const getOrders = asyncHandler(async (req, res, next) => {
           razorpayPaymentId: true,
         },
       },
+      coupon: {
+        select: {
+          id: true,
+          code: true,
+          discountType: true,
+          discountValue: true,
+        },
+      },
     },
     orderBy: {
       [sort]: order,
@@ -101,11 +109,31 @@ export const getOrders = asyncHandler(async (req, res, next) => {
     take: parseInt(limit),
   });
 
+  // Keep the original order data and preserve historical pricing information
+  const formattedOrders = orders.map((order) => ({
+    ...order,
+    subTotal: parseFloat(order.subTotal),
+    tax: parseFloat(order.tax),
+    shippingCost: parseFloat(order.shippingCost),
+    discount: parseFloat(order.discount) || 0,
+    total: parseFloat(order.total), // Use the exact total that was recorded at time of order
+    couponDetails: order.coupon
+      ? {
+          id: order.coupon.id,
+          code: order.coupon.code,
+          discountType: order.coupon.discountType,
+          discountValue: parseFloat(order.coupon.discountValue),
+        }
+      : order.couponCode
+      ? { code: order.couponCode }
+      : null,
+  }));
+
   res.status(200).json(
     new ApiResponsive(
       200,
       {
-        orders,
+        orders: formattedOrders,
         pagination: {
           total: totalOrders,
           page: parseInt(page),
@@ -164,6 +192,15 @@ export const getOrderById = asyncHandler(async (req, res, next) => {
         },
       },
       shippingAddress: true,
+      coupon: {
+        select: {
+          id: true,
+          code: true,
+          description: true,
+          discountType: true,
+          discountValue: true,
+        },
+      },
     },
   });
 
@@ -171,10 +208,36 @@ export const getOrderById = asyncHandler(async (req, res, next) => {
     throw new ApiError(404, "Order not found");
   }
 
+  // Normalize values for tax and shipping
+  const modifiedOrder = {
+    ...order,
+    tax: "0.00", // Always set tax to 0
+    shippingCost: "0.00", // Always set shipping to 0
+    total: (
+      parseFloat(order.subTotal) - parseFloat(order.discount || 0)
+    ).toFixed(2), // Recalculate total
+    // Add detailed coupon information
+    couponDetails: order.coupon
+      ? {
+          id: order.coupon.id,
+          code: order.coupon.code,
+          description: order.coupon.description,
+          discountType: order.coupon.discountType,
+          discountValue: parseFloat(order.coupon.discountValue),
+        }
+      : order.couponCode
+      ? { code: order.couponCode }
+      : null,
+  };
+
   res
     .status(200)
     .json(
-      new ApiResponsive(200, { order }, "Order details fetched successfully")
+      new ApiResponsive(
+        200,
+        { order: modifiedOrder },
+        "Order details fetched successfully"
+      )
     );
 });
 
@@ -470,6 +533,7 @@ export const createOrder = asyncHandler(async (req, res, next) => {
     taxRate,
     discount,
     couponCode,
+    couponId,
     notes,
   } = req.body;
 
@@ -497,6 +561,17 @@ export const createOrder = asyncHandler(async (req, res, next) => {
 
     if (!address) {
       throw new ApiError(404, "Shipping address not found for this user");
+    }
+  }
+
+  // If couponCode is provided but not couponId, try to find the coupon
+  let finalCouponId = couponId;
+  if (couponCode && !couponId) {
+    const coupon = await prisma.coupon.findUnique({
+      where: { code: couponCode },
+    });
+    if (coupon) {
+      finalCouponId = coupon.id;
     }
   }
 
@@ -539,10 +614,10 @@ export const createOrder = asyncHandler(async (req, res, next) => {
   }
 
   // Calculate tax and total
-  const taxAmount = (parseFloat(taxRate) || 0) * subTotal;
-  const shippingAmount = parseFloat(shippingCost) || 0;
+  const taxAmount = 0; // Set tax to 0
+  const shippingAmount = 0; // Set shipping to 0
   const discountAmount = parseFloat(discount) || 0;
-  const total = subTotal + taxAmount + shippingAmount - discountAmount;
+  const total = subTotal - discountAmount; // Calculate total without tax and shipping
 
   // Create order with transaction to handle inventory
   const order = await prisma.$transaction(async (tx) => {
@@ -557,6 +632,7 @@ export const createOrder = asyncHandler(async (req, res, next) => {
         shippingCost: shippingAmount,
         discount: discountAmount,
         couponCode,
+        couponId: finalCouponId,
         total,
         shippingAddressId,
         notes,
@@ -819,6 +895,113 @@ export const getOrderStats = asyncHandler(async (req, res, next) => {
       ? totalSales._sum.total / totalOrders
       : 0;
 
+  // Get monthly sales data for the last 6 months
+  const monthlyRevenueStartDate = new Date();
+  monthlyRevenueStartDate.setMonth(monthlyRevenueStartDate.getMonth() - 5);
+  monthlyRevenueStartDate.setDate(1);
+  monthlyRevenueStartDate.setHours(0, 0, 0, 0);
+
+  const orders = await prisma.order.findMany({
+    where: {
+      createdAt: {
+        gte: monthlyRevenueStartDate,
+      },
+      status: {
+        in: ["PAID", "SHIPPED", "DELIVERED"],
+      },
+    },
+    select: {
+      total: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  // Group orders by month
+  const monthlyData = {};
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  orders.forEach((order) => {
+    const date = new Date(order.createdAt);
+    const monthYear = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+    if (!monthlyData[monthYear]) {
+      monthlyData[monthYear] = 0;
+    }
+
+    monthlyData[monthYear] += parseFloat(order.total);
+  });
+
+  // Convert to array format needed for the chart
+  const monthlySales = Object.entries(monthlyData).map(([month, revenue]) => ({
+    month,
+    revenue: parseFloat(revenue).toFixed(2),
+  }));
+
+  // Calculate growth percentages
+  // For orders: Compare current period vs previous same-length period
+  const previousPeriodStartDate = new Date(startDate);
+  const periodLength = endDate.getTime() - startDate.getTime();
+  previousPeriodStartDate.setTime(
+    previousPeriodStartDate.getTime() - periodLength
+  );
+
+  const previousPeriodOrders = await prisma.order.count({
+    where: {
+      createdAt: {
+        gte: previousPeriodStartDate,
+        lt: startDate,
+      },
+    },
+  });
+
+  const previousPeriodSales = await prisma.order.aggregate({
+    _sum: {
+      total: true,
+    },
+    where: {
+      createdAt: {
+        gte: previousPeriodStartDate,
+        lt: startDate,
+      },
+      status: {
+        in: ["PAID", "SHIPPED", "DELIVERED"],
+      },
+    },
+  });
+
+  // Calculate growth percentages
+  let orderGrowth = 0;
+  if (previousPeriodOrders > 0) {
+    orderGrowth = Math.round(
+      ((totalOrders - previousPeriodOrders) / previousPeriodOrders) * 100
+    );
+  }
+
+  let revenueGrowth = 0;
+  if (previousPeriodSales._sum.total) {
+    revenueGrowth = Math.round(
+      ((totalSales._sum.total - previousPeriodSales._sum.total) /
+        previousPeriodSales._sum.total) *
+        100
+    );
+  }
+
   // Get top selling products
   const topProducts = await prisma.orderItem.groupBy({
     by: ["productId"],
@@ -883,6 +1066,9 @@ export const getOrderStats = asyncHandler(async (req, res, next) => {
         averageOrderValue,
         statusCounts,
         topProducts: topProductsDetails,
+        monthlySales,
+        orderGrowth,
+        revenueGrowth,
       },
       "Order statistics fetched successfully"
     )

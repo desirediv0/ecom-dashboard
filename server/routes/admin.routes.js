@@ -10,12 +10,23 @@ import {
   deleteAdmin,
   updateAdminPermissions,
   getLowStockAlerts,
+  getUsers,
+  getUserById,
+  verifyUserEmail,
+  deleteUser,
+  updateUserDetails,
 } from "../controllers/admin.controller.js";
 import {
   verifyAdminJWT,
   hasPermission,
   hasRole,
 } from "../middlewares/admin.middleware.js";
+import {
+  getMostViewedPages,
+  getMostViewedProducts,
+  getUsersWithProductsInCart,
+  getAnalyticsDashboard,
+} from "../controllers/analytics.controller.js";
 
 const router = express.Router();
 
@@ -61,6 +72,63 @@ router.post(
   verifyAdminJWT,
   hasRole("SUPER_ADMIN"),
   updateAdminPermissions
+);
+
+// User Management Routes
+router.get("/users", verifyAdminJWT, hasPermission("users", "read"), getUsers);
+
+router.get(
+  "/users/:userId",
+  verifyAdminJWT,
+  hasPermission("users", "read"),
+  getUserById
+);
+
+router.post(
+  "/users/:userId/verify-email",
+  verifyAdminJWT,
+  hasPermission("users", "update"),
+  verifyUserEmail
+);
+
+router.patch(
+  "/users/:userId",
+  verifyAdminJWT,
+  hasPermission("users", "update"),
+  updateUserDetails
+);
+
+router.delete(
+  "/users/:userId",
+  verifyAdminJWT,
+  hasPermission("users", "delete"),
+  deleteUser
+);
+
+// Analytics routes
+router.get(
+  "/analytics/dashboard",
+  verifyAdminJWT,
+  hasPermission("analytics", "read"),
+  getAnalyticsDashboard
+);
+router.get(
+  "/analytics/pages",
+  verifyAdminJWT,
+  hasPermission("analytics", "read"),
+  getMostViewedPages
+);
+router.get(
+  "/analytics/products",
+  verifyAdminJWT,
+  hasPermission("analytics", "read"),
+  getMostViewedProducts
+);
+router.get(
+  "/analytics/carts",
+  verifyAdminJWT,
+  hasPermission("analytics", "read"),
+  getUsersWithProductsInCart
 );
 
 export default router;

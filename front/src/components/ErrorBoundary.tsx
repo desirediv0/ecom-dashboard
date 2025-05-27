@@ -41,7 +41,7 @@ export function ErrorBoundary() {
         </Button>
       </div>
 
-      {process.env.NODE_ENV === "development" && error instanceof Error && (
+      {import.meta.env.MODE === "development" && error instanceof Error && (
         <div className="mt-8 max-w-2xl overflow-auto rounded border bg-muted/50 p-4 text-left">
           <p className="font-medium">Debug Information:</p>
           <pre className="mt-2 text-xs text-muted-foreground">

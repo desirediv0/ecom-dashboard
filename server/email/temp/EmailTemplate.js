@@ -4,7 +4,7 @@ export const getVerificationTemplate = (verificationLink) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Email - EcomSupplements</title>
+    <title>Verify Your Email - GenuineNutrition</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -47,22 +47,21 @@ export const getVerificationTemplate = (verificationLink) => `
             font-size: 16px;
             color: #333333;
         }
+        .button-container {
+            text-align: center;
+            margin: 25px 0;
+        }
         .button {
             display: inline-block;
             padding: 15px 35px;
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            color: #ffffff;
+            background-color: #2563eb;
+            color: #ffffff !important;
             text-decoration: none;
             border-radius: 50px;
             font-weight: bold;
             font-size: 18px;
             text-align: center;
-            transition: all 0.3s ease;
             box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
         }
         .features {
             background-color: #f8f9fa;
@@ -95,14 +94,17 @@ export const getVerificationTemplate = (verificationLink) => `
 <body>
     <div class="container">
         <div class="header">
-            <h1>Welcome to EcomSupplements</h1>
+            <h1>Welcome to GenuineNutrition</h1>
         </div>
         <div class="content">
             <h2>Verify Your Email</h2>
             <p>Dear Valued Customer,</p>
-            <p>Welcome to EcomSupplements - your trusted source for premium quality supplements. Please verify your email address to access your account:</p>
-            <a href="${verificationLink}" class="button">Verify Email Now</a>
-            <p>If you didn't create an account with EcomSupplements, please disregard this email.</p>
+            <p>Welcome to GenuineNutrition - your trusted source for premium quality supplements. Please verify your email address to access your account:</p>
+            <div class="button-container">
+                <a href="${verificationLink}" class="button">Verify Email Now</a>
+            </div>
+            <p>If you can't click the button, copy and paste this link in your browser: <br>${verificationLink}</p>
+            <p>If you didn't create an account with GenuineNutrition, please disregard this email.</p>
             
             <div class="features">
                 <h3>What you can do after verification:</h3>
@@ -113,7 +115,7 @@ export const getVerificationTemplate = (verificationLink) => `
             </div>
         </div>
         <div class="footer">
-            © ${new Date().getFullYear()} EcomSupplements | Premium Health Supplements<br>
+            © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
             This is an automated message. Please do not reply to this email.
         </div>
     </div>
@@ -267,7 +269,7 @@ export const getResetTemplate = (resetLink) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Your Password - EcomSupplements</title>
+    <title>Reset Your Password - GenuineNutrition</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -344,13 +346,13 @@ export const getResetTemplate = (resetLink) => `
         <div class="content">
             <h2>Password Reset Request</h2>
             <p>Dear Valued Customer,</p>
-            <p>We received a request to reset the password for your EcomSupplements account. Click the button below to create a new password:</p>
+            <p>We received a request to reset the password for your GenuineNutrition account. Click the button below to create a new password:</p>
             <a href="${resetLink}" class="button">Reset Password</a>
-            <p>If you didn't request this password reset, please contact our support team immediately at support@ecomsupplements.com</p>
+            <p>If you didn't request this password reset, please contact our support team immediately at support@GenuineNutrition.com</p>
             <p>This link will expire in 15 minutes for security reasons.</p>
         </div>
         <div class="footer">
-            © ${new Date().getFullYear()} EcomSupplements | Premium Health Supplements<br>
+            © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
             This is an automated message. Please do not reply to this email.
         </div>
     </div>
@@ -1115,7 +1117,7 @@ export const getOrderConfirmationTemplate = (data) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmation - EcomSupplements</title>
+    <title>Order Confirmation - GenuineNutrition</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -1198,16 +1200,19 @@ export const getOrderConfirmationTemplate = (data) => `
             font-weight: bold;
             border-top: 2px solid #dee2e6;
         }
+        .button-container {
+            text-align: center;
+            margin-top: 25px;
+        }
         .button {
             display: inline-block;
             padding: 12px 25px;
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            color: #ffffff;
+            background-color: #2563eb;
+            color: #ffffff !important;
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
             text-align: center;
-            margin-top: 20px;
         }
     </style>
 </head>
@@ -1290,13 +1295,18 @@ export const getOrderConfirmationTemplate = (data) => `
             </div>
             
             <p>You can track your order status in your account dashboard:</p>
-            <a href="${
+            <div class="button-container">
+                <a href="${
+                  process.env.FRONTEND_URL
+                }/account/orders" class="button">Track Your Order</a>
+            </div>
+            <p>If you can't click the button, copy and paste this link in your browser: <br>${
               process.env.FRONTEND_URL
-            }/account/orders" class="button">Track Your Order</a>
+            }/account/orders</p>
         </div>
         <div class="footer">
-            © ${new Date().getFullYear()} EcomSupplements | Premium Health Supplements<br>
-            Questions? Contact our customer support at support@ecomsupplements.com
+            © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
+            Questions? Contact our customer support at support@GenuineNutrition.com
         </div>
     </div>
 </body>

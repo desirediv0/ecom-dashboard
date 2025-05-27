@@ -36,3 +36,21 @@ export function debugData(label: string, data: any, always: boolean = false) {
     console.groupEnd();
   }
 }
+
+// Format date string to a readable format
+export function formatDate(dateString: string): string {
+  if (!dateString) return "N/A";
+
+  const date = new Date(dateString);
+
+  // Return "Invalid Date" if the date is not valid
+  if (isNaN(date.getTime())) return "Invalid Date";
+
+  return new Intl.DateTimeFormat("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}

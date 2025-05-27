@@ -15,7 +15,7 @@ const sendEmail = async (options) => {
 
     // Set email options
     const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || "EcomSupplements"} <${
+      from: `${process.env.EMAIL_FROM_NAME || "GenuineNutrition"} <${
         process.env.FROM_EMAIL
       }>`,
       to: options.email,

@@ -151,7 +151,11 @@ export const getAllProducts = asyncHandler(async (req, res) => {
       },
       _count: {
         select: {
-          reviews: true,
+          reviews: {
+            where: {
+              status: "APPROVED",
+            },
+          },
           variants: true,
         },
       },
@@ -258,7 +262,11 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
       },
       _count: {
         select: {
-          reviews: true,
+          reviews: {
+            where: {
+              status: "APPROVED",
+            },
+          },
         },
       },
     },
@@ -320,6 +328,10 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
           ).toFixed(1)
         : null,
     reviewCount: product._count.reviews,
+    // Include SEO fields
+    metaTitle: product.metaTitle || product.name,
+    metaDescription: product.metaDescription || product.description,
+    keywords: product.keywords || "",
   };
 
   // Add related products
@@ -352,7 +364,11 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
           },
           _count: {
             select: {
-              reviews: true,
+              reviews: {
+                where: {
+                  status: "APPROVED",
+                },
+              },
             },
           },
         },
@@ -482,5 +498,32 @@ export const getAllWeights = asyncHandler(async (req, res) => {
         { weights: formattedWeights },
         "Weights fetched successfully"
       )
+    );
+});
+
+// Get maximum product price for price range slider
+export const getMaxPrice = asyncHandler(async (req, res) => {
+  // Find the highest priced active variant
+  const highestPriceVariant = await prisma.productVariant.findFirst({
+    where: {
+      isActive: true,
+      product: {
+        isActive: true,
+      },
+    },
+    orderBy: {
+      price: "desc",
+    },
+  });
+
+  // If no variants found, return a default max price
+  const maxPrice = highestPriceVariant
+    ? parseFloat(highestPriceVariant.price)
+    : 1000;
+
+  res
+    .status(200)
+    .json(
+      new ApiResponsive(200, { maxPrice }, "Maximum price fetched successfully")
     );
 });

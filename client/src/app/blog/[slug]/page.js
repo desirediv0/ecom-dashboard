@@ -1,13 +1,6 @@
 import { fetchApi } from "@/lib/utils";
 import BlogPostClient from "./BlogPostClient";
 
-// Helper function to format image URLs correctly
-const getImageUrl = (image) => {
-  if (!image) return "/images/blog-placeholder.jpg";
-  if (image.startsWith("http")) return image;
-  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
-};
-
 // Generate metadata for the page - runs on the server
 export async function generateMetadata({ params }) {
   const { slug } = params;
@@ -26,13 +19,14 @@ export async function generateMetadata({ params }) {
     }
 
     return {
-      title: post.title,
-      description: post.summary || post.title,
+      title: post.metaTitle || post.title,
+      description: post.metaDescription || post.summary || post.title,
+      keywords: post.keywords || post.title,
       openGraph: {
-        title: post.title,
-        description: post.summary || post.content,
-        images: post.coverImage
-          ? [getImageUrl(post.coverImage)]
+        title: post.metaTitle || post.title,
+        description: post.metaDescription || post.summary || post.content,
+        images: post.coverImageUrl
+          ? [post.coverImageUrl]
           : ["/images/blog-placeholder.jpg"],
         type: "article",
       },

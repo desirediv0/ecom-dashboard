@@ -93,6 +93,10 @@ export function ProductForm({
       carbs: "",
       fat: "",
     },
+    // SEO fields
+    metaTitle: "",
+    metaDescription: "",
+    keywords: "",
   });
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -296,6 +300,10 @@ export function ProductForm({
                 carbs: "",
                 fat: "",
               },
+              // SEO fields
+              metaTitle: productData.metaTitle || "",
+              metaDescription: productData.metaDescription || "",
+              keywords: productData.keywords || "",
             });
 
             // Set selected categories
@@ -560,6 +568,11 @@ export function ProductForm({
       formData.append("isActive", String(product.isActive));
       formData.append("hasVariants", String(hasVariants));
       formData.append("isSupplement", String(product.isSupplement));
+
+      // Add SEO fields
+      formData.append("metaTitle", product.metaTitle || "");
+      formData.append("metaDescription", product.metaDescription || "");
+      formData.append("keywords", product.keywords || "");
 
       // Add categories information
       if (product.categoryIds && product.categoryIds.length > 0) {
@@ -1089,6 +1102,57 @@ export function ProductForm({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* SEO Section */}
+          <div className="space-y-4 rounded-lg border p-4 bg-gray-50">
+            <h2 className="text-xl font-semibold border-b pb-2">
+              SEO Information
+            </h2>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="metaTitle">SEO Title</Label>
+                <Input
+                  id="metaTitle"
+                  name="metaTitle"
+                  value={product.metaTitle}
+                  onChange={handleChange}
+                  placeholder="SEO Title (recommended 50-60 characters)"
+                />
+                <p className="text-xs text-muted-foreground">
+                  If left empty, the product name will be used
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="metaDescription">SEO Description</Label>
+                <Textarea
+                  id="metaDescription"
+                  name="metaDescription"
+                  value={product.metaDescription}
+                  onChange={handleChange}
+                  placeholder="Meta description (recommended 150-160 characters)"
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  If left empty, the product description will be used
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="keywords">Keywords</Label>
+                <Input
+                  id="keywords"
+                  name="keywords"
+                  value={product.keywords}
+                  onChange={handleChange}
+                  placeholder="Comma-separated keywords"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Keywords for search engines (comma-separated)
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Variants Configuration */}

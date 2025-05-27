@@ -203,7 +203,14 @@ export default function CheckoutPage() {
 
     try {
       // Get checkout amount
-      const amount = totals.total;
+      const calculatedAmount = totals.subtotal - totals.discount;
+      // Fix: Keep 2 decimal places instead of rounding to preserve exact amount
+      const amount = Math.max(parseFloat(calculatedAmount.toFixed(2)), 1);
+
+      // Show warning if original amount was less than 1
+      if (calculatedAmount < 1) {
+        toast.info("Minimum order amount is ₹1. Your total has been adjusted.");
+      }
 
       if (paymentMethod === "RAZORPAY") {
         // Step 1: Create Razorpay order
@@ -213,6 +220,10 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             amount,
             currency: "INR",
+            // Include coupon information for proper tracking
+            couponCode: coupon?.code || null,
+            couponId: coupon?.id || null,
+            discountAmount: totals.discount || 0,
           }),
         });
 
@@ -232,14 +243,12 @@ export default function CheckoutPage() {
           throw new Error("Razorpay SDK failed to load");
         }
 
-        // Step 3: Initialize Razorpay checkout
-        console.log("Initializing Razorpay with key:", razorpayKey);
         const options = {
           key: razorpayKey,
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
-          name: "Gym Supplements",
-          description: "Payment for your order",
+          name: "Genuine Nutrition - Premium Supplements for Your Fitness Journey",
+          description: "Get high-quality supplements at the best prices.",
           order_id: razorpayOrder.id,
           prefill: {
             name: user?.name || "",
@@ -261,8 +270,13 @@ export default function CheckoutPage() {
                   razorpayOrderId: response.razorpay_order_id,
                   razorpayPaymentId: response.razorpay_payment_id,
                   razorpaySignature: response.razorpay_signature,
+                  // Include shipping and coupon information
                   shippingAddressId: selectedAddressId,
                   billingAddressSameAsShipping: true,
+                  // Also pass coupon information again to ensure it's included
+                  couponCode: coupon?.code || null,
+                  couponId: coupon?.id || null,
+                  discountAmount: totals.discount || 0,
                   notes: "",
                 }),
               });
@@ -277,11 +291,31 @@ export default function CheckoutPage() {
               }
             } catch (error) {
               console.error("Payment verification error:", error);
-              setError(error.message || "Payment verification failed");
+
+              // If the error is about a previously cancelled order, guide the user
+              if (
+                error.message &&
+                error.message.includes("previously cancelled")
+              ) {
+                setError(
+                  "Your previous order was cancelled. Please refresh the page and try again."
+                );
+                toast.error("Please refresh the page to start a new checkout", {
+                  duration: 6000,
+                });
+              } else {
+                setError(error.message || "Payment verification failed");
+              }
             }
           },
           theme: {
-            color: "#3399cc",
+            color: "#F47C20",
+          },
+          modal: {
+            ondismiss: function () {
+              // When Razorpay modal is dismissed
+              setProcessing(false);
+            },
           },
         };
 
@@ -291,8 +325,22 @@ export default function CheckoutPage() {
       // Add COD implementation here if required
     } catch (error) {
       console.error("Checkout error:", error);
-      setError(error.message || "Checkout failed");
-      toast.error(error.message || "Checkout failed");
+
+      if (
+        error.message &&
+        error.message.includes("order was previously cancelled")
+      ) {
+        // Clear local state and guide the user
+        setError(
+          "This order was previously cancelled. Please refresh the page to start a new checkout."
+        );
+        toast.error("Please refresh the page to start a new checkout", {
+          duration: 6000,
+        });
+      } else {
+        setError(error.message || "Checkout failed");
+        toast.error(error.message || "Checkout failed");
+      }
     } finally {
       setProcessing(false);
     }
@@ -605,19 +653,18 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{formatCurrency(totals.shipping)}</span>
+                  <span className="text-green-600 font-medium">FREE</span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (5%)</span>
-                  <span>{formatCurrency(totals.tax)}</span>
-                </div>
+                {/* Tax removed */}
               </div>
 
               <div className="pt-4">
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>{formatCurrency(totals.total)}</span>
+                  <span>
+                    {formatCurrency(totals.subtotal - totals.discount)}
+                  </span>
                 </div>
               </div>
             </div>

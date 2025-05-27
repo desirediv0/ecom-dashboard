@@ -17,6 +17,10 @@ import {
   Ticket,
   FileText,
   Mail,
+  Star,
+  MessageSquare,
+  HelpCircle,
+  BarChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SafeRender } from "@/components/SafeRender";
@@ -131,6 +135,16 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
+                href="/dashboard/analytics"
+                icon={<BarChart className="h-5 w-5" />}
+                title="Analytics"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.ANALYTICS,
+                  Action.READ
+                )}
+              />
+              <NavItem
                 href="/products"
                 icon={<Package className="h-5 w-5" />}
                 title="Products"
@@ -138,6 +152,16 @@ export default function DashboardLayout() {
                   admin,
                   Resource.PRODUCTS,
                   Action.READ
+                )}
+              />
+              <NavItem
+                href="/featured-products"
+                icon={<Star className="h-5 w-5" />}
+                title="Featured"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.PRODUCTS,
+                  Action.UPDATE
                 )}
               />
               <NavItem
@@ -193,7 +217,7 @@ export default function DashboardLayout() {
               <NavItem
                 href="/blog-management"
                 icon={<FileText className="h-5 w-5" />}
-                title="Blog Management"
+                title="Blog"
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.CONTENT,
@@ -203,10 +227,40 @@ export default function DashboardLayout() {
               <NavItem
                 href="/contact-management"
                 icon={<Mail className="h-5 w-5" />}
-                title="Contact Submissions"
+                title="Contact"
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.CONTACT,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/reviews-management"
+                icon={<MessageSquare className="h-5 w-5" />}
+                title="Reviews"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.REVIEWS,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/faq-management"
+                icon={<HelpCircle className="h-5 w-5" />}
+                title="FAQ"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.FAQS,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/users"
+                icon={<Users className="h-5 w-5" />}
+                title="Users"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.USERS,
                   Action.READ
                 )}
               />
@@ -304,6 +358,17 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
+                href="/featured-products"
+                icon={<Star className="h-5 w-5" />}
+                title="Featured"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.PRODUCTS,
+                  Action.UPDATE
+                )}
+              />
+              <NavItem
                 href="/flavors"
                 icon={<Coffee className="h-5 w-5" />}
                 title="Flavors"
@@ -361,7 +426,7 @@ export default function DashboardLayout() {
               <NavItem
                 href="/blog-management"
                 icon={<FileText className="h-5 w-5" />}
-                title="Blog Management"
+                title="Blog"
                 onClick={toggleMobileMenu}
                 hasPermission={hasPermissionFor(
                   admin,
@@ -372,11 +437,33 @@ export default function DashboardLayout() {
               <NavItem
                 href="/contact-management"
                 icon={<Mail className="h-5 w-5" />}
-                title="Contact Submissions"
+                title="Contact"
                 onClick={toggleMobileMenu}
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.CONTACT,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/reviews-management"
+                icon={<MessageSquare className="h-5 w-5" />}
+                title="Reviews"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.REVIEWS,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/faq-management"
+                icon={<HelpCircle className="h-5 w-5" />}
+                title="FAQ"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.FAQS,
                   Action.READ
                 )}
               />
@@ -386,6 +473,28 @@ export default function DashboardLayout() {
                 title="Admins"
                 onClick={toggleMobileMenu}
                 hasPermission={admin?.role === "SUPER_ADMIN"}
+              />
+              <NavItem
+                href="/users"
+                icon={<Users className="h-5 w-5" />}
+                title="Users"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.USERS,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/dashboard/analytics"
+                icon={<BarChart className="h-5 w-5" />}
+                title="Analytics"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.ANALYTICS,
+                  Action.READ
+                )}
               />
             </div>
           </SafeRender>

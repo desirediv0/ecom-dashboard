@@ -243,7 +243,7 @@ export default function ContactPage() {
                           <p className="font-medium">Email</p>
                           <p className="text-gray-600">
                             {contactInfo?.email ||
-                              "support@ecomsupplements.com"}
+                              "support@GenuineNutrition.com"}
                           </p>
                         </div>
                       </div>
@@ -266,7 +266,7 @@ export default function ContactPage() {
                       <a
                         href={
                           contactInfo?.socialLinks?.facebook ||
-                          "https://facebook.com/ecomsupplements"
+                          "https://facebook.com/GenuineNutrition"
                         }
                         target="_blank"
                         rel="noopener noreferrer"
@@ -278,7 +278,7 @@ export default function ContactPage() {
                       <a
                         href={
                           contactInfo?.socialLinks?.instagram ||
-                          "https://instagram.com/ecomsupplements"
+                          "https://instagram.com/GenuineNutrition"
                         }
                         target="_blank"
                         rel="noopener noreferrer"
@@ -290,7 +290,7 @@ export default function ContactPage() {
                       <a
                         href={
                           contactInfo?.socialLinks?.twitter ||
-                          "https://twitter.com/ecomsupplements"
+                          "https://twitter.com/GenuineNutrition"
                         }
                         target="_blank"
                         rel="noopener noreferrer"
@@ -315,7 +315,7 @@ export default function ContactPage() {
                 },${
                   contactInfo?.mapCoordinates?.lng || 72.8777
                 }&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                title="EcomSupplements Location"
+                title="GenuineNutrition Location"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

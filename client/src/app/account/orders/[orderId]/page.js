@@ -336,7 +336,10 @@ export default function OrderDetailsPage({ params }) {
                       key={item.id}
                       className="flex border-b pb-4 last:border-0 last:pb-0"
                     >
-                      <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-4">
+                      <Link
+                        href={`/products/${item.slug}`}
+                        className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-4"
+                      >
                         {item.image ? (
                           <Image
                             width={80}
@@ -353,7 +356,7 @@ export default function OrderDetailsPage({ params }) {
                             />
                           </div>
                         )}
-                      </div>
+                      </Link>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-base font-medium truncate">
                           {item.name}
@@ -394,16 +397,37 @@ export default function OrderDetailsPage({ params }) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping:</span>
-                    <span>{formatCurrency(order.shippingCost)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax:</span>
-                    <span>{formatCurrency(order.tax)}</span>
+                    <span className="text-green-600 font-medium">FREE</span>
                   </div>
                   {order.discount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount:</span>
                       <span>-{formatCurrency(order.discount)}</span>
+                    </div>
+                  )}
+                  {order.couponCode && (
+                    <div className="mt-1 p-2 bg-green-50 border border-green-100 rounded-md">
+                      <div className="flex items-center text-green-700 text-sm font-medium mb-1">
+                        <DynamicIcon name="Tag" className="h-4 w-4 mr-1" />
+                        Coupon applied: {order.couponCode}
+                      </div>
+                      {order.couponDetails && (
+                        <div className="text-xs text-green-600">
+                          {order.couponDetails.discountType === "PERCENTAGE" ? (
+                            <span>
+                              {order.couponDetails.discountValue}% off your
+                              order
+                            </span>
+                          ) : (
+                            <span>
+                              {formatCurrency(
+                                order.couponDetails.discountValue
+                              )}{" "}
+                              off your order
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                   <div className="border-t pt-2 mt-2 flex justify-between font-semibold">

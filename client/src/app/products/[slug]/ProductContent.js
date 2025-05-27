@@ -62,53 +62,45 @@ export default function ProductContent({ slug }) {
           setMainImage(productData.images[0]);
         }
 
-        // Get all available combinations from variants
-        const combinations = [];
-        if (productData.variants) {
-          productData.variants.forEach((variant) => {
-            if (variant.flavorId && variant.weightId) {
-              combinations.push({
-                flavorId: variant.flavorId,
-                weightId: variant.weightId,
-              });
-            }
-          });
-        }
-        setAvailableCombinations(combinations);
+        // Extract all available combinations from variants
+        if (productData.variants && productData.variants.length > 0) {
+          const combinations = productData.variants
+            .filter((v) => v.isActive && v.quantity > 0)
+            .map((variant) => ({
+              flavorId: variant.flavorId,
+              weightId: variant.weightId,
+              variant: variant,
+            }));
 
-        // Set default flavor and weight if available
-        if (productData.flavorOptions && productData.flavorOptions.length > 0) {
-          const firstFlavor = productData.flavorOptions[0];
-          setSelectedFlavor(firstFlavor);
+          setAvailableCombinations(combinations);
 
-          // Find first available weight for this flavor
+          // Set default flavor and weight if available
           if (
-            productData.weightOptions &&
-            productData.weightOptions.length > 0
+            productData.flavorOptions &&
+            productData.flavorOptions.length > 0
           ) {
-            const availableWeight = productData.weightOptions.find((weight) =>
-              combinations.some(
-                (combo) =>
-                  combo.flavorId === firstFlavor.id &&
-                  combo.weightId === weight.id
-              )
-            );
-            if (availableWeight) {
-              setSelectedWeight(availableWeight);
-            }
-          }
-        }
+            const firstFlavor = productData.flavorOptions[0];
+            setSelectedFlavor(firstFlavor);
 
-        // Set default variant if no flavor or weight options
-        if (
-          (!productData.flavorOptions ||
-            productData.flavorOptions.length === 0) &&
-          (!productData.weightOptions ||
-            productData.weightOptions.length === 0) &&
-          productData.variants &&
-          productData.variants.length > 0
-        ) {
-          setSelectedVariant(productData.variants[0]);
+            // Find matching weights for this flavor
+            const matchingVariant = combinations.find(
+              (combo) => combo.flavorId === firstFlavor.id
+            );
+
+            if (matchingVariant && productData.weightOptions) {
+              const matchingWeight = productData.weightOptions.find(
+                (weight) => weight.id === matchingVariant.weightId
+              );
+
+              if (matchingWeight) {
+                setSelectedWeight(matchingWeight);
+                setSelectedVariant(matchingVariant.variant);
+              }
+            }
+          } else if (productData.variants.length > 0) {
+            // If no flavor/weight options but we have variants, select the first one
+            setSelectedVariant(productData.variants[0]);
+          }
         }
       } catch (err) {
         console.error("Error fetching product details:", err);
@@ -131,20 +123,67 @@ export default function ProductContent({ slug }) {
     );
   };
 
+  // Get available weights for a specific flavor
+  const getAvailableWeightsForFlavor = (flavorId) => {
+    const availableWeights = availableCombinations
+      .filter((combo) => combo.flavorId === flavorId)
+      .map((combo) => combo.weightId);
+
+    return availableWeights;
+  };
+
+  // Get available flavors for a specific weight
+  const getAvailableFlavorsForWeight = (weightId) => {
+    const availableFlavors = availableCombinations
+      .filter((combo) => combo.weightId === weightId)
+      .map((combo) => combo.flavorId);
+
+    return availableFlavors;
+  };
+
   // Handle flavor change
   const handleFlavorChange = (flavor) => {
     setSelectedFlavor(flavor);
 
-    // Find first available weight for this flavor
-    if (product?.weightOptions?.length > 0) {
-      const availableWeight = product.weightOptions.find((weight) =>
-        isCombinationAvailable(flavor.id, weight.id)
-      );
-      if (availableWeight) {
-        setSelectedWeight(availableWeight);
+    // Find available weights for this flavor
+    const availableWeightIds = getAvailableWeightsForFlavor(flavor.id);
+
+    if (product?.weightOptions?.length > 0 && availableWeightIds.length > 0) {
+      // Use currently selected weight if it's compatible with the new flavor
+      if (selectedWeight && availableWeightIds.includes(selectedWeight.id)) {
+        // Current weight is compatible, keep it selected
+        const matchingVariant = availableCombinations.find(
+          (combo) =>
+            combo.flavorId === flavor.id && combo.weightId === selectedWeight.id
+        );
+
+        if (matchingVariant) {
+          setSelectedVariant(matchingVariant.variant);
+        }
       } else {
-        setSelectedWeight(null);
+        // Current weight is not compatible, switch to first available
+        const firstAvailableWeight = product.weightOptions.find((weight) =>
+          availableWeightIds.includes(weight.id)
+        );
+
+        if (firstAvailableWeight) {
+          setSelectedWeight(firstAvailableWeight);
+
+          // Find the corresponding variant
+          const matchingVariant = availableCombinations.find(
+            (combo) =>
+              combo.flavorId === flavor.id &&
+              combo.weightId === firstAvailableWeight.id
+          );
+
+          if (matchingVariant) {
+            setSelectedVariant(matchingVariant.variant);
+          }
+        }
       }
+    } else {
+      setSelectedWeight(null);
+      setSelectedVariant(null);
     }
   };
 
@@ -152,47 +191,47 @@ export default function ProductContent({ slug }) {
   const handleWeightChange = (weight) => {
     setSelectedWeight(weight);
 
-    // Find first available flavor for this weight
-    if (product?.flavorOptions?.length > 0) {
-      const availableFlavor = product.flavorOptions.find((flavor) =>
-        isCombinationAvailable(flavor.id, weight.id)
-      );
-      if (availableFlavor) {
-        setSelectedFlavor(availableFlavor);
-      } else {
-        setSelectedFlavor(null);
-      }
-    }
-  };
+    // Find available flavors for this weight
+    const availableFlavorIds = getAvailableFlavorsForWeight(weight.id);
 
-  // Fetch selected variant when flavor or weight changes
-  useEffect(() => {
-    const fetchVariant = async () => {
-      // If product has no flavor/weight options, don't fetch variant
-      if (
-        (!product?.flavorOptions || product.flavorOptions.length === 0) &&
-        (!product?.weightOptions || product.weightOptions.length === 0)
-      ) {
-        return;
-      }
-
-      // Only try to fetch variant if both flavor and weight are selected
-      if (!selectedFlavor || !selectedWeight || !product) return;
-
-      try {
-        const response = await fetchApi(
-          `/public/product-variant?productId=${product.id}&flavorId=${selectedFlavor.id}&weightId=${selectedWeight.id}`
+    if (product?.flavorOptions?.length > 0 && availableFlavorIds.length > 0) {
+      // Use currently selected flavor if it's compatible with the new weight
+      if (selectedFlavor && availableFlavorIds.includes(selectedFlavor.id)) {
+        // Current flavor is compatible, keep it selected
+        const matchingVariant = availableCombinations.find(
+          (combo) =>
+            combo.weightId === weight.id && combo.flavorId === selectedFlavor.id
         );
 
-        setSelectedVariant(response.data.variant);
-      } catch (err) {
-        console.error("Error fetching variant:", err);
-        setSelectedVariant(null);
-      }
-    };
+        if (matchingVariant) {
+          setSelectedVariant(matchingVariant.variant);
+        }
+      } else {
+        // Current flavor is not compatible, switch to first available
+        const firstAvailableFlavor = product.flavorOptions.find((flavor) =>
+          availableFlavorIds.includes(flavor.id)
+        );
 
-    fetchVariant();
-  }, [selectedFlavor, selectedWeight, product]);
+        if (firstAvailableFlavor) {
+          setSelectedFlavor(firstAvailableFlavor);
+
+          // Find the corresponding variant
+          const matchingVariant = availableCombinations.find(
+            (combo) =>
+              combo.weightId === weight.id &&
+              combo.flavorId === firstAvailableFlavor.id
+          );
+
+          if (matchingVariant) {
+            setSelectedVariant(matchingVariant.variant);
+          }
+        }
+      }
+    } else {
+      setSelectedFlavor(null);
+      setSelectedVariant(null);
+    }
+  };
 
   // Check if product is in wishlist
   useEffect(() => {
@@ -273,9 +312,80 @@ export default function ProductContent({ slug }) {
     }
   };
 
-  // Handle image change
-  const handleImageChange = (image) => {
-    setMainImage(image);
+  // Render product images
+  const renderImages = () => {
+    if (!product || !product.images || product.images.length === 0) {
+      return (
+        <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
+          <Image
+            src="/images/product-placeholder.jpg"
+            alt={product?.name || "Product"}
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+      );
+    }
+
+    // If there's only one image
+    if (product.images.length === 1) {
+      return (
+        <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
+          <Image
+            src={getImageUrl(product.images[0].url)}
+            alt={product?.name || "Product"}
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+      );
+    }
+
+    // Main image display
+    return (
+      <div className="space-y-4">
+        <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
+          <Image
+            src={getImageUrl(mainImage?.url || product.images[0].url)}
+            alt={product?.name || "Product"}
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+
+        {/* Thumbnail grid for multiple images */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {product.images.map((image, index) => (
+            <div
+              key={index}
+              className={`relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-2 ${
+                mainImage?.url === image.url
+                  ? "border-primary"
+                  : "border-transparent"
+              }`}
+              onClick={() => setMainImage(image)}
+            >
+              <Image
+                src={getImageUrl(image.url)}
+                alt={`${product.name} - Image ${index + 1}`}
+                fill
+                className="object-contain"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Get image URL helper
+  const getImageUrl = (image) => {
+    if (!image) return "/images/product-placeholder.jpg";
+    if (image.startsWith("http")) return image;
+    return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
   };
 
   // Format price display
@@ -435,38 +545,45 @@ export default function ProductContent({ slug }) {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm mb-6">
+      <div className="flex items-center text-sm mb-8">
         <Link href="/" className="text-gray-500 hover:text-primary">
           Home
         </Link>
-        <ChevronRight className="h-3 w-3 mx-2 text-gray-400" />
+        <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
         <Link href="/products" className="text-gray-500 hover:text-primary">
           Products
         </Link>
-        {product?.category && (
+        {product?.categories?.[0] && (
           <>
-            <ChevronRight className="h-3 w-3 mx-2 text-gray-400" />
+            <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
             <Link
-              href={`/category/${product.category.slug}`}
+              href={`/category/${product.categories[0].slug}`}
               className="text-gray-500 hover:text-primary"
             >
-              {product.category.name}
+              {product.categories[0].name}
             </Link>
           </>
         )}
-        <ChevronRight className="h-3 w-3 mx-2 text-gray-400" />
-        <span className="text-gray-900 font-medium">{product?.name}</span>
+        <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
+        <span className="text-primary">{product?.name}</span>
       </div>
 
-      {/* Main product section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        {/* Left Column - Product Images */}
+      {/* Product Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Product Images */}
         <div>
-          <ProductCarousel
-            images={product?.images || []}
-            productName={product?.name || "Product"}
-            showSaleBadge={selectedVariant && selectedVariant.salePrice}
-          />
+          {loading ? (
+            <div className="aspect-square w-full bg-gray-100 rounded-lg animate-pulse"></div>
+          ) : error ? (
+            <div className="aspect-square w-full bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="text-center p-6">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <p className="text-red-600">{error}</p>
+              </div>
+            </div>
+          ) : (
+            renderImages()
+          )}
         </div>
 
         {/* Right Column - Product Details */}
@@ -523,9 +640,12 @@ export default function ProductContent({ slug }) {
               <h3 className="text-sm font-medium mb-3 uppercase">Flavor</h3>
               <div className="flex flex-wrap gap-2">
                 {product.flavorOptions.map((flavor) => {
-                  const isAvailable = product.weightOptions?.some((weight) =>
-                    isCombinationAvailable(flavor.id, weight.id)
+                  // Check if this flavor has any available combinations
+                  const availableWeightIds = getAvailableWeightsForFlavor(
+                    flavor.id
                   );
+                  const isAvailable = availableWeightIds.length > 0;
+
                   return (
                     <button
                       key={flavor.id}
@@ -553,9 +673,18 @@ export default function ProductContent({ slug }) {
               <h3 className="text-sm font-medium mb-3 uppercase">Weight</h3>
               <div className="flex flex-wrap gap-2">
                 {product.weightOptions.map((weight) => {
-                  const isAvailable = product.flavorOptions?.some((flavor) =>
-                    isCombinationAvailable(flavor.id, weight.id)
+                  // Check if this weight has any available combinations with the selected flavor
+                  const availableFlavorIds = getAvailableFlavorsForWeight(
+                    weight.id
                   );
+                  const isAvailable = selectedFlavor
+                    ? availableCombinations.some(
+                        (combo) =>
+                          combo.flavorId === selectedFlavor.id &&
+                          combo.weightId === weight.id
+                      )
+                    : availableFlavorIds.length > 0;
+
                   return (
                     <button
                       key={weight.id}

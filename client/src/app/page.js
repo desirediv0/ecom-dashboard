@@ -5,14 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchApi } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowRight,
-  Star,
-  ShoppingCart,
-  ChevronRight,
-  Heart,
-  ChevronLeft,
-} from "lucide-react";
+import { ArrowRight, Star, ChevronRight, Heart, Eye } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -25,6 +18,7 @@ import GymSupplementShowcase from "@/components/showcase";
 import BenefitsSec from "@/components/benifit-sec";
 import FeaturedCategoriesSection from "@/components/catgry";
 import Headtext from "@/components/ui/headtext";
+import ProductQuickView from "@/components/ProductQuickView";
 
 // Hero Carousel Component
 const HeroCarousel = () => {
@@ -280,157 +274,173 @@ function useWindowSize() {
 }
 
 // Featured Products Component with modern card design
-const FeaturedProducts = ({ products = [] }) => {
+const FeaturedProducts = ({
+  products = [],
+  isLoading = false,
+  error = null,
+}) => {
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {[...Array(8)].map((_, index) => (
+          <ProductSkeleton key={index} />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">Failed to load products</p>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No products found</p>
+      </div>
+    );
+  }
+
   return (
-    <section className="py-10 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {products.map((product) => (
+          <div
+            key={product.id || product.slug || Math.random().toString()}
+            className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
           >
-            <Headtext text="FEATURED PRODUCTS" />
-            <p className="text-gray-600 my-6 max-w-2xl mx-auto">
-              High-quality supplements to enhance your fitness journey
-            </p>
-          </motion.div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {products.map((product) => (
-            <div
-              key={product.id || product.slug || Math.random().toString()}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group"
-            >
-              <div className="relative p-6 bg-gray-50/50">
-                {/* Circular image with aspect ratio preserved */}
-                <Link
-                  href={`/products/${product.slug || ""}`}
-                  className="block relative aspect-square mx-auto max-w-[180px]"
-                >
-                  {product.image ? (
-                    <Image
-                      src={product.image}
-                      alt={product.name || "Product"}
-                      fill
-                      className="object-contain p-2 transition-transform duration-500 group-hover:scale-110"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                    />
-                  ) : (
-                    <div
-                      className={`absolute inset-0 rounded-full ${getProductColor(
-                        product.name || "Product"
-                      )} flex items-center justify-center`}
-                    >
-                      <span className="font-medium text-gray-500 text-xl">
-                        {(product.name || "XX").substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                </Link>
-
-                {/* Labels and action buttons */}
+            <Link href={`/products/${product.slug || ""}`}>
+              <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
+                {product.image ? (
+                  <Image
+                    src={product.image}
+                    alt={product.name || "Product"}
+                    fill
+                    className="object-contain p-4 transition-transform group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                ) : (
+                  <Image
+                    src="/product-placeholder.jpg"
+                    alt={product.name || "Product"}
+                    fill
+                    className="object-contain p-4 transition-transform group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                )}
                 {product.hasSale && (
-                  <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-full">
+                  <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-sm">
                     SALE
                   </span>
                 )}
-                <div className="absolute top-3 right-3 flex flex-col gap-2">
-                  <button
-                    aria-label="Add to wishlist"
-                    className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110 hover:bg-primary hover:text-white"
-                  >
-                    <Heart className="h-[18px] w-[18px]" />
-                  </button>
-                  <button
-                    aria-label="Quick shop"
-                    className="bg-white rounded-full p-2 shadow-md transition-transform hover:scale-110 hover:bg-primary hover:text-white"
-                  >
-                    <ShoppingCart className="h-[18px] w-[18px]" />
-                  </button>
-                </div>
-              </div>
 
-              <div className="p-4">
-                <div className="flex items-center mb-1.5">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-3.5 w-3.5"
-                        fill={
-                          i < Math.round(product.avgRating || 0)
-                            ? "currentColor"
-                            : "none"
-                        }
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-500 ml-2">
-                    ({product.reviewCount || 0})
-                  </span>
-                </div>
-
-                <Link href={`/products/${product.slug || ""}`}>
-                  <h3 className="text-base md:text-lg font-medium line-clamp-2 group-hover:text-primary transition-colors mb-1">
-                    {product.name || "Product"}
-                  </h3>
-                </Link>
-
-                <div className="flex flex-wrap items-center justify-between mt-3">
-                  <div>
-                    {product.hasSale ? (
-                      <div className="flex items-center">
-                        <span className="font-bold text-base md:text-lg">
-                          ₹{product.basePrice || 0}
-                        </span>
-                        <span className="text-gray-500 line-through text-xs ml-2">
-                          ₹{product.regularPrice || 0}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="font-bold text-base md:text-lg">
-                        ₹{product.basePrice || 0}
-                      </span>
-                    )}
-                  </div>
-
-                  {(product.flavors || 0) > 1 && (
-                    <span className="text-xs text-primary font-medium bg-primary/10 px-2 py-1 rounded-full">
-                      {product.flavors} flavors
-                    </span>
-                  )}
-                </div>
-
-                <Link href={`/products/${product.slug || ""}`}>
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
                   <Button
+                    variant="ghost"
                     size="sm"
-                    className="w-full mt-4 py-2 rounded-full font-medium group-hover:bg-primary/90 transition-colors"
+                    className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setQuickViewProduct(product);
+                      setQuickViewOpen(true);
+                    }}
                   >
-                    Add to Cart
+                    <Eye className="h-5 w-5" />
                   </Button>
-                </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
+                  >
+                    <Heart className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            </Link>
 
-        <div className="text-center mt-10">
-          <Link href="/products">
-            <Button
-              variant="outline"
-              size="lg"
-              className="font-medium border-primary text-primary hover:bg-primary hover:text-white group rounded-full"
-            >
-              View All Products
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-            </Button>
-          </Link>
-        </div>
+            <div className="p-4 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <div className="flex text-yellow-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="h-4 w-4"
+                      fill={
+                        i < Math.round(product.avgRating || 0)
+                          ? "currentColor"
+                          : "none"
+                      }
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-gray-500 ml-2">
+                  ({product.reviewCount || 0})
+                </span>
+              </div>
+
+              <Link
+                href={`/products/${product.slug || ""}`}
+                className="hover:text-primary"
+              >
+                <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
+                  {product.name || "Product"}
+                </h3>
+              </Link>
+
+              <div className="flex items-center justify-center mb-2">
+                {product.hasSale ? (
+                  <div className="flex items-center">
+                    <span className="font-bold text-lg text-primary">
+                      ₹{product.basePrice || 0}
+                    </span>
+                    <span className="text-gray-500 line-through text-sm ml-2">
+                      ₹{product.regularPrice || 0}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-bold text-lg text-primary">
+                    ₹{product.basePrice || 0}
+                  </span>
+                )}
+              </div>
+
+              {(product.flavors || 0) > 1 && (
+                <span className="text-xs text-gray-500 block">
+                  {product.flavors} variants
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
-    </section>
+
+      <div className="text-center mt-10">
+        <Link href="/products">
+          <Button
+            variant="outline"
+            size="lg"
+            className="font-medium border-primary text-primary hover:bg-primary hover:text-white group rounded-full"
+          >
+            View All Products
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+          </Button>
+        </Link>
+      </div>
+
+      {/* Quick View Dialog */}
+      <ProductQuickView
+        product={quickViewProduct}
+        open={quickViewOpen}
+        onOpenChange={setQuickViewOpen}
+      />
+    </>
   );
 };
 
@@ -555,153 +565,6 @@ const TestimonialsSection = () => {
   );
 };
 
-// Trending Products Section with horizontal scroll on mobile
-const TrendingSection = ({ products = [] }) => {
-  const [api, setApi] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const displayProducts = products.slice(0, 8);
-
-  // Update current slide index when carousel changes
-  useEffect(() => {
-    if (!api) return;
-
-    const onSelect = () => {
-      setCurrentIndex(api.selectedScrollSnap());
-    };
-
-    api.on("select", onSelect);
-
-    return () => {
-      api.off("select", onSelect);
-    };
-  }, [api]);
-
-  return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              <span className="relative inline-block">
-                TRENDING NOW
-                <motion.span
-                  className="absolute bottom-0 left-0 h-3 w-full bg-primary/20 -z-10"
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "100%" }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  viewport={{ once: true }}
-                />
-              </span>
-            </h2>
-            <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-              Our most popular supplements that customers love
-            </p>
-          </motion.div>
-        </div>
-
-        <div className="relative">
-          <Carousel setApi={setApi} opts={{ loop: true, align: "start" }}>
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {displayProducts.map((product) => (
-                <CarouselItem
-                  key={product.id || product.slug || Math.random().toString()}
-                  className="pl-2 md:pl-4 basis-3/4 sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
-                >
-                  <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
-                    <div className="p-6 bg-gray-50/50 relative">
-                      <Link
-                        href={`/products/${product.slug || ""}`}
-                        className="block relative aspect-square mx-auto max-w-[160px]"
-                      >
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name || "Product"}
-                            fill
-                            className="object-contain p-2 transition-transform duration-500 group-hover:scale-110"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                          />
-                        ) : (
-                          <div
-                            className={`absolute inset-0 rounded-full ${getProductColor(
-                              product.name || "Product"
-                            )} flex items-center justify-center`}
-                          >
-                            <span className="font-medium text-gray-500 text-xl">
-                              {(product.name || "XX")
-                                .substring(0, 2)
-                                .toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </Link>
-
-                      {product.hasSale && (
-                        <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-full">
-                          SALE
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-4">
-                      <Link href={`/products/${product.slug || ""}`}>
-                        <h3 className="text-base font-medium mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                          {product.name || "Product"}
-                        </h3>
-                      </Link>
-
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-base">
-                          ₹{product.basePrice || 0}
-                        </span>
-                        <Link href={`/products/${product.slug || ""}`}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="px-3 py-1 text-xs rounded-full"
-                          >
-                            Quick View
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-
-            <CarouselPrevious className="absolute left-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
-            <CarouselNext className="absolute right-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
-
-            {/* Dot indicators */}
-            <div className="flex justify-center mt-8 gap-1.5">
-              {Array.from({
-                length: Math.ceil(displayProducts.length / 4),
-              }).map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => api?.scrollTo(idx * 4)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    Math.floor(currentIndex / 4) === idx
-                      ? "bg-primary scale-110"
-                      : "bg-gray-300"
-                  }`}
-                  aria-label={`Go to slide group ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </Carousel>
-        </div>
-      </div>
-    </section>
-  );
-};
-
 // Newsletter Section
 const NewsletterSection = () => {
   const [email, setEmail] = useState("");
@@ -750,15 +613,7 @@ const NewsletterSection = () => {
                 <div className="flex flex-col gap-4 mb-6">
                   <div className="flex items-center">
                     <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
-                      <motion.div
-                        className="h-6 w-6 text-primary"
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      >
+                      <div className="h-6 w-6 text-primary">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
@@ -770,7 +625,7 @@ const NewsletterSection = () => {
                         >
                           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
                         </svg>
-                      </motion.div>
+                      </div>
                     </div>
                     <span className="text-sm">Weekly fitness newsletter</span>
                   </div>
@@ -914,11 +769,6 @@ const NewsletterSection = () => {
   );
 };
 
-// Product and Category skeletons
-const CategorySkeleton = () => (
-  <div className="aspect-[4/5] rounded-lg overflow-hidden bg-gray-200 animate-pulse"></div>
-);
-
 const ProductSkeleton = () => (
   <div className="bg-white rounded-lg overflow-hidden shadow-sm animate-pulse">
     <div className="aspect-square bg-gray-200"></div>
@@ -945,10 +795,10 @@ export default function Home() {
           "/public/products?featured=true&limit=8"
         );
         setFeaturedProducts(productsRes?.data?.products || []);
-        setProductsLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err?.message || "Failed to fetch data");
+      } finally {
         setProductsLoading(false);
       }
     };
@@ -964,39 +814,24 @@ export default function Home() {
       {/* Featured Categories Section */}
       <FeaturedCategoriesSection />
 
-      {/* Featured Products - show skeleton if loading */}
-      <section className="py-10 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <Headtext text="FEATURED PRODUCTS" />
-            <p className="text-gray-600 my-6 max-w-2xl mx-auto">
-              High-quality supplements to enhance your fitness journey
-            </p>
+      {/* Featured Products Section */}
+      {featuredProducts.length && (
+        <section className="py-10 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <Headtext text="FEATURED PRODUCTS" />
+              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+                High-quality supplements to enhance your fitness journey
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={featuredProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
           </div>
-
-          {productsLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {[...Array(8)].map((_, index) => (
-                <ProductSkeleton key={index} />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-8">
-              <p className="text-red-500">Failed to load products</p>
-            </div>
-          ) : featuredProducts.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No products found</p>
-            </div>
-          ) : (
-            <FeaturedProducts products={featuredProducts} />
-          )}
-        </div>
-      </section>
-
-      {/* Trending Products Section */}
-      {!productsLoading && !error && featuredProducts.length > 0 && (
-        <TrendingSection products={featuredProducts} />
+        </section>
       )}
 
       <GymSupplementShowcase />

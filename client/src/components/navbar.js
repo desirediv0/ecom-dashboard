@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Phone,
   MapPin,
+  LogIn,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -21,6 +22,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { fetchApi } from "@/lib/utils";
 import { ClientOnly } from "./client-only";
 import Image from "next/image";
+import { toast, Toaster } from "sonner";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -91,7 +93,10 @@ export function Navbar() {
 
   const handleLogout = async () => {
     await logout();
-    router.push("/");
+    // Show logout toast notification
+    toast.success("Logged out successfully");
+    // Force reload to ensure UI updates correctly
+    window.location.href = "/";
   };
 
   const toggleDropdown = (dropdown) => {
@@ -121,7 +126,6 @@ export function Navbar() {
     categories,
     searchQuery,
     setSearchQuery,
-    handleSearch,
     isAuthenticated,
     handleLogout,
   }) => {
@@ -168,9 +172,13 @@ export function Navbar() {
               className="flex items-center"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span className="text-xl font-bold text-gray-900 flex items-center">
-                <span className="text-primary">Ecom</span>
-              </span>
+              <Image
+                src="/logo.jpeg"
+                alt="Logo"
+                width={120}
+                height={120}
+                className="ml-2 p-2 lg:p-0"
+              />
             </Link>
             <div className="flex items-center gap-2">
               <button
@@ -357,8 +365,9 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm" ref={navbarRef}>
+      <Toaster position="top-center" />
       {/* Top bar */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white py-2 md:py-1.5 text-center text-xs md:text-sm font-medium">
+      <div className="bg-gradient-to-r from-orange-500 to-blue-500/80 text-white py-2 md:py-1.5 text-center text-xs md:text-sm font-medium">
         Free shipping on orders over ₹999 | Use code FIT10 for 10% off your
         first order
       </div>
@@ -422,16 +431,13 @@ export function Navbar() {
   
             {/* Logo */}
             <Link href="/" className="flex items-center">
-              <span className="text-xl md:text-2xl font-bold text-gray-900 flex items-center">
-                {/* <span className="text-primary">Ecom</span> */}
-                <Image
-                  src="/logo.png"
-                  alt="Logo"
-                  width={150}
-                  height={150}
-                  className="ml-2 p-2 lg:p-0"
-                />
-              </span>
+              <Image
+                src="/logo.jpeg"
+                alt="Logo"
+                width={150}
+                height={150}
+                className="ml-2 p-2 lg:p-0"
+              />
             </Link>
 
             {/* Desktop Navigation */}
@@ -485,7 +491,7 @@ export function Navbar() {
                   ))}
                   <div className="pt-2 mt-2 border-t border-gray-100">
                     <Link
-                      href="/products"
+                      href="/categories"
                       className="block px-4 py-2.5 text-primary font-medium hover:bg-primary/5 transition-all duration-200"
                       onClick={() => setActiveDropdown(null)}
                     >
@@ -666,7 +672,11 @@ export function Navbar() {
                     onClick={() => toggleDropdown("account")}
                     aria-expanded={activeDropdown === "account"}
                   >
-                    <User className="h-5 w-5" />
+                    {isAuthenticated ? (
+                      <User className="h-5 w-5" />
+                    ) : (
+                      <LogIn className="h-5 w-5" />
+                    )}
                     <ChevronDown
                       className={`ml-1 h-4 w-4 transition-transform duration-200 ${
                         activeDropdown === "account" ? "rotate-180" : ""

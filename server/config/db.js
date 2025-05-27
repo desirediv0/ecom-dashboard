@@ -5,7 +5,7 @@ export const prisma = new PrismaClient({
   log: ["error", "warn"],
   // Define transaction timeout (available in Prisma Client)
   transactionOptions: {
-    maxWait: 15000, // maximum time in ms to wait to acquire a transaction
-    timeout: 60000, // maximum time in ms for the transaction to run
+    maxWait: 30000, // increased from 15000 - maximum time in ms to wait to acquire a transaction
+    timeout: 120000, // increased from 60000 - maximum time in ms for the transaction to run
   },
 });

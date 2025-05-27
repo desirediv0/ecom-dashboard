@@ -197,6 +197,10 @@ export const getProductById = asyncHandler(async (req, res, next) => {
           }
         : null,
     })),
+    // Include SEO fields
+    metaTitle: product.metaTitle || product.name,
+    metaDescription: product.metaDescription || product.description,
+    keywords: product.keywords || "",
   };
 
   res
@@ -229,6 +233,9 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     isActive,
     hasVariants,
     variants: variantsJson,
+    metaTitle,
+    metaDescription,
+    keywords,
   } = req.body;
 
   // Validation checks with better error handling
@@ -341,6 +348,9 @@ export const createProduct = asyncHandler(async (req, res, next) => {
           nutritionInfo: parsedNutritionInfo,
           featured: featured === "true" || featured === true,
           isActive: isActive === "true" || isActive === true || true,
+          metaTitle: metaTitle || cleanName,
+          metaDescription: metaDescription || description,
+          keywords,
         },
       });
 
@@ -614,46 +624,70 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     });
 
     // Format the response data
-    const formattedProduct = {
-      ...result,
-      // Extract categories into a more usable format
-      categories: result.categories.map((pc) => ({
-        id: pc.category.id,
-        name: pc.category.name,
-        description: pc.category.description,
-        image: pc.category.image ? getFileUrl(pc.category.image) : null,
-        slug: pc.category.slug,
-        isPrimary: pc.isPrimary,
-      })),
-      primaryCategory:
-        result.categories.find((pc) => pc.isPrimary)?.category ||
-        (result.categories.length > 0 ? result.categories[0].category : null),
-      images: result.images.map((image) => ({
-        ...image,
-        url: getFileUrl(image.url),
-      })),
-      variants: result.variants.map((variant) => ({
-        ...variant,
-        flavor: variant.flavor
-          ? {
-              ...variant.flavor,
-              image: variant.flavor.image
-                ? getFileUrl(variant.flavor.image)
-                : null,
-            }
-          : null,
-      })),
-    };
+    try {
+      const formattedProduct = {
+        ...result,
+        // Extract categories into a more usable format
+        categories: result.categories.map((pc) => ({
+          id: pc.category.id,
+          name: pc.category.name,
+          description: pc.category.description,
+          image: pc.category.image ? getFileUrl(pc.category.image) : null,
+          slug: pc.category.slug,
+          isPrimary: pc.isPrimary,
+        })),
+        primaryCategory:
+          result.categories.find((pc) => pc.isPrimary)?.category ||
+          (result.categories.length > 0 ? result.categories[0].category : null),
+        images: result.images.map((image) => ({
+          ...image,
+          url: getFileUrl(image.url),
+        })),
+        variants: result.variants.map((variant) => ({
+          ...variant,
+          flavor: variant.flavor
+            ? {
+                ...variant.flavor,
+                image: variant.flavor.image
+                  ? getFileUrl(variant.flavor.image)
+                  : null,
+              }
+            : null,
+        })),
+        // Include message when variants couldn't be deleted due to orders
+        _message:
+          variantIdsWithOrders && variantIdsWithOrders.length > 0
+            ? "Some variants could not be deleted because they have associated orders."
+            : undefined,
+      };
 
-    res
-      .status(201)
-      .json(
+      // Send success response
+      res
+        .status(201)
+        .json(
+          new ApiResponsive(
+            201,
+            { product: formattedProduct },
+            "Product created successfully"
+          )
+        );
+    } catch (formattingError) {
+      // If formatting fails but product was created, still return success
+      console.error("Error formatting product response:", formattingError);
+      res.status(201).json(
         new ApiResponsive(
           201,
-          { product: formattedProduct },
-          "Product created successfully"
+          {
+            product: {
+              id: result.id,
+              name: result.name,
+              slug: result.slug,
+            },
+          },
+          "Product created successfully but encountered error formatting response"
         )
       );
+    }
   } catch (error) {
     console.error("Product creation error:", error);
     throw new ApiError(500, `Failed to create product: ${error.message}`);
@@ -678,6 +712,9 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
     price,
     salePrice,
     quantity,
+    metaTitle,
+    metaDescription,
+    keywords,
   } = req.body;
 
   // Check if product exists
@@ -697,6 +734,9 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
   if (!product) {
     throw new ApiError(404, "Product not found");
   }
+
+  // Declare variantIdsWithOrders in outer scope so it's available after the transaction
+  let variantIdsWithOrders = [];
 
   // Parse category IDs if provided
   let parsedCategoryIds = [];
@@ -806,6 +846,9 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           ...(isActive !== undefined && {
             isActive: isActive === "true" || isActive === true,
           }),
+          ...(metaTitle !== undefined && { metaTitle }),
+          ...(metaDescription !== undefined && { metaDescription }),
+          ...(keywords !== undefined && { keywords }),
         },
       });
 
@@ -887,16 +930,58 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
                 (id) => !updatedVariantIds.includes(id)
               );
 
-        console.log(
-          `Existing variants: ${existingVariantIds.length}, To delete: ${variantIdsToDelete.length}, To keep/update: ${updatedVariantIds.length}`
-        );
-
-        // Delete removed variants
+        // Delete removed variants safely
         if (variantIdsToDelete.length > 0) {
-          console.log(`Deleting variants: ${variantIdsToDelete.join(", ")}`);
-          await prisma.productVariant.deleteMany({
-            where: { id: { in: variantIdsToDelete } },
+          // Check if any variants have related order items
+          const variantsWithOrders = await prisma.orderItem.findMany({
+            where: {
+              variantId: { in: variantIdsToDelete },
+            },
+            select: {
+              variantId: true,
+            },
+            distinct: ["variantId"],
           });
+
+          // Assign to outer scope variable instead of creating a new const
+          variantIdsWithOrders = variantsWithOrders.map(
+            (item) => item.variantId
+          );
+
+          if (variantIdsWithOrders.length > 0) {
+            // For variants that have orders, mark them as inactive instead of deleting
+            await prisma.productVariant.updateMany({
+              where: {
+                id: { in: variantIdsWithOrders },
+              },
+              data: {
+                isActive: false,
+              },
+            });
+
+            // Only delete variants that don't have orders
+            const safeToDeleteIds = variantIdsToDelete.filter(
+              (id) => !variantIdsWithOrders.includes(id)
+            );
+
+            if (safeToDeleteIds.length > 0) {
+              await prisma.productVariant.deleteMany({
+                where: { id: { in: safeToDeleteIds } },
+              });
+            }
+
+            // Don't try to save notes to the database since the field doesn't exist in the schema            // Just log a message instead            console.log(`Product ${productId}: Some variants could not be deleted because they have associated orders.`);                        // We'll include this message in the API response after the transaction
+          } else {
+            // If no variants have orders, delete them all
+            console.log(
+              `Deleting all requested variants: ${variantIdsToDelete.join(
+                ", "
+              )}`
+            );
+            await prisma.productVariant.deleteMany({
+              where: { id: { in: variantIdsToDelete } },
+            });
+          }
         }
 
         // Update or create variants
@@ -915,11 +1000,6 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
             });
 
             if (!variantExists) {
-              console.log(
-                `Variant ${variant.id} not found in database, will create new`
-              );
-              // If variant no longer exists in DB but is in our update list,
-              // treat it as a new variant instead (database might be out of sync)
               variant.id = null;
             }
           }
@@ -979,17 +1059,61 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
               variantSku = `${variantSku}-${randomSuffix}`;
             }
 
+            // Better error handling for variant price parsing
+            let parsedPrice = 0;
+            let parsedSalePrice = null;
+            let parsedQuantity = 0;
+
+            try {
+              // Parse price with validation
+              if (variant.price) {
+                parsedPrice = parseFloat(variant.price);
+                if (isNaN(parsedPrice)) {
+                  console.warn(
+                    `Invalid price value: ${variant.price}, defaulting to 0`
+                  );
+                  parsedPrice = 0;
+                }
+              }
+
+              // Parse sale price with validation
+              if (
+                variant.salePrice &&
+                variant.salePrice !== "null" &&
+                variant.salePrice !== ""
+              ) {
+                parsedSalePrice = parseFloat(variant.salePrice);
+                if (isNaN(parsedSalePrice)) {
+                  console.warn(
+                    `Invalid sale price value: ${variant.salePrice}, defaulting to null`
+                  );
+                  parsedSalePrice = null;
+                }
+              }
+
+              // Parse quantity with validation
+              if (variant.quantity) {
+                parsedQuantity = parseInt(variant.quantity);
+                if (isNaN(parsedQuantity)) {
+                  console.warn(
+                    `Invalid quantity value: ${variant.quantity}, defaulting to 0`
+                  );
+                  parsedQuantity = 0;
+                }
+              }
+            } catch (error) {
+              console.error(`Error parsing variant data: ${error.message}`);
+            }
+
             await prisma.productVariant.update({
               where: { id: variant.id },
               data: {
                 sku: variantSku || variant.sku,
                 flavorId: variant.flavorId || null,
                 weightId: variant.weightId || null,
-                price: parseFloat(variant.price),
-                salePrice: variant.salePrice
-                  ? parseFloat(variant.salePrice)
-                  : null,
-                quantity: parseInt(variant.quantity || 0),
+                price: parsedPrice,
+                salePrice: parsedSalePrice,
+                quantity: parsedQuantity,
                 isActive:
                   variant.isActive !== undefined ? variant.isActive : true,
               },
@@ -1046,38 +1170,124 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
               variantSku = `${variantSku}-${randomSuffix}`;
             }
 
+            // Better error handling for variant price parsing
+            let parsedPrice = 0;
+            let parsedSalePrice = null;
+            let parsedQuantity = 0;
+
+            try {
+              // Parse price with validation
+              if (variant.price) {
+                parsedPrice = parseFloat(variant.price);
+                if (isNaN(parsedPrice)) {
+                  console.warn(
+                    `Invalid price value: ${variant.price}, defaulting to 0`
+                  );
+                  parsedPrice = 0;
+                }
+              }
+
+              // Parse sale price with validation
+              if (
+                variant.salePrice &&
+                variant.salePrice !== "null" &&
+                variant.salePrice !== ""
+              ) {
+                parsedSalePrice = parseFloat(variant.salePrice);
+                if (isNaN(parsedSalePrice)) {
+                  console.warn(
+                    `Invalid sale price value: ${variant.salePrice}, defaulting to null`
+                  );
+                  parsedSalePrice = null;
+                }
+              }
+
+              // Parse quantity with validation
+              if (variant.quantity) {
+                parsedQuantity = parseInt(variant.quantity);
+                if (isNaN(parsedQuantity)) {
+                  console.warn(
+                    `Invalid quantity value: ${variant.quantity}, defaulting to 0`
+                  );
+                  parsedQuantity = 0;
+                }
+              }
+            } catch (error) {
+              console.error(`Error parsing variant data: ${error.message}`);
+            }
+
             await prisma.productVariant.create({
               data: {
                 productId,
                 sku: variantSku || variant.sku,
                 flavorId: variant.flavorId || null,
                 weightId: variant.weightId || null,
-                price: parseFloat(variant.price),
-                salePrice: variant.salePrice
-                  ? parseFloat(variant.salePrice)
-                  : null,
-                quantity: parseInt(variant.quantity || 0),
+                price: parsedPrice,
+                salePrice: parsedSalePrice,
+                quantity: parsedQuantity,
                 isActive:
                   variant.isActive !== undefined ? variant.isActive : true,
               },
             });
           }
         }
-      } else if (hasVariants === "false" || hasVariants === false) {
+      } else if (
+        hasVariants === "false" ||
+        hasVariants === false ||
+        hasVariants === null ||
+        hasVariants === undefined
+      ) {
         // If switching to non-variant mode, handle simple product price and quantity
         // If no variants exist, create a default one, otherwise update the first one
         if (product.variants.length === 0) {
           const defaultSku = `${baseSku}-DEF`;
 
           // Ensure price, salePrice, and quantity are properly parsed
-          const parsedPrice = price ? parseFloat(price) : 0;
-          const parsedSalePrice =
-            salePrice && salePrice !== "null" && salePrice !== ""
-              ? parseFloat(salePrice)
-              : null;
-          const parsedQuantity = req.body.quantity
-            ? parseInt(req.body.quantity)
-            : 0;
+          // Parse price with validation
+          let parsedPrice = 0;
+          try {
+            if (price) {
+              parsedPrice = parseFloat(price);
+              if (isNaN(parsedPrice)) {
+                console.warn(`Invalid price value: ${price}, defaulting to 0`);
+                parsedPrice = 0;
+              }
+            }
+          } catch (error) {
+            console.error(`Error parsing price: ${error.message}`);
+          }
+
+          // Parse sale price with validation
+          let parsedSalePrice = null;
+          try {
+            if (salePrice && salePrice !== "null" && salePrice !== "") {
+              parsedSalePrice = parseFloat(salePrice);
+              if (isNaN(parsedSalePrice)) {
+                console.warn(
+                  `Invalid sale price value: ${salePrice}, defaulting to null`
+                );
+                parsedSalePrice = null;
+              }
+            }
+          } catch (error) {
+            console.error(`Error parsing sale price: ${error.message}`);
+          }
+
+          // Parse quantity with validation
+          let parsedQuantity = 0;
+          try {
+            if (req.body.quantity) {
+              parsedQuantity = parseInt(req.body.quantity);
+              if (isNaN(parsedQuantity)) {
+                console.warn(
+                  `Invalid quantity value: ${req.body.quantity}, defaulting to 0`
+                );
+                parsedQuantity = 0;
+              }
+            }
+          } catch (error) {
+            console.error(`Error parsing quantity: ${error.message}`);
+          }
 
           await prisma.productVariant.create({
             data: {
@@ -1091,24 +1301,162 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
               isActive: true,
             },
           });
-        } else if (price || salePrice || quantity) {
-          // Update the first variant with new price/quantity
+        } else {
+          // Always update the price and other fields, even if they're not explicitly defined in the request
+          // This fixes the issue where price wasn't updating when hasVariants was null
 
-          // Ensure price, salePrice, and quantity are properly parsed for update
+          // Robust parsing for price, salePrice, and quantity
           const updateData = {};
-          if (price) updateData.price = parseFloat(price);
-          if (salePrice !== undefined) {
-            updateData.salePrice =
-              salePrice && salePrice !== "null" && salePrice !== ""
-                ? parseFloat(salePrice)
-                : null;
-          }
-          if (quantity) updateData.quantity = parseInt(quantity);
 
-          await prisma.productVariant.update({
-            where: { id: product.variants[0].id },
-            data: updateData,
-          });
+          // Parse price with enhanced validation and debugging
+          try {
+            // Log the raw price to diagnose issues
+            console.log(
+              `Raw price received: '${price}', type: ${typeof price}`
+            );
+
+            if (price !== undefined) {
+              // Try to parse as integer first then as float if necessary
+              let parsedPrice;
+
+              // Remove any formatting characters that might be causing issues
+              const cleanPrice = String(price).replace(/[^\d.-]/g, "");
+              console.log(`Cleaned price string: '${cleanPrice}'`);
+
+              parsedPrice = parseFloat(cleanPrice);
+
+              if (!isNaN(parsedPrice)) {
+                updateData.price = parsedPrice;
+                console.log(`Parsed price as number: ${parsedPrice}`);
+              } else {
+                console.warn(
+                  `Invalid price value: ${price}, using existing price`
+                );
+                updateData.price = parseFloat(product.variants[0].price);
+                console.log(`Using existing price: ${updateData.price}`);
+              }
+            } else {
+              // Price is required, so use existing value if not provided
+              updateData.price = parseFloat(product.variants[0].price);
+              console.log(
+                `Price not in request, using existing: ${updateData.price}`
+              );
+            }
+          } catch (error) {
+            console.error(`Error parsing price: ${error.message}`);
+            updateData.price = parseFloat(product.variants[0].price);
+          }
+
+          // Parse sale price with validation - more aggressive checking
+          try {
+            // Log the raw sale price coming in to diagnose issues
+            console.log(
+              `Raw sale price received: '${salePrice}', type: ${typeof salePrice}`
+            );
+
+            // Consider salePrice as defined if it exists in the request
+            if (salePrice !== undefined) {
+              // Only set a non-null sale price if we have a valid number
+              if (salePrice && salePrice !== "null" && salePrice !== "") {
+                const parsedSalePrice = parseFloat(salePrice);
+                if (!isNaN(parsedSalePrice)) {
+                  updateData.salePrice = parsedSalePrice;
+                  console.log(
+                    `Parsed sale price as number: ${parsedSalePrice}`
+                  );
+                } else {
+                  console.warn(
+                    `Invalid sale price value: ${salePrice}, defaulting to null`
+                  );
+                  updateData.salePrice = null;
+                }
+              } else {
+                console.log(
+                  `Setting sale price to null because value is empty or null`
+                );
+                updateData.salePrice = null;
+              }
+            } else {
+              console.log(
+                `Sale price not provided in request, keeping existing value`
+              );
+              // Don't include salePrice in the update if it wasn't in the request
+              // This means remove the salePrice key from updateData to prevent updates
+              delete updateData.salePrice;
+            }
+          } catch (error) {
+            console.error(`Error parsing sale price: ${error.message}`);
+            // Don't update on error
+            delete updateData.salePrice;
+          }
+
+          // Parse quantity with validation
+          try {
+            if (quantity !== undefined) {
+              const parsedQuantity = parseInt(quantity);
+              if (!isNaN(parsedQuantity)) {
+                updateData.quantity = parsedQuantity;
+              } else {
+                console.warn(
+                  `Invalid quantity value: ${quantity}, keeping existing quantity`
+                );
+                // Don't update quantity if invalid
+              }
+            }
+          } catch (error) {
+            console.error(`Error parsing quantity: ${error.message}`);
+            // Don't update quantity on error
+          }
+
+          // Output debug info to check what's happening
+          console.log("Updating variant with ID:", product.variants[0].id);
+          console.log(
+            "Update data to apply:",
+            JSON.stringify(updateData, null, 2)
+          );
+
+          // Direct database update using raw SQL to bypass any Prisma caching issues
+          if (price !== undefined) {
+            await prisma.$executeRaw`
+              UPDATE "ProductVariant" 
+              SET "price" = ${String(updateData.price)}, 
+                  "updatedAt" = NOW() 
+              WHERE "id" = ${product.variants[0].id};
+            `;
+            console.log("Updated price with direct SQL:", updateData.price);
+          }
+
+          // Handle sale price
+          if (salePrice !== undefined) {
+            await prisma.$executeRaw`
+              UPDATE "ProductVariant" 
+              SET "salePrice" = ${
+                updateData.salePrice === null
+                  ? null
+                  : String(updateData.salePrice)
+              }, 
+                  "updatedAt" = NOW() 
+              WHERE "id" = ${product.variants[0].id};
+            `;
+            console.log(
+              "Updated sale price with direct SQL:",
+              updateData.salePrice
+            );
+          }
+
+          // Handle quantity
+          if (quantity !== undefined) {
+            await prisma.$executeRaw`
+              UPDATE "ProductVariant" 
+              SET "quantity" = ${updateData.quantity}, 
+                  "updatedAt" = NOW() 
+              WHERE "id" = ${product.variants[0].id};
+            `;
+            console.log(
+              "Updated quantity with direct SQL:",
+              updateData.quantity
+            );
+          }
         }
       }
 
@@ -1188,8 +1536,18 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         }
       }
 
-      // Return updated product with relations
-      return await prisma.product.findUnique({
+      // Get the current state of variants to ensure we have the latest data
+      const refreshedVariants = await prisma.$queryRaw`
+        SELECT * FROM "ProductVariant" WHERE "productId" = ${productId};
+      `;
+
+      console.log(
+        "Refreshed variants:",
+        JSON.stringify(refreshedVariants, null, 2)
+      );
+
+      // Get the full product with fresh data
+      const freshProduct = await prisma.product.findUnique({
         where: { id: productId },
         include: {
           categories: {
@@ -1206,6 +1564,28 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           },
         },
       });
+
+      // Force update the variant data in the result to ensure it's fresh
+      if (
+        freshProduct &&
+        freshProduct.variants &&
+        freshProduct.variants.length > 0
+      ) {
+        for (const variant of freshProduct.variants) {
+          const refreshedVariant = refreshedVariants.find(
+            (v) => v.id === variant.id
+          );
+          if (refreshedVariant) {
+            // Explicitly update the fields that might be stale
+            variant.price = refreshedVariant.price;
+            variant.salePrice = refreshedVariant.salePrice;
+            variant.quantity = refreshedVariant.quantity;
+            variant.updatedAt = refreshedVariant.updatedAt;
+          }
+        }
+      }
+
+      return freshProduct;
     });
 
     // Format the response data
@@ -1238,6 +1618,11 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
             }
           : null,
       })),
+      // Include message when variants couldn't be deleted due to orders
+      _message:
+        variantIdsWithOrders && variantIdsWithOrders.length > 0
+          ? "Some variants could not be deleted because they have associated orders."
+          : undefined,
     };
 
     res

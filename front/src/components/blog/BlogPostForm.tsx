@@ -72,6 +72,18 @@ const blogPostSchema = z.object({
       "Only .jpg, .jpeg, .png, and .webp files are accepted"
     ),
   removeCoverImage: z.boolean(),
+  metaTitle: z
+    .string()
+    .max(60, "SEO title should be under 60 characters")
+    .optional(),
+  metaDescription: z
+    .string()
+    .max(160, "SEO description should be under 160 characters")
+    .optional(),
+  keywords: z
+    .string()
+    .max(200, "Keywords should be under 200 characters")
+    .optional(),
 });
 
 type BlogPostFormValues = {
@@ -82,6 +94,9 @@ type BlogPostFormValues = {
   isPublished: boolean;
   coverImage?: any;
   removeCoverImage: boolean;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
 };
 
 const BlogPostForm = ({ postId, isEditing = false }: BlogPostFormProps) => {
@@ -104,6 +119,9 @@ const BlogPostForm = ({ postId, isEditing = false }: BlogPostFormProps) => {
       categories: [],
       coverImage: null,
       removeCoverImage: false,
+      metaTitle: "",
+      metaDescription: "",
+      keywords: "",
     },
   });
 
@@ -144,6 +162,9 @@ const BlogPostForm = ({ postId, isEditing = false }: BlogPostFormProps) => {
             "categories",
             post.categories.map((cat: { id: string }) => cat.id)
           );
+          form.setValue("metaTitle", post.metaTitle || "");
+          form.setValue("metaDescription", post.metaDescription || "");
+          form.setValue("keywords", post.keywords || "");
 
           // Set image preview if exists
           if (post.coverImageUrl) {
@@ -233,6 +254,19 @@ const BlogPostForm = ({ postId, isEditing = false }: BlogPostFormProps) => {
 
       if (values.categories && values.categories.length > 0) {
         formData.append("categories", JSON.stringify(values.categories));
+      }
+
+      // SEO fields
+      if (values.metaTitle) {
+        formData.append("metaTitle", values.metaTitle);
+      }
+
+      if (values.metaDescription) {
+        formData.append("metaDescription", values.metaDescription);
+      }
+
+      if (values.keywords) {
+        formData.append("keywords", values.keywords);
       }
 
       // Handle cover image
@@ -355,6 +389,72 @@ const BlogPostForm = ({ postId, isEditing = false }: BlogPostFormProps) => {
                 </FormItem>
               )}
             />
+
+            <div className="border p-4 rounded-lg space-y-4 mt-6">
+              <h3 className="font-medium text-lg">SEO Settings</h3>
+
+              <FormField
+                control={form.control as any}
+                name="metaTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SEO Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="SEO title (recommended 50-60 chars)"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      If left empty, the post title will be used
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control as any}
+                name="metaDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SEO Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Meta description (recommended under 160 chars)"
+                        {...field}
+                        className="resize-none"
+                        rows={2}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      If left empty, the post summary will be used
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control as any}
+                name="keywords"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Keywords</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Comma-separated keywords"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Keywords for search engines (comma-separated)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           <div className="space-y-6">

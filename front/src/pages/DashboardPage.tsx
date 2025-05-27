@@ -2,17 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { orders, inventory } from "@/api/adminService";
 import { Card } from "@/components/ui/card";
+
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  BarChart3,
   AlertTriangle,
   ShoppingCart,
   TrendingUp,
@@ -21,14 +12,42 @@ import {
   AlertCircle,
   Package2,
   ExternalLink,
+  PieChart as PieChartIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
+
+// Helper function to get proper image URL
+const getImageUrl = (image: string | undefined | null): string => {
+  if (!image) return "/images/blog-placeholder.jpg";
+  if (image.startsWith("http")) return image;
+  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+};
+
+// Define types for API data
+interface OrderStats {
+  totalOrders?: number;
+  totalSales?: number;
+  orderGrowth?: number;
+  revenueGrowth?: number;
+  statusCounts?: Record<string, number>;
+  topProducts?: Array<any>;
+  monthlySales?: Array<{ month: string; revenue: number }>;
+  [key: string]: any;
+}
 
 export default function DashboardPage() {
   const { admin } = useAuth();
-  const [orderStats, setOrderStats] = useState<any>(null);
+  const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
   const [inventoryAlerts, setInventoryAlerts] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,14 +61,82 @@ export default function DashboardPage() {
 
         // Load order stats
         const orderStatsData = await orders.getOrderStats();
-        setOrderStats(orderStatsData.data);
+
+        // Handle different response structures
+        let actualData: OrderStats = {};
+        if (orderStatsData?.data?.success && orderStatsData?.data?.data) {
+          // Structure: { data: { success: true, data: {...} } }
+          actualData = orderStatsData.data.data;
+        } else if (
+          orderStatsData?.data?.statusCode === 200 &&
+          orderStatsData?.data?.data
+        ) {
+          // Structure: { data: { statusCode: 200, data: {...} } }
+          actualData = orderStatsData.data.data;
+        } else if (orderStatsData?.data) {
+          // Direct data structure: { data: {...} }
+          actualData = orderStatsData.data;
+        }
+
+        // Keep the actual sales data without generating fake data
+        let monthlySales = actualData.monthlySales || [];
+
+        // Create default status counts if missing
+        let statusCounts = actualData.statusCounts || {};
+        if (!statusCounts || Object.keys(statusCounts).length === 0) {
+          statusCounts = {};
+        }
+
+        // Keep only real product data
+        let topProducts = actualData.topProducts || [];
+
+        // Initialize missing properties to prevent rendering errors
+        const processedData = {
+          ...actualData,
+          totalOrders: actualData.totalOrders || 0,
+          totalSales: actualData.totalSales || 0,
+          statusCounts: statusCounts,
+          topProducts: topProducts,
+          monthlySales: monthlySales,
+          // Add default values for growth stats if missing
+          orderGrowth: actualData.orderGrowth || 0,
+          revenueGrowth: actualData.revenueGrowth || 0,
+        };
+        setOrderStats(processedData);
 
         // Load inventory alerts
         const inventoryAlertsData = await inventory.getInventoryAlerts();
-        setInventoryAlerts(inventoryAlertsData.data);
+
+        // Extract the actual inventory data from the nested structure
+        let actualInventoryData = {};
+        if (
+          inventoryAlertsData?.data?.success &&
+          inventoryAlertsData?.data?.data
+        ) {
+          actualInventoryData = inventoryAlertsData.data.data;
+        } else if (
+          inventoryAlertsData?.data?.statusCode === 200 &&
+          inventoryAlertsData?.data?.data
+        ) {
+          actualInventoryData = inventoryAlertsData.data.data;
+        } else if (inventoryAlertsData?.data) {
+          actualInventoryData = inventoryAlertsData.data;
+        }
+
+        setInventoryAlerts(actualInventoryData);
       } catch (error: any) {
         console.error("Error fetching dashboard data:", error);
         setError("Failed to load dashboard data. Please try again.");
+        // Set default values for orderStats to prevent rendering errors
+        setOrderStats({
+          totalOrders: 0,
+          totalSales: 0,
+          statusCounts: {},
+          topProducts: [],
+          monthlySales: [],
+          orderGrowth: 0,
+          revenueGrowth: 0,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -151,7 +238,7 @@ export default function DashboardPage() {
                   className="h-12 w-12 rounded-md mr-3 flex-shrink-0 bg-gray-100"
                   style={{
                     backgroundImage: alert.image
-                      ? `url(${alert.image})`
+                      ? `url(${getImageUrl(alert.image)})`
                       : "none",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
@@ -201,7 +288,7 @@ export default function DashboardPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1">
         {/* Total Orders */}
         <Card className="flex flex-col p-6">
           <div className="flex items-center justify-between">
@@ -214,11 +301,11 @@ export default function DashboardPage() {
             <p className="text-2xl font-bold">{orderStats?.totalOrders || 0}</p>
           </div>
           <div className="mt-2 flex items-center text-xs">
-            {orderStats?.orderGrowth > 0 ? (
+            {(orderStats?.orderGrowth ?? 0) > 0 ? (
               <>
                 <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
                 <span className="text-green-500">
-                  {orderStats?.orderGrowth}% increase
+                  {orderStats?.orderGrowth || 0}% increase
                 </span>
               </>
             ) : (
@@ -226,39 +313,6 @@ export default function DashboardPage() {
                 <TrendingDown className="mr-1 h-3 w-3 text-destructive" />
                 <span className="text-destructive">
                   {Math.abs(orderStats?.orderGrowth || 0)}% decrease
-                </span>
-              </>
-            )}
-            <span className="ml-1 text-muted-foreground">vs. last month</span>
-          </div>
-        </Card>
-
-        {/* Total Revenue */}
-        <Card className="flex flex-col p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">
-              Total Revenue
-            </p>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="mt-3">
-            <p className="text-2xl font-bold">
-              ₹{orderStats?.totalSales?.toLocaleString() || 0}
-            </p>
-          </div>
-          <div className="mt-2 flex items-center text-xs">
-            {orderStats?.revenueGrowth > 0 ? (
-              <>
-                <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
-                <span className="text-green-500">
-                  {orderStats?.revenueGrowth}% increase
-                </span>
-              </>
-            ) : (
-              <>
-                <TrendingDown className="mr-1 h-3 w-3 text-destructive" />
-                <span className="text-destructive">
-                  {Math.abs(orderStats?.revenueGrowth || 0)}% decrease
                 </span>
               </>
             )}
@@ -287,11 +341,7 @@ export default function DashboardPage() {
                   style={{
                     backgroundImage:
                       product.images && product.images[0]
-                        ? `url(${
-                            product.images[0].url.startsWith("http")
-                              ? product.images[0].url
-                              : `${process.env.REACT_APP_API_URL || ""}/${product.images[0].url}`
-                          })`
+                        ? `url(${getImageUrl(product.images[0].url || product.images[0])})`
                         : "none",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
@@ -310,21 +360,18 @@ export default function DashboardPage() {
                         </span>
                         <span>
                           <span className="font-medium text-foreground">
-                            ₹{parseFloat(product.revenue).toLocaleString() || 0}
+                            ₹
+                            {typeof product.revenue === "string"
+                              ? product.revenue
+                              : parseFloat(
+                                  product.revenue || 0
+                                ).toLocaleString()}
                           </span>{" "}
                           revenue
                         </span>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs h-8"
-                        asChild
-                      >
-                        <Link to={`/products/${product.id}`}>Edit</Link>
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -352,88 +399,104 @@ export default function DashboardPage() {
                 Current status of orders
               </p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.entries(orderStats.statusCounts).map(
-                ([status, count]) => {
-                  // Define colors for different statuses
-                  const getStatusColor = (status: string) => {
-                    switch (status) {
-                      case "PENDING":
-                        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-                      case "PROCESSING":
-                        return "bg-blue-100 text-blue-800 border-blue-200";
-                      case "PAID":
-                        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-                      case "SHIPPED":
-                        return "bg-indigo-100 text-indigo-800 border-indigo-200";
-                      case "DELIVERED":
-                        return "bg-green-100 text-green-800 border-green-200";
-                      case "CANCELLED":
-                        return "bg-red-100 text-red-800 border-red-200";
-                      case "REFUNDED":
-                        return "bg-purple-100 text-purple-800 border-purple-200";
-                      default:
-                        return "bg-gray-100 text-gray-800 border-gray-200";
-                    }
-                  };
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(orderStats.statusCounts).map(
+                  ([status, count]) => {
+                    // Define colors for different statuses
+                    const getStatusColor = (status: string) => {
+                      switch (status) {
+                        case "PENDING":
+                          return "bg-yellow-100 text-yellow-800 border-yellow-200";
+                        case "PROCESSING":
+                          return "bg-blue-100 text-blue-800 border-blue-200";
+                        case "PAID":
+                          return "bg-emerald-100 text-emerald-800 border-emerald-200";
+                        case "SHIPPED":
+                          return "bg-indigo-100 text-indigo-800 border-indigo-200";
+                        case "DELIVERED":
+                          return "bg-green-100 text-green-800 border-green-200";
+                        case "CANCELLED":
+                          return "bg-red-100 text-red-800 border-red-200";
+                        case "REFUNDED":
+                          return "bg-purple-100 text-purple-800 border-purple-200";
+                        default:
+                          return "bg-gray-100 text-gray-800 border-gray-200";
+                      }
+                    };
 
-                  return (
-                    <div
-                      key={status}
-                      className={`border rounded-lg p-3 ${getStatusColor(status)}`}
-                    >
-                      <div className="text-sm font-medium">{status}</div>
-                      <div className="text-xl font-bold mt-1">
-                        {count as number}
+                    return (
+                      <div
+                        key={status}
+                        className={`border rounded-lg p-3 ${getStatusColor(status)}`}
+                      >
+                        <div className="text-sm font-medium">{status}</div>
+                        <div className="text-xl font-bold mt-1">
+                          {count as number}
+                        </div>
                       </div>
-                    </div>
-                  );
-                }
-              )}
+                    );
+                  }
+                )}
+              </div>
+
+              {/* Pie Chart */}
+              <div className="flex flex-col items-center">
+                <div className="flex items-center mb-2">
+                  <PieChartIcon className="h-4 w-4 mr-2 text-primary" />
+                  <span className="font-medium">Visual Distribution</span>
+                </div>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(orderStats.statusCounts).map(
+                          ([status, count]) => ({
+                            name: status,
+                            value: count as number,
+                          })
+                        )}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        nameKey="name"
+                        label={({ name, percent }) =>
+                          `${name}: ${(percent * 100).toFixed(0)}%`
+                        }
+                      >
+                        {Object.entries(orderStats.statusCounts).map(
+                          ([_], index) => {
+                            const COLORS = [
+                              "#ffc107", // PENDING - yellow
+                              "#3b82f6", // PROCESSING - blue
+                              "#10b981", // PAID - emerald
+                              "#6366f1", // SHIPPED - indigo
+                              "#22c55e", // DELIVERED - green
+                              "#ef4444", // CANCELLED - red
+                              "#a855f7", // REFUNDED - purple
+                              "#94a3b8", // default - gray
+                            ];
+                            return (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            );
+                          }
+                        )}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           </Card>
         )}
-
-      {/* Revenue Chart */}
-      {orderStats?.monthlySales && orderStats.monthlySales.length > 0 && (
-        <Card className="p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-medium">Revenue Over Time</h3>
-            <p className="text-sm text-muted-foreground">
-              Monthly revenue for the past 6 months
-            </p>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={orderStats.monthlySales}
-                margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => value.substring(0, 3)}
-                />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `₹${value / 1000}k`}
-                />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Revenue"
-                  stroke="var(--chart-1)"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

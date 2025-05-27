@@ -25,7 +25,7 @@ const CircularCategoryCard = ({ category, index }) => {
       <div className="relative mb-6">
         {/* Rotating outline */}
         <motion.div
-          className="absolute inset-0 rounded-full border-2 border-dashed border-black/30"
+          className="absolute inset-0 rounded-full border-2 border-dashed border-[#1C4E80]/30"
           animate={{ rotate: 360 }}
           transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
         />
@@ -34,7 +34,7 @@ const CircularCategoryCard = ({ category, index }) => {
         <div className="p-2 relative">
           {/* Position indicator dot */}
           <motion.div
-            className="absolute w-4 h-4 bg-black rounded-full z-20 shadow-md"
+            className="absolute w-4 h-4 bg-[#F47C20] rounded-full z-20 shadow-md"
             style={{ top: "10%", right: "10%" }}
             whileHover={{ scale: 1.2 }}
           />
@@ -71,7 +71,7 @@ const CircularCategoryCard = ({ category, index }) => {
                 transition={{ type: "spring", stiffness: 400 }}
               >
                 <svg
-                  className="w-6 h-6"
+                  className="w-6 h-6 text-[#1C4E80]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -91,14 +91,14 @@ const CircularCategoryCard = ({ category, index }) => {
 
         {/* Decorative elements */}
         <motion.div
-          className="absolute -z-10 w-12 h-12 bg-black/10 rounded-full"
+          className="absolute -z-10 w-12 h-12 bg-[#1C4E80]/10 rounded-full"
           style={{ bottom: "-5%", right: "15%" }}
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
         />
 
         <motion.div
-          className="absolute -z-10 w-8 h-8 border-2 border-black/20 rounded-full"
+          className="absolute -z-10 w-8 h-8 border-2 border-[#1C4E80]/20 rounded-full"
           style={{ top: "0%", left: "15%" }}
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
@@ -107,12 +107,14 @@ const CircularCategoryCard = ({ category, index }) => {
 
       {/* Category Info */}
       <div className="text-center px-4">
-        <h3 className="text-xl font-bold text-black mb-1">{category.name}</h3>
+        <h3 className="text-xl font-bold text-[#333333] mb-1">
+          {category.name}
+        </h3>
         <p className="text-gray-600 text-sm">{category.description || ""}</p>
 
         {/* Underline animation on hover */}
         <motion.div
-          className="h-0.5 w-0 bg-black mx-auto mt-2"
+          className="h-0.5 w-0 bg-[#F47C20] mx-auto mt-2"
           animate={{ width: "0%" }}
           whileHover={{ width: "30%" }}
           transition={{ duration: 0.3 }}
@@ -175,8 +177,8 @@ const FeaturedCategoriesCarousel = ({ categories }) => {
           ))}
         </CarouselContent>
 
-        <CarouselPrevious className="absolute left-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
-        <CarouselNext className="absolute right-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-white" />
+        <CarouselPrevious className="absolute left-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-[#1C4E80] hover:text-white" />
+        <CarouselNext className="absolute right-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-[#1C4E80] hover:text-white" />
 
         {/* Dot indicators */}
         <div className="flex justify-center mt-8 gap-1.5">
@@ -187,7 +189,7 @@ const FeaturedCategoriesCarousel = ({ categories }) => {
                 onClick={() => api?.scrollTo(idx * 4)}
                 className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                   Math.floor(currentIndex / 4) === idx
-                    ? "bg-primary scale-110"
+                    ? "bg-[#F47C20] scale-110"
                     : "bg-gray-300"
                 }`}
                 aria-label={`Go to slide group ${idx + 1}`}
@@ -260,9 +262,9 @@ const FeaturedCategoriesSection = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          <Link href="/products">
+          <Link href="/categories">
             <button className="group relative inline-flex items-center  -mt-20 lg:mt-0 justify-center px-8 py-3 font-medium overflow-hidden">
-              <span className="relative z-10 px-3 lg:px-5 py-2 lg:py-3 bg-black text-nowrap text-white hover:bg-white hover:text-black border border-black rounded-full flex items-center">
+              <span className="relative z-10 px-3 lg:px-5 py-2 lg:py-3 bg-[#1C4E80] text-nowrap text-white hover:bg-white hover:text-[#1C4E80] border border-[#1C4E80] rounded-full flex items-center">
                 VIEW ALL CATEGORIES
                 <svg
                   className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform duration-300"
@@ -279,7 +281,7 @@ const FeaturedCategoriesSection = () => {
                   />
                 </svg>
               </span>
-              <span className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-black group-hover:w-1/2 group-hover:left-1/4 transition-all duration-300"></span>
+              <span className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-[#F47C20] group-hover:w-1/2 group-hover:left-1/4 transition-all duration-300"></span>
             </button>
           </Link>
         </motion.div>

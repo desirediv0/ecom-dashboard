@@ -64,7 +64,7 @@ export default function ShippingPolicyPage() {
               <section className="mb-10">
                 <h2>Delivery Information</h2>
                 <p>
-                  At EcomSupplements, we strive to deliver your orders as
+                  At GenuineNutrition, we strive to deliver your orders as
                   quickly and efficiently as possible. We understand that when
                   you order nutritional supplements, you want them right away.
                   That&apos;s why we&apos;ve partnered with reliable courier
@@ -174,7 +174,7 @@ export default function ShippingPolicyPage() {
                 </p>
                 <p>
                   For any other shipping-related queries, please contact our
-                  customer support team at support@ecomsupplements.com or call
+                  customer support team at support@GenuineNutrition.com or call
                   us at +91 98765 43210.
                 </p>
               </section>

@@ -136,6 +136,33 @@ export const adminUsers = {
   },
 };
 
+// Customer Users Management
+export const customerUsers = {
+  getUsers: (
+    params: { page?: number; limit?: number; search?: string } = {}
+  ) => {
+    return api.get("/api/admin/users", { params });
+  },
+  getUserById: (userId: string) => {
+    return api.get(`/api/admin/users/${userId}`);
+  },
+  updateUserStatus: (userId: string, isActive: boolean) => {
+    return api.patch(`/api/admin/users/${userId}/status`, { isActive });
+  },
+  verifyUserEmail: (userId: string) => {
+    return api.post(`/api/admin/users/${userId}/verify-email`);
+  },
+  deleteUser: (userId: string) => {
+    return api.delete(`/api/admin/users/${userId}`);
+  },
+  updateUserDetails: (
+    userId: string,
+    data: { name?: string; phone?: string; email?: string }
+  ) => {
+    return api.patch(`/api/admin/users/${userId}`, data);
+  },
+};
+
 // Product Management
 export const products = {
   getProducts: (params: ProductQueryParams = {}) => {
@@ -143,6 +170,9 @@ export const products = {
   },
   getProductById: (productId: string) => {
     return api.get(`/api/admin/products/${productId}`);
+  },
+  getFeaturedProducts: (limit: number = 8) => {
+    return api.get(`/api/public/products?featured=true&limit=${limit}`);
   },
   createProduct: (data: ProductData) => {
     // Check if data is already FormData
@@ -371,6 +401,21 @@ export const inventory = {
       const response = await api.get(
         `/api/admin/inventory-alerts?threshold=${threshold}`
       );
+
+      // Check if data is nested in a success response wrapper
+      if (response.data.success && response.data.data) {
+        // Return the data in the expected format for direct use
+        return {
+          data: response.data.data,
+        };
+      } else if (response.data.statusCode === 200 && response.data.data) {
+        // Handle alternative format with statusCode
+        return {
+          data: response.data.data,
+        };
+      }
+
+      // If no special structure, just return the original response
       return response.data;
     } catch (error) {
       console.error("Error fetching inventory alerts:", error);
@@ -453,8 +498,31 @@ export const orders = {
   updateOrderStatus: (orderId: string, data: { status: string }) => {
     return api.patch(`/api/admin/orders/${orderId}/status`, data);
   },
-  getOrderStats: () => {
-    return api.get("/api/admin/orders-stats");
+  getOrderStats: async () => {
+    console.log("Calling order stats API endpoint");
+    try {
+      const response = await api.get("/api/admin/orders-stats");
+      console.log("Raw order stats API response:", response);
+
+      // Check if data is nested in a success response wrapper
+      if (response.data.success && response.data.data) {
+        // Return the data in the expected format for direct use
+        return {
+          data: response.data.data,
+        };
+      } else if (response.data.statusCode === 200 && response.data.data) {
+        // Handle alternative format with statusCode
+        return {
+          data: response.data.data,
+        };
+      }
+
+      // If no special structure, just return the original response
+      return response;
+    } catch (error) {
+      console.error("Error getting order stats:", error);
+      throw error;
+    }
   },
 };
 
@@ -504,6 +572,45 @@ export const coupons = {
   },
   deleteCoupon: (couponId: string) => {
     return api.delete(`/api/admin/coupons/${couponId}`);
+  },
+};
+
+// Reviews Management
+export const reviews = {
+  getReviews: (
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      productId?: string;
+      rating?: number;
+      sortBy?: string;
+      order?: "asc" | "desc";
+    } = {}
+  ) => {
+    return api.get("/api/admin/reviews", { params });
+  },
+  getReviewById: (reviewId: string) => {
+    return api.get(`/api/admin/reviews/${reviewId}`);
+  },
+  updateReview: (
+    reviewId: string,
+    data: {
+      status?: "APPROVED" | "REJECTED" | "PENDING";
+      featured?: boolean;
+      adminComment?: string;
+    }
+  ) => {
+    return api.patch(`/api/admin/reviews/${reviewId}`, data);
+  },
+  deleteReview: (reviewId: string) => {
+    return api.delete(`/api/admin/reviews/${reviewId}`);
+  },
+  replyToReview: (reviewId: string, comment: string) => {
+    return api.post(`/api/admin/reviews/${reviewId}/reply`, { comment });
+  },
+  getReviewStats: () => {
+    return api.get("/api/admin/review-stats");
   },
 };
 

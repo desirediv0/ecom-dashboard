@@ -11,11 +11,15 @@ import adminFlavorRoutes from "./routes/admin.flavor.routes.js";
 import adminWeightRoutes from "./routes/admin.weight.routes.js";
 import adminCouponRoutes from "./routes/admin.coupon.routes.js";
 import adminContentRoutes from "./routes/admin.content.routes.js";
+import adminReviewRoutes from "./routes/admin.review.routes.js";
+import adminFaqRoutes from "./routes/admin.faq.routes.js";
 import publicRoutes from "./routes/public.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import couponRoutes from "./routes/coupon.routes.js";
 import contentRoutes from "./routes/content.routes.js";
+import faqRoutes from "./routes/faq.routes.js";
+import { trackPageView } from "./middlewares/tracking.middleware.js";
 
 const app = express();
 
@@ -38,12 +42,18 @@ app.use(
       "Pragma",
       "Origin",
       "Accept",
+      "X-Requested-With",
     ],
     exposedHeaders: ["Set-Cookie"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
+    maxAge: 86400, // 24 hours
   })
 );
+
+// Handle preflight OPTIONS requests explicitly
+app.options("*", cors());
+
 // Cache Control Headers
 app.use((req, res, next) => {
   res.header("Cache-Control", "no-store, no-cache, must-revalidate, private");
@@ -58,6 +68,10 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+// Add page view tracking middleware
+app.use(trackPageView);
+
 // Static Files
 app.use(express.static("public/upload"));
 
@@ -86,11 +100,14 @@ app.use("/api/admin", adminFlavorRoutes);
 app.use("/api/admin", adminWeightRoutes);
 app.use("/api/admin", adminCouponRoutes);
 app.use("/api/admin", adminContentRoutes);
+app.use("/api/admin", adminReviewRoutes);
+app.use("/api/admin/faqs", adminFaqRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/content", contentRoutes);
+app.use("/api/faqs", faqRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

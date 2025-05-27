@@ -60,6 +60,11 @@ interface ProductFormData {
     benefits: string;
     howToUse: string;
   };
+  featured: boolean;
+  // SEO Fields
+  metaTitle: string;
+  metaDescription: string;
+  keywords: string;
 }
 
 interface CategoryType {
@@ -108,6 +113,11 @@ export default function ProductForm() {
         benefits: "",
         howToUse: "",
       },
+      featured: false,
+      // SEO Fields defaults
+      metaTitle: "",
+      metaDescription: "",
+      keywords: "",
     },
   });
 
@@ -165,6 +175,7 @@ export default function ProductForm() {
               setValue("hasSale", productData.price > productData.salePrice);
               setValue("stock", String(productData.quantity || ""));
               setValue("isVeg", productData.isVeg ?? true);
+              setValue("featured", productData.featured ?? false);
 
               // Set category
               if (productData.categories && productData.categories[0]) {
@@ -260,6 +271,11 @@ export default function ProductForm() {
                 // Reset variants array and append formatted variants
                 setValue("variants", formattedVariants);
               }
+
+              // Set product SEO data if available
+              setValue("metaTitle", productData.metaTitle || "");
+              setValue("metaDescription", productData.metaDescription || "");
+              setValue("keywords", productData.keywords || "");
             }
           } catch (error) {
             console.error("Error fetching product data:", error);
@@ -399,6 +415,15 @@ export default function ProductForm() {
       formData.append("name", data.name);
       formData.append("description", data.description || "");
       formData.append("isActive", String(data.isActive));
+      formData.append("featured", String(data.featured));
+
+      // Add SEO fields
+      formData.append("metaTitle", data.metaTitle || "");
+      formData.append("metaDescription", data.metaDescription || "");
+      formData.append("keywords", data.keywords || "");
+
+      // Log the featured value for debugging
+      console.log("Featured product status:", data.featured);
 
       // Map form categories to API expected format
       if (data.categoryId) {
@@ -586,7 +611,7 @@ export default function ProductForm() {
             <TabsList className="mb-4 w-full justify-start">
               <TabsTrigger value="basic">Basic Information</TabsTrigger>
               <TabsTrigger value="variants">Variants</TabsTrigger>
-              <TabsTrigger value="extras">Additional Information</TabsTrigger>
+              <TabsTrigger value="extras">Additional & SEO</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-6">
@@ -799,6 +824,27 @@ export default function ProductForm() {
                         )}
                       />
                       <Label htmlFor="isVeg">Vegetarian</Label>
+                    </div>
+                  </div>
+
+                  {/* Featured Product Checkbox - Made more visible */}
+                  <div className="mt-2 p-3 border border-primary/20 rounded-md bg-primary/5">
+                    <div className="flex items-center space-x-2">
+                      <Controller
+                        control={control}
+                        name="featured"
+                        render={({ field }) => (
+                          <Checkbox
+                            id="featured"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="h-5 w-5 border-primary"
+                          />
+                        )}
+                      />
+                      <Label htmlFor="featured" className="font-medium">
+                        Featured Product (Highlighted on Homepage)
+                      </Label>
                     </div>
                   </div>
                 </CardContent>
@@ -1189,23 +1235,61 @@ export default function ProductForm() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Advanced Options</CardTitle>
+                  <CardTitle>Advanced Options & SEO</CardTitle>
                   <CardDescription>
-                    Additional settings and product options
+                    Additional settings, product options and search engine
+                    optimization
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg border p-4">
+                  {/* SEO Section */}
+                  <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-4 space-y-4">
                     <div className="space-y-0.5">
-                      <Label className="text-base">SEO Details</Label>
-                      <p className="text-sm text-muted-foreground">
+                      <Label className="text-base font-bold">SEO Details</Label>
+                      <p className="text-sm text-muted-foreground mb-4">
                         Meta tags and descriptions for search engine
                         optimization
                       </p>
                     </div>
-                    <Button variant="outline" type="button">
-                      Edit
-                    </Button>
+
+                    <div className="space-y-3 pl-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="metaTitle">SEO Title</Label>
+                        <Input
+                          id="metaTitle"
+                          placeholder="SEO Title (recommended 50-60 characters)"
+                          {...register("metaTitle")}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          If left empty, the product name will be used
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="metaDescription">SEO Description</Label>
+                        <Textarea
+                          id="metaDescription"
+                          placeholder="Meta description (recommended 150-160 characters)"
+                          className="min-h-20"
+                          {...register("metaDescription")}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          If left empty, the product description will be used
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="keywords">Keywords</Label>
+                        <Input
+                          id="keywords"
+                          placeholder="Comma-separated keywords"
+                          {...register("keywords")}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Keywords for search engines (comma-separated)
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between rounded-lg border p-4">

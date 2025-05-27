@@ -7,11 +7,54 @@ export function cn(...inputs) {
 
 // API URL
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4005/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+
+// Track in-flight requests to prevent duplicates
+const pendingRequests = {};
 
 // API request helper with error handling
 export async function fetchApi(endpoint, options = {}) {
-  const url = `${API_URL}${endpoint}`;
+  // Ensure endpoint doesn't duplicate /api if it's already in API_URL
+  const fixedEndpoint =
+    API_URL.endsWith("/api") && endpoint.startsWith("/api")
+      ? endpoint.replace("/api", "")
+      : endpoint;
+
+  const url = `${API_URL}${fixedEndpoint}`;
+
+  // For GET requests to verification endpoints, implement request deduplication
+  if (options.method === "GET" || !options.method) {
+    const requestKey = url; // Use URL as the request key
+
+    // If this exact request is already in flight, wait for it
+    if (pendingRequests[requestKey]) {
+      try {
+        return await pendingRequests[requestKey];
+      } catch (error) {
+        throw error;
+      }
+    }
+
+    // No request in flight, create a new promise
+    pendingRequests[requestKey] = (async () => {
+      try {
+        const result = await performFetch(url, options);
+        return result;
+      } finally {
+        // Clear the pending request after completion (success or error)
+        delete pendingRequests[requestKey];
+      }
+    })();
+
+    return pendingRequests[requestKey];
+  }
+
+  // For other requests (POST, PUT, etc.), just perform the fetch
+  return performFetch(url, options);
+}
+
+// Internal fetch function
+async function performFetch(url, options) {
   const headers = {
     "Content-Type": "application/json",
     ...options.headers,
@@ -23,13 +66,16 @@ export async function fetchApi(endpoint, options = {}) {
   };
 
   try {
-    let response = await fetch(url, config);
+    // Add timestamp to prevent caching
+    const urlWithTimestamp =
+      url + (url.includes("?") ? "&" : "?") + "_t=" + Date.now();
+    let response = await fetch(urlWithTimestamp, config);
 
     // Handle token expiration
     if (
       response.status === 401 &&
-      endpoint !== "/users/refresh-token" &&
-      endpoint !== "/users/logout"
+      !url.includes("/users/refresh-token") &&
+      !url.includes("/users/logout")
     ) {
       // Try to refresh the token
       try {
@@ -40,7 +86,7 @@ export async function fetchApi(endpoint, options = {}) {
 
         if (refreshResponse.ok) {
           // Token refreshed successfully, retry the original request
-          response = await fetch(url, config);
+          response = await fetch(urlWithTimestamp, config);
         }
       } catch (refreshError) {
         console.error("Failed to refresh token:", refreshError);
@@ -48,15 +94,47 @@ export async function fetchApi(endpoint, options = {}) {
       }
     }
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Something went wrong");
+    // Try to parse the response as JSON (even for error responses)
+    let data;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      // Handle non-JSON responses
+      const text = await response.text();
+      try {
+        // Try to parse text as JSON anyway
+        data = JSON.parse(text);
+      } catch (e) {
+        // If it's not parseable JSON, create a minimal response object
+        data = {
+          success: response.ok,
+          message: text || (response.ok ? "Success" : "Request failed"),
+        };
+      }
     }
 
-    return await response.json();
+    if (!response.ok) {
+      // Create a structured error object
+      const error = new Error(data.message || "Something went wrong");
+      error.statusCode = response.status;
+      error.data = data;
+      error.response = response;
+      throw error;
+    }
+
+    return data;
   } catch (error) {
+    // If it's already our formatted error, just rethrow it
+    if (error.statusCode && error.data) {
+      throw error;
+    }
+
+    // Otherwise create a new error
     console.error("API Error:", error);
-    throw error;
+    const enhancedError = new Error(error.message || "Failed to fetch data");
+    enhancedError.originalError = error;
+    throw enhancedError;
   }
 }
 
@@ -73,10 +151,18 @@ export function getAuthToken() {
 
 // Format currency
 export function formatCurrency(amount) {
+  // Ensure we have a valid number and properly format with 2 decimal places
+  const parseAmount =
+    amount !== undefined && amount !== null ? parseFloat(amount) : 0;
+  // Use toFixed(2) before passing to NumberFormat to ensure 2 decimal places
+  const fixedAmount = parseFloat(parseAmount.toFixed(2));
+
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-  }).format(amount);
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(fixedAmount);
 }
 
 // Format date

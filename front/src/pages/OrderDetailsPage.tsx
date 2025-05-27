@@ -126,6 +126,13 @@ export default function OrderDetailsPage() {
     }
   };
 
+  // Get image URL helper
+  const getImageUrl = (image: string | undefined) => {
+    if (!image) return "/images/product-placeholder.jpg";
+    if (image.startsWith("http")) return image;
+    return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+  };
+
   // Loading state
   if (isLoading && !orderDetails) {
     return (
@@ -248,9 +255,8 @@ export default function OrderDetailsPage() {
             orderDetails.status !== "CANCELLED" &&
             orderDetails.status !== "REFUNDED" && (
               <div className="flex flex-wrap gap-2">
-                {/* Processing button - show for PENDING, SHIPPED */}
-                {(orderDetails.status === "PENDING" ||
-                  orderDetails.status === "SHIPPED") && (
+                {/* Processing button - show for PENDING only */}
+                {orderDetails.status === "PENDING" && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -335,15 +341,15 @@ export default function OrderDetailsPage() {
                       <tr key={item.id} className="border-b">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
-                            {item.product?.images?.[0]?.url && (
-                              <div className="h-12 w-12 rounded-md bg-muted/50 object-cover">
-                                <img
-                                  src={item.product.images[0]?.url}
-                                  alt={item.product.name}
-                                  className="h-full w-full rounded-md object-cover"
-                                />
-                              </div>
-                            )}
+                            <div className="h-12 w-12 rounded-md bg-muted/50 overflow-hidden">
+                              <img
+                                src={getImageUrl(
+                                  item.product?.images?.[0]?.url
+                                )}
+                                alt={item.product?.name || "Product"}
+                                className="h-full w-full object-contain"
+                              />
+                            </div>
                             <div>
                               <p className="font-medium">
                                 {item.product?.name}
@@ -538,12 +544,12 @@ export default function OrderDetailsPage() {
                   <span>{formatCurrency(orderDetails.subTotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax:</span>
-                  <span>{formatCurrency(orderDetails.tax)}</span>
+                  <span>Tax (0%):</span>
+                  <span>{formatCurrency(0)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping:</span>
-                  <span>{formatCurrency(orderDetails.shippingCost)}</span>
+                  <span>{formatCurrency(0)}</span>
                 </div>
                 {parseFloat(orderDetails.discount || 0) > 0 && (
                   <div className="flex justify-between text-green-600">
@@ -551,16 +557,50 @@ export default function OrderDetailsPage() {
                     <span>-{formatCurrency(orderDetails.discount)}</span>
                   </div>
                 )}
+                {orderDetails.couponCode && (
+                  <div className="mt-1 p-2 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20 rounded-md">
+                    <div className="flex items-center text-green-700 dark:text-green-500 font-medium mb-1">
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Coupon applied: {orderDetails.couponCode}
+                    </div>
+                    {orderDetails.coupon && (
+                      <div className="text-sm text-green-600 dark:text-green-500">
+                        {orderDetails.coupon.discountType === "PERCENTAGE" ? (
+                          <span>
+                            {orderDetails.coupon.discountValue}% off the order
+                            total
+                          </span>
+                        ) : (
+                          <span>
+                            {formatCurrency(orderDetails.coupon.discountValue)}{" "}
+                            off the order total
+                          </span>
+                        )}
+                        {orderDetails.coupon.description && (
+                          <p className="text-xs mt-1 text-green-500 dark:text-green-400">
+                            {orderDetails.coupon.description}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-between border-t pt-2 font-medium">
                   <span>Total:</span>
-                  <span>{formatCurrency(orderDetails.total)}</span>
+                  <span>
+                    {formatCurrency(
+                      parseFloat(orderDetails.subTotal) -
+                        parseFloat(orderDetails.discount || 0)
+                    )}
+                  </span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Tracking Info */}
-          {orderDetails.tracking && (
+          {orderDetails.status === "SHIPPED" ||
+          orderDetails.status === "DELIVERED" ? (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -569,75 +609,98 @@ export default function OrderDetailsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <p>
-                    <span className="font-medium">Carrier:</span>{" "}
-                    {orderDetails.tracking.carrier}
-                  </p>
-                  <p>
-                    <span className="font-medium">Tracking Number:</span>{" "}
-                    <span className="font-mono">
-                      {orderDetails.tracking.trackingNumber}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="font-medium">Status:</span>{" "}
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(
-                        orderDetails.tracking.status
-                      )}`}
-                    >
-                      {orderDetails.tracking.status}
-                    </span>
-                  </p>
-                  {orderDetails.tracking.estimatedDelivery && (
+                {orderDetails.tracking ? (
+                  <div className="space-y-2">
                     <p>
-                      <span className="font-medium">Estimated Delivery:</span>{" "}
-                      {formatDate(orderDetails.tracking.estimatedDelivery)}
+                      <span className="font-medium">Carrier:</span>{" "}
+                      {orderDetails.tracking.carrier || "Not specified"}
                     </p>
-                  )}
-
-                  {/* Tracking Updates */}
-                  {orderDetails.tracking.updates &&
-                    orderDetails.tracking.updates.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="mb-2 font-medium">Tracking Updates</h4>
-                        <div className="space-y-3">
-                          {orderDetails.tracking.updates.map(
-                            (update: any, index: number) => (
-                              <div
-                                key={index}
-                                className="rounded-md border border-muted bg-muted/40 p-3"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Clock className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm text-muted-foreground">
-                                    {formatDate(update.timestamp)}
-                                  </span>
-                                </div>
-                                <p className="mt-1 font-medium">
-                                  {update.status}
-                                </p>
-                                {update.location && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {update.location}
-                                  </p>
-                                )}
-                                {update.description && (
-                                  <p className="text-sm">
-                                    {update.description}
-                                  </p>
-                                )}
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
+                    <p>
+                      <span className="font-medium">Tracking Number:</span>{" "}
+                      <span className="font-mono">
+                        {orderDetails.tracking.trackingNumber ||
+                          "Not available"}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="font-medium">Status:</span>{" "}
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(
+                          orderDetails.tracking?.status || orderDetails.status
+                        )}`}
+                      >
+                        {orderDetails.tracking?.status || orderDetails.status}
+                      </span>
+                    </p>
+                    {orderDetails.tracking.estimatedDelivery && (
+                      <p>
+                        <span className="font-medium">Estimated Delivery:</span>{" "}
+                        {formatDate(orderDetails.tracking.estimatedDelivery)}
+                      </p>
                     )}
-                </div>
+
+                    {/* Tracking Updates */}
+                    {orderDetails.tracking.updates &&
+                      orderDetails.tracking.updates.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="mb-2 font-medium">Tracking Updates</h4>
+                          <div className="space-y-3">
+                            {orderDetails.tracking.updates.map(
+                              (update: any, index: number) => (
+                                <div
+                                  key={index}
+                                  className="rounded-md border border-muted bg-muted/40 p-3"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm text-muted-foreground">
+                                      {formatDate(update.timestamp)}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 font-medium">
+                                    {update.status}
+                                  </p>
+                                  {update.location && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {update.location}
+                                    </p>
+                                  )}
+                                  {update.description && (
+                                    <p className="text-sm">
+                                      {update.description}
+                                    </p>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex flex-col items-center justify-center py-4 text-center">
+                      <Truck className="h-10 w-10 text-muted-foreground mb-2" />
+                      <p className="font-medium">Shipping in progress</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {orderDetails.status === "DELIVERED"
+                          ? "This order has been marked as delivered, but no detailed tracking information is available."
+                          : "This order has been shipped, but detailed tracking information is not yet available."}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-4">
+                        Status:{" "}
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadgeClass(orderDetails.status)}`}
+                        >
+                          {orderDetails.status}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

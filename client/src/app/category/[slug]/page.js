@@ -331,7 +331,7 @@ export default function CategoryPage() {
 
                 {product.flavors > 1 && (
                   <span className="text-xs text-gray-500 block">
-                    {product.flavors} flavors available
+                    {product.flavors} variants
                   </span>
                 )}
               </div>

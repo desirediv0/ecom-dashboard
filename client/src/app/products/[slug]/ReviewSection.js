@@ -164,6 +164,24 @@ export default function ReviewSection({ product }) {
                   <p className="mt-2 text-gray-600 leading-relaxed">
                     {review.comment}
                   </p>
+
+                  {/* Admin Reply */}
+                  {review.adminReply && (
+                    <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                      <p className="text-sm font-semibold text-blue-700">
+                        Response from Seller:
+                      </p>
+                      <p className="mt-1 text-sm text-gray-700">
+                        {review.adminReply}
+                      </p>
+                      {review.adminReplyDate && (
+                        <p className="mt-2 text-xs text-gray-500">
+                          Replied on{" "}
+                          {new Date(review.adminReplyDate).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -437,4 +455,3 @@ export default function ReviewSection({ product }) {
     </div>
   );
 }
-
