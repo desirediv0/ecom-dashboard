@@ -421,7 +421,7 @@ export function Navbar() {
                 <Menu className="h-6 w-6" />
               </button>
             </div>
-
+  
             {/* Logo */}
             <Link href="/" className="flex items-center">
               <Image
