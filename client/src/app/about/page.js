@@ -62,7 +62,7 @@ export default function AboutPage() {
         <div className="absolute inset-0 bg-[url('/images/nutrition-pattern.svg')] opacity-5"></div>
         <div className="container mx-auto px-4 text-center relative z-10">
           <Badge variant="secondary" className="mb-6 text-sm font-medium">
-            🏆 India's Most Trusted Nutrition Brand
+            🏆 India&apos;s Most Trusted Nutrition Brand
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
             About GenuineNutrition
@@ -114,7 +114,7 @@ export default function AboutPage() {
                     into
                     <strong className="text-blue-600">
                       {" "}
-                      India's most trusted supplement brand
+                      India&apos;s most trusted supplement brand
                     </strong>
                     , serving over 50,000 satisfied customers nationwide.
                   </p>
