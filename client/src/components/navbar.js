@@ -381,13 +381,6 @@ export function Navbar() {
                 <Phone className="h-3.5 w-3.5 mr-1.5" />
                 <span>+91 98765 43210</span>
               </div>
-              <Link
-                href="/store-locator"
-                className="flex items-center text-xs text-gray-700 hover:text-primary transition-colors"
-              >
-                <MapPin className="h-3.5 w-3.5 mr-1.5" />
-                <span>Store Locator</span>
-              </Link>
             </div>
 
             <div className="hidden lg:flex items-center space-x-4 text-xs">
@@ -434,8 +427,8 @@ export function Navbar() {
               <Image
                 src="/logo.jpeg"
                 alt="Logo"
-                width={150}
-                height={150}
+                width={180}
+                height={180}
                 className="ml-2 p-2 lg:p-0"
               />
             </Link>
