@@ -312,9 +312,34 @@ export default function ProductContent({ slug }) {
     }
   };
 
-  // Render product images
+  // Render product images - now supports variant images with improved fallback
   const renderImages = () => {
-    if (!product || !product.images || product.images.length === 0) {
+    let imagesToShow = [];
+
+    // Priority 1: Selected variant images
+    if (
+      selectedVariant &&
+      selectedVariant.images &&
+      selectedVariant.images.length > 0
+    ) {
+      imagesToShow = selectedVariant.images;
+    }
+    // Priority 2: Product images
+    else if (product && product.images && product.images.length > 0) {
+      imagesToShow = product.images;
+    }
+    // Priority 3: Any variant images from any variant
+    else if (product && product.variants && product.variants.length > 0) {
+      const variantWithImages = product.variants.find(
+        (variant) => variant.images && variant.images.length > 0
+      );
+      if (variantWithImages) {
+        imagesToShow = variantWithImages.images;
+      }
+    }
+
+    // If still no images available
+    if (imagesToShow.length === 0) {
       return (
         <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
           <Image
@@ -329,11 +354,11 @@ export default function ProductContent({ slug }) {
     }
 
     // If there's only one image
-    if (product.images.length === 1) {
+    if (imagesToShow.length === 1) {
       return (
         <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
           <Image
-            src={getImageUrl(product.images[0].url)}
+            src={getImageUrl(imagesToShow[0].url)}
             alt={product?.name || "Product"}
             fill
             className="object-contain"
@@ -343,12 +368,20 @@ export default function ProductContent({ slug }) {
       );
     }
 
+    // Find primary image or use first one
+    const primaryImage =
+      imagesToShow.find((img) => img.isPrimary) || imagesToShow[0];
+    const currentMainImage =
+      mainImage && imagesToShow.some((img) => img.url === mainImage.url)
+        ? mainImage
+        : primaryImage;
+
     // Main image display
     return (
       <div className="space-y-4">
         <div className="relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
           <Image
-            src={getImageUrl(mainImage?.url || product.images[0].url)}
+            src={getImageUrl(currentMainImage?.url)}
             alt={product?.name || "Product"}
             fill
             className="object-contain"
@@ -358,11 +391,11 @@ export default function ProductContent({ slug }) {
 
         {/* Thumbnail grid for multiple images */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {product.images.map((image, index) => (
+          {imagesToShow.map((image, index) => (
             <div
               key={index}
               className={`relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-2 ${
-                mainImage?.url === image.url
+                currentMainImage?.url === image.url
                   ? "border-primary"
                   : "border-transparent"
               }`}
@@ -385,7 +418,7 @@ export default function ProductContent({ slug }) {
   const getImageUrl = (image) => {
     if (!image) return "/images/product-placeholder.jpg";
     if (image.startsWith("http")) return image;
-    return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+    return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${image}`;
   };
 
   // Format price display

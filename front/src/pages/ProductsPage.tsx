@@ -104,6 +104,9 @@ export function ProductForm({
 
   // State for variants
   const [variants, setVariants] = useState<any[]>([]);
+  const [variantImages, setVariantImages] = useState<Map<string, File[]>>(
+    new Map()
+  );
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [selectedWeights, setSelectedWeights] = useState<string[]>([]);
 
@@ -121,24 +124,23 @@ export function ProductForm({
   }
 
   // Handle image drop for upload
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      // Create local previews for the UI
-      const newPreviews = acceptedFiles.map((file) => ({
-        url: URL.createObjectURL(file),
-        isPrimary: false,
-      }));
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    // Create local previews for the UI
+    const newPreviews = acceptedFiles.map((file) => ({
+      url: URL.createObjectURL(file),
+      isPrimary: false,
+    }));
 
-      // Set first image as primary if there are no other images
-      if (imagePreviews.length === 0 && newPreviews.length > 0) {
+    setImageFiles((prev) => {
+      // Set first image as primary if there are no existing images
+      if (prev.length === 0 && newPreviews.length > 0) {
         newPreviews[0].isPrimary = true;
       }
+      return [...prev, ...acceptedFiles];
+    });
 
-      setImageFiles((prev) => [...prev, ...acceptedFiles]);
-      setImagePreviews((prev) => [...prev, ...newPreviews]);
-    },
-    [imagePreviews.length]
-  );
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+  }, []);
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
@@ -346,6 +348,7 @@ export function ProductForm({
                     quantity: variant.quantity || 0,
                     isActive:
                       variant.isActive !== undefined ? variant.isActive : true,
+                    images: variant.images || [],
                   })
                 );
 
@@ -529,6 +532,74 @@ export function ProductForm({
   // Remove variant
   const removeVariant = (variantId: string) => {
     setVariants((prev) => prev.filter((variant) => variant.id !== variantId));
+    // Also remove any images for this variant
+    const newVariantImages = new Map(variantImages);
+    newVariantImages.delete(variantId);
+    setVariantImages(newVariantImages);
+  };
+
+  // Handle variant image upload
+  const handleVariantImageUpload = (
+    variantId: string,
+    files: FileList | null
+  ) => {
+    if (!files || files.length === 0) return;
+
+    const newVariantImages = new Map(variantImages);
+    const existingImages = newVariantImages.get(variantId) || [];
+    const newFiles = Array.from(files);
+
+    // Add new files to existing images
+    newVariantImages.set(variantId, [...existingImages, ...newFiles]);
+    setVariantImages(newVariantImages);
+  };
+
+  // Remove variant image
+  const removeVariantImage = (variantId: string, imageIndex: number) => {
+    const newVariantImages = new Map(variantImages);
+    const existingImages = newVariantImages.get(variantId) || [];
+    const updatedImages = existingImages.filter(
+      (_, index) => index !== imageIndex
+    );
+
+    if (updatedImages.length > 0) {
+      newVariantImages.set(variantId, updatedImages);
+    } else {
+      newVariantImages.delete(variantId);
+    }
+    setVariantImages(newVariantImages);
+  };
+
+  // Delete existing variant image from server
+  const handleDeleteVariantImage = async (imageId: string) => {
+    try {
+      const response = await products.deleteVariantImage(imageId);
+      if (response.data.success) {
+        // Refresh the product data to get updated images
+        if (mode === "edit" && productId) {
+          const productResponse = await products.getProductById(productId);
+          if (productResponse.data.success) {
+            const productData = productResponse.data.data?.product || {};
+
+            // Update variants with new image data
+            const updatedVariants = variants.map((variant) => {
+              const updatedVariant = productData.variants?.find(
+                (v: any) => v.id === variant.id
+              );
+              return updatedVariant
+                ? { ...variant, images: updatedVariant.images || [] }
+                : variant;
+            });
+
+            setVariants(updatedVariants);
+          }
+        }
+        toast.success("Image deleted successfully");
+      }
+    } catch (error: any) {
+      console.error("Error deleting variant image:", error);
+      toast.error(error.response?.data?.message || "Failed to delete image");
+    }
   };
 
   // Handle form submission
@@ -645,6 +716,52 @@ export function ProductForm({
       }
 
       if (response.data.success) {
+        // If product creation/update was successful and we have variant images, upload them
+        if (
+          hasVariants &&
+          variantImages.size > 0 &&
+          response.data.data?.product?.variants
+        ) {
+          const productVariants = response.data.data.product.variants;
+
+          for (const variant of productVariants) {
+            // Try multiple keys to find variant images
+            const possibleKeys = [
+              variant.id, // New database ID
+              `${variant.flavorId}-${variant.weightId}`, // Flavor-Weight combo
+            ];
+
+            // Also check if any key in variantImages Map matches this variant's flavor+weight
+            for (const [mapKey, mapImages] of variantImages.entries()) {
+              // Check if this variant matches by flavorId and weightId
+              const matchingVariant = variants.find(
+                (v) =>
+                  v.id === mapKey &&
+                  v.flavorId === variant.flavorId &&
+                  v.weightId === variant.weightId
+              );
+
+              if (matchingVariant && mapImages && mapImages.length > 0) {
+                try {
+                  for (let i = 0; i < mapImages.length; i++) {
+                    await products.uploadVariantImage(variant.id, mapImages[i]);
+                  }
+                  toast.success(
+                    `Uploaded ${mapImages.length} image(s) for ${variant.flavor?.name || "variant"}`
+                  );
+                } catch (error) {
+                  console.error(
+                    `Failed to upload images for variant ${variant.id}:`,
+                    error
+                  );
+                  toast.error(`Failed to upload images for some variants`);
+                }
+                break;
+              }
+            }
+          }
+        }
+
         toast.success(
           mode === "create"
             ? "Product created successfully"
@@ -1052,6 +1169,8 @@ export function ProductForm({
                   Maximum size: 5MB per image
                 </p>
               </div>
+
+              {/* Manual File Input as Fallback */}
             </div>
 
             {/* Image previews */}
@@ -1270,6 +1389,9 @@ export function ProductForm({
                               Stock
                             </th>
                             <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Images
+                            </th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Actions
                             </th>
                           </tr>
@@ -1336,6 +1458,96 @@ export function ProductForm({
                                   className="h-8"
                                   required
                                 />
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                <div className="space-y-2">
+                                  <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    onChange={(e) =>
+                                      handleVariantImageUpload(
+                                        variant.id,
+                                        e.target.files
+                                      )
+                                    }
+                                    className="text-xs"
+                                  />
+                                  {/* Show existing variant images */}
+                                  {variant.images &&
+                                    variant.images.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mb-2">
+                                        {variant.images.map(
+                                          (image: any, index: number) => (
+                                            <div
+                                              key={`existing-${index}`}
+                                              className="relative"
+                                            >
+                                              <img
+                                                src={image.url}
+                                                alt={
+                                                  image.alt ||
+                                                  `Variant ${index + 1}`
+                                                }
+                                                className="w-12 h-12 object-cover rounded border"
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  handleDeleteVariantImage(
+                                                    image.id
+                                                  )
+                                                }
+                                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                                              >
+                                                ×
+                                              </button>
+                                              {image.isPrimary && (
+                                                <div className="absolute bottom-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-tr">
+                                                  Primary
+                                                </div>
+                                              )}
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    )}
+
+                                  {/* Show newly uploaded images */}
+                                  {variantImages.get(variant.id) && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {variantImages
+                                        .get(variant.id)!
+                                        .map((file, index) => (
+                                          <div
+                                            key={`new-${index}`}
+                                            className="relative"
+                                          >
+                                            <img
+                                              src={URL.createObjectURL(file)}
+                                              alt={`New Variant ${index + 1}`}
+                                              className="w-12 h-12 object-cover rounded border border-green-500"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                removeVariantImage(
+                                                  variant.id,
+                                                  index
+                                                )
+                                              }
+                                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                                            >
+                                              ×
+                                            </button>
+                                            <div className="absolute bottom-0 left-0 bg-green-500 text-white text-xs px-1 rounded-tr">
+                                              New
+                                            </div>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
+                                </div>
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap">
                                 <Button
@@ -1755,7 +1967,9 @@ function ProductsList() {
         const response = await products.getProducts(params);
 
         if (response.data.success) {
-          setProductsList(response.data.data?.products || []);
+          const products = response.data.data?.products || [];
+
+          setProductsList(products);
           setTotalPages(response.data.data?.pagination?.pages || 1);
         } else {
           setError(response.data.message || "Failed to fetch products");
@@ -2177,11 +2391,28 @@ function ProductsList() {
                   productsList.map((product) => {
                     const { basePrice, regularPrice, hasSale } =
                       getProductPrices(product);
-                    const productImage =
-                      product.images && product.images.length > 0
-                        ? product.images.find((img: any) => img.isPrimary) ||
-                          product.images[0]
-                        : null;
+                    // Get image with fallback logic
+                    let productImage = null;
+
+                    // Priority 1: Product images
+                    if (product.images && product.images.length > 0) {
+                      productImage =
+                        product.images.find((img: any) => img.isPrimary) ||
+                        product.images[0];
+                    }
+                    // Priority 2: Any variant images
+                    else if (product.variants && product.variants.length > 0) {
+                      const variantWithImages = product.variants.find(
+                        (variant: any) =>
+                          variant.images && variant.images.length > 0
+                      );
+                      if (variantWithImages) {
+                        productImage =
+                          variantWithImages.images.find(
+                            (img: any) => img.isPrimary
+                          ) || variantWithImages.images[0];
+                      }
+                    }
 
                     return (
                       <tr

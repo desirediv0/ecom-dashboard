@@ -305,6 +305,56 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
     }
   };
 
+  // Get the appropriate image to display (variant image or product image)
+  const getDisplayImage = () => {
+    // Priority 1: Selected variant images
+    if (
+      selectedVariant &&
+      selectedVariant.images &&
+      selectedVariant.images.length > 0
+    ) {
+      const primaryImage = selectedVariant.images.find((img) => img.isPrimary);
+      const imageUrl = primaryImage
+        ? primaryImage.url
+        : selectedVariant.images[0].url;
+
+      if (imageUrl.startsWith("http")) return imageUrl;
+      return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+    }
+
+    // Priority 2: Product images
+    if (displayProduct?.images && displayProduct.images.length > 0) {
+      const primaryImage = displayProduct.images.find((img) => img.isPrimary);
+      const imageUrl = primaryImage
+        ? primaryImage.url
+        : displayProduct.images[0].url;
+
+      if (imageUrl.startsWith("http")) return imageUrl;
+      return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+    }
+
+    // Priority 3: Any variant images from any variant
+    if (displayProduct?.variants && displayProduct.variants.length > 0) {
+      const variantWithImages = displayProduct.variants.find(
+        (variant) => variant.images && variant.images.length > 0
+      );
+      if (variantWithImages) {
+        const primaryImage = variantWithImages.images.find(
+          (img) => img.isPrimary
+        );
+        const imageUrl = primaryImage
+          ? primaryImage.url
+          : variantWithImages.images[0].url;
+
+        if (imageUrl.startsWith("http")) return imageUrl;
+        return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+      }
+    }
+
+    // Final fallback
+    return imgSrc || "/product-placeholder.jpg";
+  };
+
   // Format price display
   const getPriceDisplay = () => {
     // Show loading state while initial data is being fetched
@@ -399,7 +449,7 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
             {/* Product Image */}
             <div className="relative h-72 md:h-full rounded-md overflow-hidden bg-gray-50 shadow-sm">
               <Image
-                src={imgSrc}
+                src={getDisplayImage()}
                 alt={displayProduct.name}
                 fill
                 className="object-contain p-2"

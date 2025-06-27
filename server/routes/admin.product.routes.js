@@ -10,6 +10,8 @@ import {
   createProductVariant,
   updateProductVariant,
   deleteProductVariant,
+  uploadVariantImage,
+  deleteVariantImage,
   bulkVariantOperations,
   getFlavors,
   createFlavor,
@@ -110,6 +112,22 @@ router.delete(
   verifyAdminJWT,
   hasPermission("products", "update"),
   deleteProductVariant
+);
+
+// Variant image routes
+router.post(
+  "/variants/:variantId/images",
+  verifyAdminJWT,
+  hasPermission("products", "update"),
+  uploadFiles.single("image"),
+  uploadVariantImage
+);
+
+router.delete(
+  "/variants/images/:imageId",
+  verifyAdminJWT,
+  hasPermission("products", "update"),
+  deleteVariantImage
 );
 
 // Flavor routes

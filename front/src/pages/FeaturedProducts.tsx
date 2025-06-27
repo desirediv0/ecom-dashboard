@@ -116,17 +116,29 @@ export default function FeaturedProductsPage() {
   };
 
   const getProductImage = (product: Product) => {
-    // Handle case where image is directly available
+    // Priority 1: Direct image field
     if (product.image) return product.image;
 
-    // Handle case where images are in an array
+    // Priority 2: Product images array
     if (product.images && product.images.length > 0) {
-      // Try to find primary image first
       const primaryImage = product.images.find((img) => img.isPrimary);
       if (primaryImage) return primaryImage.url;
-
-      // If no primary image, return first image
       return product.images[0].url;
+    }
+
+    // Priority 3: Any variant images from any variant
+    if (product.variants && product.variants.length > 0) {
+      const variantWithImages = product.variants.find(
+        (variant) => variant.images && variant.images.length > 0
+      );
+      if (variantWithImages && variantWithImages.images) {
+        const primaryImage = variantWithImages.images.find(
+          (img: any) => img.isPrimary
+        );
+        return primaryImage
+          ? primaryImage.url
+          : variantWithImages.images[0].url;
+      }
     }
 
     // No image available

@@ -145,9 +145,9 @@ export const getAllProducts = asyncHandler(async (req, res) => {
         include: {
           flavor: true,
           weight: true,
+          images: true,
         },
         orderBy: { price: "asc" },
-        take: 1, // Get at least one variant for displaying base price
       },
       _count: {
         select: {
@@ -173,6 +173,29 @@ export const getAllProducts = asyncHandler(async (req, res) => {
     const primaryCategory =
       product.categories.length > 0 ? product.categories[0].category : null;
 
+    // Get image with fallback logic
+    let imageUrl = null;
+
+    // Priority 1: Product images
+    if (product.images && product.images.length > 0) {
+      const primaryImage = product.images.find((img) => img.isPrimary);
+      imageUrl = primaryImage ? primaryImage.url : product.images[0].url;
+    }
+    // Priority 2: Any variant images
+    else if (product.variants && product.variants.length > 0) {
+      const variantWithImages = product.variants.find(
+        (variant) => variant.images && variant.images.length > 0
+      );
+      if (variantWithImages) {
+        const primaryImage = variantWithImages.images.find(
+          (img) => img.isPrimary
+        );
+        imageUrl = primaryImage
+          ? primaryImage.url
+          : variantWithImages.images[0].url;
+      }
+    }
+
     return {
       id: product.id,
       name: product.name,
@@ -186,7 +209,17 @@ export const getAllProducts = asyncHandler(async (req, res) => {
             slug: primaryCategory.slug,
           }
         : null,
-      image: product.images[0] ? getFileUrl(product.images[0].url) : null,
+      image: imageUrl ? getFileUrl(imageUrl) : null,
+      // Add variants for frontend fallback
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        images: variant.images
+          ? variant.images.map((image) => ({
+              ...image,
+              url: getFileUrl(image.url),
+            }))
+          : [],
+      })),
       basePrice:
         product.variants.length > 0
           ? parseFloat(
@@ -244,6 +277,7 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
         include: {
           flavor: true,
           weight: true,
+          images: true,
         },
         orderBy: [{ flavor: { name: "asc" } }, { weight: { value: "asc" } }],
       },
@@ -289,6 +323,24 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
     images: product.images.map((image) => ({
       ...image,
       url: getFileUrl(image.url),
+    })),
+    // Format variants with proper image URLs
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      flavor: variant.flavor
+        ? {
+            ...variant.flavor,
+            image: variant.flavor.image
+              ? getFileUrl(variant.flavor.image)
+              : null,
+          }
+        : null,
+      images: variant.images
+        ? variant.images.map((image) => ({
+            ...image,
+            url: getFileUrl(image.url),
+          }))
+        : [],
     })),
     // Group variants by flavor
     flavorOptions: Array.from(
@@ -360,6 +412,7 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
             include: {
               flavor: true,
               weight: true,
+              images: true,
             },
           },
           _count: {
@@ -426,6 +479,7 @@ export const getProductVariant = asyncHandler(async (req, res) => {
     include: {
       flavor: true,
       weight: true,
+      images: true,
     },
   });
 
@@ -442,6 +496,12 @@ export const getProductVariant = asyncHandler(async (req, res) => {
           image: variant.flavor.image ? getFileUrl(variant.flavor.image) : null,
         }
       : null,
+    images: variant.images
+      ? variant.images.map((image) => ({
+          ...image,
+          url: getFileUrl(image.url),
+        }))
+      : [],
   };
 
   res

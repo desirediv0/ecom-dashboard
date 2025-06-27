@@ -94,13 +94,10 @@ model Category {
   description String?
   image       String?
   slug        String            @unique
-  parentId    String?
   isDefault   Boolean           @default(false)
   createdBy   String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
-  parent      Category?         @relation("CategorySubcategories", fields: [parentId], references: [id])
-  children    Category[]        @relation("CategorySubcategories")
   products    ProductCategory[]
 }
 
@@ -157,24 +154,36 @@ model Weight {
 }
 
 model ProductVariant {
-  id         String      @id @default(uuid())
+  id         String                @id @default(uuid())
   productId  String
-  sku        String      @unique
+  sku        String                @unique
   flavorId   String?
   weightId   String?
-  price      Decimal     @db.Decimal(10, 2)
-  salePrice  Decimal?    @db.Decimal(10, 2)
-  quantity   Int         @default(0)
-  isActive   Boolean     @default(true)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  price      Decimal               @db.Decimal(10, 2)
+  salePrice  Decimal?              @db.Decimal(10, 2)
+  quantity   Int                   @default(0)
+  isActive   Boolean               @default(true)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
   cartItems  CartItem[]
   orderItems OrderItem[]
-  flavor     Flavor?     @relation(fields: [flavorId], references: [id])
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  weight     Weight?     @relation(fields: [weightId], references: [id])
+  images     ProductVariantImage[]
+  flavor     Flavor?               @relation(fields: [flavorId], references: [id])
+  product    Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  weight     Weight?               @relation(fields: [weightId], references: [id])
 
   @@unique([productId, flavorId, weightId])
+}
+
+model ProductVariantImage {
+  id        String         @id @default(uuid())
+  variantId String
+  url       String
+  alt       String?
+  isPrimary Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 }
 
 model CartItem {
