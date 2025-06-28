@@ -223,8 +223,7 @@ export default function ContactPage() {
                         <div>
                           <p className="font-medium">Address</p>
                           <p className="text-gray-600">
-                            {contactInfo?.address ||
-                              "123 Supplement Street, Health City, 400001"}
+                            {contactInfo?.address || "Gurgaon, Haryana, India"}
                           </p>
                         </div>
                       </div>
@@ -244,16 +243,6 @@ export default function ContactPage() {
                           <p className="text-gray-600">
                             {contactInfo?.email ||
                               "support@GenuineNutrition.com"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <Clock className="h-5 w-5 text-primary mt-1 mr-3" />
-                        <div>
-                          <p className="font-medium">Business Hours</p>
-                          <p className="text-gray-600">
-                            {contactInfo?.hours ||
-                              "Monday - Saturday: 10:00 AM - 7:00 PM"}
                           </p>
                         </div>
                       </div>
@@ -326,8 +315,7 @@ export default function ContactPage() {
             </div>
             <p className="text-center text-gray-600">
               Visit our store at{" "}
-              {contactInfo?.address ||
-                "123 Supplement Street, Health City, 400001"}
+              {contactInfo?.address || "Gurgaon, Haryana, India"}
             </p>
           </div>
         </div>

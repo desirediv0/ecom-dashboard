@@ -379,9 +379,9 @@ const getContactInfo = asyncHandler(async (req, res) => {
 
     // Default fallback contact info
     const contactInfo = {
-      address: "123 Supplement Street, Health City, 400001",
+      address: "Gurgaon, Haryana, India",
       phone: "+91 98765 43210",
-      email: "support@GenuineNutrition.com",
+      email: "support@genuinenutrition",
       hours: "Monday - Saturday: 10:00 AM - 7:00 PM",
       mapCoordinates: {
         lat: 19.076,

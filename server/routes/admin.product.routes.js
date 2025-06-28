@@ -12,6 +12,7 @@ import {
   deleteProductVariant,
   uploadVariantImage,
   deleteVariantImage,
+  setVariantImageAsPrimary,
   bulkVariantOperations,
   getFlavors,
   createFlavor,
@@ -128,6 +129,13 @@ router.delete(
   verifyAdminJWT,
   hasPermission("products", "update"),
   deleteVariantImage
+);
+
+router.patch(
+  "/variants/images/:imageId/set-primary",
+  verifyAdminJWT,
+  hasPermission("products", "update"),
+  setVariantImageAsPrimary
 );
 
 // Flavor routes

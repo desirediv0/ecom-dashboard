@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { v4 as uuidv4 } from "uuid";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DeleteProductDialog } from "@/components/DeleteProductDialog";
+import VariantCard from "@/components/VariantCard";
 
 function useCategories() {
   const [categoriesData, setCategoriesData] = useState<any[]>([]);
@@ -104,9 +105,6 @@ export function ProductForm({
 
   // State for variants
   const [variants, setVariants] = useState<any[]>([]);
-  const [variantImages, setVariantImages] = useState<Map<string, File[]>>(
-    new Map()
-  );
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [selectedWeights, setSelectedWeights] = useState<string[]>([]);
 
@@ -125,8 +123,38 @@ export function ProductForm({
 
   // Handle image drop for upload
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    console.log(
+      `📸 Files dropped/selected: ${acceptedFiles.length}`,
+      acceptedFiles
+    );
+
+    if (acceptedFiles.length === 0) {
+      toast.error("No valid files selected");
+      return;
+    }
+
+    // Validate files
+    const validFiles = acceptedFiles.filter((file) => {
+      const isValidType = file.type.startsWith("image/");
+      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+
+      if (!isValidType) {
+        toast.error(`${file.name} is not a valid image file`);
+        return false;
+      }
+      if (!isValidSize) {
+        toast.error(`${file.name} is too large. Maximum size is 10MB`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) {
+      return;
+    }
+
     // Create local previews for the UI
-    const newPreviews = acceptedFiles.map((file) => ({
+    const newPreviews = validFiles.map((file) => ({
       url: URL.createObjectURL(file),
       isPrimary: false,
     }));
@@ -136,20 +164,33 @@ export function ProductForm({
       if (prev.length === 0 && newPreviews.length > 0) {
         newPreviews[0].isPrimary = true;
       }
-      return [...prev, ...acceptedFiles];
+      console.log(
+        `📸 Total files after addition: ${prev.length + validFiles.length}`
+      );
+      return [...prev, ...validFiles];
     });
 
     setImagePreviews((prev) => [...prev, ...newPreviews]);
+
+    toast.success(`${validFiles.length} image(s) added successfully`);
   }, []);
 
-  const { getRootProps, getInputProps } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       "image/jpeg": [],
       "image/png": [],
       "image/webp": [],
+      "image/gif": [],
     },
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: 10 * 1024 * 1024, // 10MB
+    multiple: true,
+    onDropRejected: (rejectedFiles) => {
+      rejectedFiles.forEach((file) => {
+        const errors = file.errors.map((e) => e.message).join(", ");
+        toast.error(`${file.file.name}: ${errors}`);
+      });
+    },
   });
 
   // Remove image from preview and files
@@ -348,7 +389,14 @@ export function ProductForm({
                     quantity: variant.quantity || 0,
                     isActive:
                       variant.isActive !== undefined ? variant.isActive : true,
-                    images: variant.images || [],
+                    images: Array.isArray(variant.images)
+                      ? variant.images.map((img: any) => ({
+                          url: img.url,
+                          id: img.id,
+                          isPrimary: img.isPrimary || false,
+                          isNew: false,
+                        }))
+                      : [],
                   })
                 );
 
@@ -464,6 +512,7 @@ export function ProductForm({
             salePrice: product.salePrice || "",
             quantity: product.quantity || 0,
             isActive: true,
+            images: [],
           });
         });
       });
@@ -487,6 +536,7 @@ export function ProductForm({
           salePrice: product.salePrice || "",
           quantity: product.quantity || 0,
           isActive: true,
+          images: [],
         });
       });
     } else if (selectedWeightObjects.length > 0) {
@@ -507,6 +557,7 @@ export function ProductForm({
           salePrice: product.salePrice || "",
           quantity: product.quantity || 0,
           isActive: true,
+          images: [],
         });
       });
     }
@@ -514,92 +565,31 @@ export function ProductForm({
     setVariants((prev) => [...prev, ...newVariants]);
   };
 
-  // Update variant field
-  const updateVariant = (variantId: string, field: string, value: any) => {
-    // Ensure numeric values are properly handled
-    if (field === "price" || field === "salePrice" || field === "quantity") {
-      // If empty string, use empty string (allows clearing sale price)
-      value = value === "" ? "" : value;
-    }
-
+  // Handle variant images change (used by VariantCard)
+  const handleVariantImagesChange = (variantIndex: number, images: any[]) => {
     setVariants((prev) =>
-      prev.map((variant) =>
-        variant.id === variantId ? { ...variant, [field]: value } : variant
+      prev.map((variant, i) =>
+        i === variantIndex ? { ...variant, images } : variant
       )
     );
   };
 
-  // Remove variant
-  const removeVariant = (variantId: string) => {
-    setVariants((prev) => prev.filter((variant) => variant.id !== variantId));
-    // Also remove any images for this variant
-    const newVariantImages = new Map(variantImages);
-    newVariantImages.delete(variantId);
-    setVariantImages(newVariantImages);
-  };
-
-  // Handle variant image upload
-  const handleVariantImageUpload = (
-    variantId: string,
-    files: FileList | null
+  // Update variant by index (used by VariantCard)
+  const updateVariantByIndex = (
+    variantIndex: number,
+    field: string,
+    value: any
   ) => {
-    if (!files || files.length === 0) return;
-
-    const newVariantImages = new Map(variantImages);
-    const existingImages = newVariantImages.get(variantId) || [];
-    const newFiles = Array.from(files);
-
-    // Add new files to existing images
-    newVariantImages.set(variantId, [...existingImages, ...newFiles]);
-    setVariantImages(newVariantImages);
-  };
-
-  // Remove variant image
-  const removeVariantImage = (variantId: string, imageIndex: number) => {
-    const newVariantImages = new Map(variantImages);
-    const existingImages = newVariantImages.get(variantId) || [];
-    const updatedImages = existingImages.filter(
-      (_, index) => index !== imageIndex
+    setVariants((prev) =>
+      prev.map((variant, i) =>
+        i === variantIndex ? { ...variant, [field]: value } : variant
+      )
     );
-
-    if (updatedImages.length > 0) {
-      newVariantImages.set(variantId, updatedImages);
-    } else {
-      newVariantImages.delete(variantId);
-    }
-    setVariantImages(newVariantImages);
   };
 
-  // Delete existing variant image from server
-  const handleDeleteVariantImage = async (imageId: string) => {
-    try {
-      const response = await products.deleteVariantImage(imageId);
-      if (response.data.success) {
-        // Refresh the product data to get updated images
-        if (mode === "edit" && productId) {
-          const productResponse = await products.getProductById(productId);
-          if (productResponse.data.success) {
-            const productData = productResponse.data.data?.product || {};
-
-            // Update variants with new image data
-            const updatedVariants = variants.map((variant) => {
-              const updatedVariant = productData.variants?.find(
-                (v: any) => v.id === variant.id
-              );
-              return updatedVariant
-                ? { ...variant, images: updatedVariant.images || [] }
-                : variant;
-            });
-
-            setVariants(updatedVariants);
-          }
-        }
-        toast.success("Image deleted successfully");
-      }
-    } catch (error: any) {
-      console.error("Error deleting variant image:", error);
-      toast.error(error.response?.data?.message || "Failed to delete image");
-    }
+  // Remove variant by index (used by VariantCard)
+  const removeVariantByIndex = (variantIndex: number) => {
+    setVariants((prev) => prev.filter((_, i) => i !== variantIndex));
   };
 
   // Handle form submission
@@ -689,23 +679,43 @@ export function ProductForm({
         formData.append("variants", JSON.stringify(processedVariants));
       }
 
-      // Add images
-      if (imageFiles.length > 0) {
+      // Add images (only for non-variant products)
+      if (!hasVariants && imageFiles.length > 0) {
+        console.log(
+          `📸 Submitting ${imageFiles.length} images for simple product:`,
+          imageFiles
+        );
+
         // Add primary image index
         const primaryIndex = imagePreviews.findIndex(
           (img) => img.isPrimary === true
         );
         if (primaryIndex >= 0) {
           formData.append("primaryImageIndex", String(primaryIndex));
+          console.log(`📸 Primary image index: ${primaryIndex}`);
         } else {
           // Default to first image as primary if none is marked
           formData.append("primaryImageIndex", "0");
+          console.log(`📸 Default primary image index: 0`);
         }
 
-        // Append each image file
-        imageFiles.forEach((file) => {
-          formData.append(`images`, file);
+        // Append each image file with proper field name for multer
+        imageFiles.forEach((file, index) => {
+          formData.append("images", file);
+          console.log(
+            `📸 Added image ${index + 1}: ${file.name} (${file.size} bytes)`
+          );
         });
+
+        // Also log the FormData contents
+        console.log(
+          `📸 FormData contents:`,
+          Object.fromEntries(formData.entries())
+        );
+      } else if (hasVariants) {
+        console.log(
+          `📸 Skipping product images for variant product - will use variant-specific images`
+        );
       }
 
       let response;
@@ -717,47 +727,96 @@ export function ProductForm({
 
       if (response.data.success) {
         // If product creation/update was successful and we have variant images, upload them
-        if (
-          hasVariants &&
-          variantImages.size > 0 &&
-          response.data.data?.product?.variants
-        ) {
+        if (hasVariants && response.data.data?.product?.variants) {
           const productVariants = response.data.data.product.variants;
+          console.log(
+            `📸 Processing variant images for ${productVariants.length} variants`
+          );
 
-          for (const variant of productVariants) {
-            // Try multiple keys to find variant images
-            const possibleKeys = [
-              variant.id, // New database ID
-              `${variant.flavorId}-${variant.weightId}`, // Flavor-Weight combo
-            ];
+          let uploadPromises = [];
 
-            // Also check if any key in variantImages Map matches this variant's flavor+weight
-            for (const [mapKey, mapImages] of variantImages.entries()) {
-              // Check if this variant matches by flavorId and weightId
-              const matchingVariant = variants.find(
-                (v) =>
-                  v.id === mapKey &&
-                  v.flavorId === variant.flavorId &&
-                  v.weightId === variant.weightId
+          // Match variants by their temporary IDs or flavor/weight combination
+          for (let i = 0; i < variants.length; i++) {
+            const localVariant = variants[i];
+
+            // In create mode: match by index
+            // In edit mode: match by ID or create new mapping for newly generated variants
+            let serverVariant;
+
+            if (mode === "create") {
+              serverVariant = productVariants[i]; // Match by index since they're created in same order
+            } else {
+              // Edit mode: find matching variant by ID or create new one
+              const isNewVariant =
+                localVariant.id && localVariant.id.includes("-"); // UUID format
+
+              if (isNewVariant) {
+                // This is a newly generated variant, find it in the updated product variants
+                // Match by flavor/weight combination
+                serverVariant = productVariants.find(
+                  (sv: any) =>
+                    sv.flavorId === localVariant.flavorId &&
+                    sv.weightId === localVariant.weightId
+                );
+              } else {
+                // This is an existing variant, find by ID
+                serverVariant = productVariants.find(
+                  (sv: any) => sv.id === localVariant.id
+                );
+              }
+            }
+
+            if (localVariant && localVariant.images && serverVariant) {
+              // Filter only new images that need to be uploaded
+              const newImages = localVariant.images.filter(
+                (img: any) => img.isNew && img.file
               );
 
-              if (matchingVariant && mapImages && mapImages.length > 0) {
-                try {
-                  for (let i = 0; i < mapImages.length; i++) {
-                    await products.uploadVariantImage(variant.id, mapImages[i]);
-                  }
-                  toast.success(
-                    `Uploaded ${mapImages.length} image(s) for ${variant.flavor?.name || "variant"}`
-                  );
-                } catch (error) {
-                  console.error(
-                    `Failed to upload images for variant ${variant.id}:`,
-                    error
-                  );
-                  toast.error(`Failed to upload images for some variants`);
+              if (newImages.length > 0) {
+                console.log(
+                  `📸 Found ${newImages.length} new images for variant ${serverVariant.id} (${localVariant.flavor?.name || "N/A"} - ${localVariant.weight?.value || "N/A"}${localVariant.weight?.unit || ""}) [Mode: ${mode}]`
+                );
+
+                // Upload each new image for this variant
+                for (let j = 0; j < newImages.length; j++) {
+                  const imageData = newImages[j];
+                  const isPrimary = imageData.isPrimary || j === 0; // First image is primary if none marked
+
+                  const uploadPromise = products
+                    .uploadVariantImage(
+                      serverVariant.id,
+                      imageData.file,
+                      isPrimary
+                    )
+                    .then(() => {
+                      console.log(
+                        `📸 Uploaded image ${j + 1}/${newImages.length} for variant ${serverVariant.id} (isPrimary: ${isPrimary})`
+                      );
+                    })
+                    .catch((error) => {
+                      console.error(
+                        `❌ Failed to upload image ${j + 1} for variant ${serverVariant.id}:`,
+                        error
+                      );
+                      throw error;
+                    });
+
+                  uploadPromises.push(uploadPromise);
                 }
-                break;
               }
+            }
+          }
+
+          // Wait for all uploads to complete
+          if (uploadPromises.length > 0) {
+            try {
+              await Promise.all(uploadPromises);
+              toast.success(
+                `Successfully uploaded ${uploadPromises.length} variant image(s)`
+              );
+            } catch (error) {
+              console.error("Some variant image uploads failed:", error);
+              toast.error("Failed to upload some variant images");
             }
           }
         }
@@ -1143,85 +1202,127 @@ export function ProductForm({
             </div>
           </div>
 
-          {/* Product Images - Dropzone */}
-          <div className="space-y-4 rounded-lg border p-4 bg-gray-50">
-            <h2 className="text-xl font-semibold border-b pb-2">
-              Product Images
-            </h2>
-            <div className="space-y-2">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium">Upload Images</p>
-                <p className="text-xs text-muted-foreground">
-                  Drag and drop images here, or click to select files. The first
-                  image will be the primary image.
-                </p>
-              </div>
-              <div
-                {...getRootProps()}
-                className="border-2 border-dashed rounded-md p-8 cursor-pointer hover:bg-muted/50 transition-colors text-center bg-white"
-              >
-                <input {...getInputProps()} />
-                <ImageIcon className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  Drop images here, or click to select files
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Maximum size: 5MB per image
-                </p>
+          {/* Product Images - Dropzone - Only show when variants are NOT enabled */}
+          {!hasVariants && (
+            <div className="space-y-4 rounded-lg border p-4 bg-gray-50">
+              <h2 className="text-xl font-semibold border-b pb-2">
+                Product Images
+              </h2>
+              <div className="space-y-2">
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-medium">Upload Images</p>
+                  <p className="text-xs text-muted-foreground">
+                    Drag and drop images here, or click to select files. The
+                    first image will be the primary image.
+                  </p>
+                </div>
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-md p-8 cursor-pointer transition-colors text-center bg-white ${
+                    isDragActive
+                      ? "border-blue-400 bg-blue-50"
+                      : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <ImageIcon className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+                  {isDragActive ? (
+                    <p className="text-blue-600 font-medium">
+                      Drop the images here...
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-muted-foreground">
+                        Drop multiple images here, or click to select files
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Supports JPEG, PNG, WebP, GIF • Maximum size: 10MB per
+                        image
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* Fallback file input */}
+                <div className="mt-2">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    multiple
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        const files = Array.from(e.target.files);
+                        onDrop(files);
+                        // Clear the input so the same file can be selected again
+                        e.target.value = "";
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Alternative: Use this input if drag and drop doesn't work
+                  </p>
+                </div>
+
+                {/* Manual File Input as Fallback */}
               </div>
 
-              {/* Manual File Input as Fallback */}
-            </div>
-
-            {/* Image previews */}
-            {imagePreviews.length > 0 && (
-              <div className="mt-4">
-                <Label className="mb-3 block">Product Images</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative group">
-                      <div
-                        className={`relative h-32 rounded-md overflow-hidden border-2 ${preview.isPrimary ? "border-primary" : "border-transparent"}`}
-                      >
-                        <img
-                          src={preview.url}
-                          alt={`Product preview ${index + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                        {preview.isPrimary && (
-                          <span className="absolute top-2 left-2 bg-primary text-white text-xs py-1 px-2 rounded-full">
-                            Primary
-                          </span>
-                        )}
-                      </div>
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex space-x-1">
-                        {!preview.isPrimary && (
+              {/* Image previews */}
+              {imagePreviews.length > 0 && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <Label>Product Images</Label>
+                    <Badge variant="outline" className="text-xs">
+                      {imagePreviews.length} image
+                      {imagePreviews.length !== 1 ? "s" : ""}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <div
+                          className={`relative h-32 rounded-md overflow-hidden border-2 ${preview.isPrimary ? "border-primary" : "border-transparent"}`}
+                        >
+                          <img
+                            src={preview.url}
+                            alt={`Product preview ${index + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                          {preview.isPrimary && (
+                            <span className="absolute top-2 left-2 bg-primary text-white text-xs py-1 px-2 rounded-full">
+                              Primary
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex space-x-1">
+                          {!preview.isPrimary && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 bg-white hover:bg-primary hover:text-white"
+                              onClick={() => setPrimaryImage(index)}
+                            >
+                              <Star className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             type="button"
                             variant="outline"
                             size="icon"
-                            className="h-7 w-7 bg-white hover:bg-primary hover:text-white"
-                            onClick={() => setPrimaryImage(index)}
+                            className="h-7 w-7 bg-white hover:bg-destructive hover:text-white"
+                            onClick={() => removeImage(index)}
                           >
-                            <Star className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        )}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 bg-white hover:bg-destructive hover:text-white"
-                          onClick={() => removeImage(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* SEO Section */}
           <div className="space-y-4 rounded-lg border p-4 bg-gray-50">
@@ -1277,9 +1378,21 @@ export function ProductForm({
           {/* Variants Configuration */}
           {hasVariants && (
             <div className="space-y-4 rounded-lg border p-4 bg-gray-50">
-              <h2 className="text-xl font-semibold border-b pb-2">
-                Variants Configuration
-              </h2>
+              <div className="flex items-center justify-between border-b pb-2">
+                <h2 className="text-xl font-semibold">
+                  Variants Configuration
+                </h2>
+                <Badge variant="secondary" className="text-xs">
+                  Using variant-specific images
+                </Badge>
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                <p className="text-sm text-green-700">
+                  <strong>✓ Variant Mode:</strong> Each variant can have its own
+                  images. Upload images for each variant below in the table.
+                </p>
+              </div>
 
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -1369,199 +1482,18 @@ export function ProductForm({
                   </div>
 
                   {variants.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-full divide-y divide-gray-200 border">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              SKU
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Variant
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Price
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Sale Price
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Stock
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Images
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {variants.map((variant) => (
-                            <tr key={variant.id}>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                <Input
-                                  value={variant.sku || "Auto-generated"}
-                                  readOnly
-                                  className="h-8 bg-muted"
-                                />
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                {variant.flavor ? variant.flavor.name : ""}{" "}
-                                {variant.weight
-                                  ? `${variant.weight.value}${variant.weight.unit}`
-                                  : ""}
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                <Input
-                                  value={variant.price || ""}
-                                  onChange={(e) =>
-                                    updateVariant(
-                                      variant.id,
-                                      "price",
-                                      e.target.value
-                                    )
-                                  }
-                                  type="number"
-                                  min="0"
-                                  className="h-8"
-                                  required
-                                />
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                <Input
-                                  value={variant.salePrice || ""}
-                                  onChange={(e) =>
-                                    updateVariant(
-                                      variant.id,
-                                      "salePrice",
-                                      e.target.value
-                                    )
-                                  }
-                                  type="number"
-                                  min="0"
-                                  className="h-8"
-                                />
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                <Input
-                                  value={variant.quantity || ""}
-                                  onChange={(e) =>
-                                    updateVariant(
-                                      variant.id,
-                                      "quantity",
-                                      e.target.value
-                                    )
-                                  }
-                                  type="number"
-                                  min="0"
-                                  className="h-8"
-                                  required
-                                />
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                <div className="space-y-2">
-                                  <input
-                                    type="file"
-                                    multiple
-                                    accept="image/*"
-                                    onChange={(e) =>
-                                      handleVariantImageUpload(
-                                        variant.id,
-                                        e.target.files
-                                      )
-                                    }
-                                    className="text-xs"
-                                  />
-                                  {/* Show existing variant images */}
-                                  {variant.images &&
-                                    variant.images.length > 0 && (
-                                      <div className="flex flex-wrap gap-1 mb-2">
-                                        {variant.images.map(
-                                          (image: any, index: number) => (
-                                            <div
-                                              key={`existing-${index}`}
-                                              className="relative"
-                                            >
-                                              <img
-                                                src={image.url}
-                                                alt={
-                                                  image.alt ||
-                                                  `Variant ${index + 1}`
-                                                }
-                                                className="w-12 h-12 object-cover rounded border"
-                                              />
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  handleDeleteVariantImage(
-                                                    image.id
-                                                  )
-                                                }
-                                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                                              >
-                                                ×
-                                              </button>
-                                              {image.isPrimary && (
-                                                <div className="absolute bottom-0 left-0 bg-blue-500 text-white text-xs px-1 rounded-tr">
-                                                  Primary
-                                                </div>
-                                              )}
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-                                    )}
-
-                                  {/* Show newly uploaded images */}
-                                  {variantImages.get(variant.id) && (
-                                    <div className="flex flex-wrap gap-1">
-                                      {variantImages
-                                        .get(variant.id)!
-                                        .map((file, index) => (
-                                          <div
-                                            key={`new-${index}`}
-                                            className="relative"
-                                          >
-                                            <img
-                                              src={URL.createObjectURL(file)}
-                                              alt={`New Variant ${index + 1}`}
-                                              className="w-12 h-12 object-cover rounded border border-green-500"
-                                            />
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                removeVariantImage(
-                                                  variant.id,
-                                                  index
-                                                )
-                                              }
-                                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                                            >
-                                              ×
-                                            </button>
-                                            <div className="absolute bottom-0 left-0 bg-green-500 text-white text-xs px-1 rounded-tr">
-                                              New
-                                            </div>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeVariant(variant.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="space-y-4">
+                      {variants.map((variant, variantIndex) => (
+                        <VariantCard
+                          key={variant.id || `variant-${variantIndex}`}
+                          variant={variant}
+                          index={variantIndex}
+                          onUpdate={updateVariantByIndex}
+                          onRemove={removeVariantByIndex}
+                          onImagesChange={handleVariantImagesChange}
+                          isEditMode={mode === "edit"}
+                        />
+                      ))}
                     </div>
                   ) : (
                     <div className="text-center p-4 border rounded-md bg-white">
@@ -1764,13 +1696,15 @@ const CategorySelector = ({
 
     if (isCurrentlySelected) {
       // If deselecting, remove this category
-      newSelectionIds = newSelectionIds.filter((id) => id !== categoryId);
+      newSelectionIds = newSelectionIds.filter(
+        (id: string) => id !== categoryId
+      );
 
       // If this is a parent, also remove all its children
       if (isParent(categoryId)) {
         const childrenIds = getChildrenIds(categoryId);
         newSelectionIds = newSelectionIds.filter(
-          (id) => !childrenIds.includes(id)
+          (id: string) => !childrenIds.includes(id)
         );
       }
     } else {

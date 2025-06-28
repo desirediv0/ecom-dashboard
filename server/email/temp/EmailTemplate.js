@@ -348,7 +348,7 @@ export const getResetTemplate = (resetLink) => `
             <p>Dear Valued Customer,</p>
             <p>We received a request to reset the password for your GenuineNutrition account. Click the button below to create a new password:</p>
             <a href="${resetLink}" class="button">Reset Password</a>
-            <p>If you didn't request this password reset, please contact our support team immediately at support@GenuineNutrition.com</p>
+            <p>If you didn't request this password reset, please contact our support team immediately at support@genuinenutrition</p>
             <p>This link will expire in 15 minutes for security reasons.</p>
         </div>
         <div class="footer">
@@ -1306,7 +1306,7 @@ export const getOrderConfirmationTemplate = (data) => `
         </div>
         <div class="footer">
             © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
-            Questions? Contact our customer support at support@GenuineNutrition.com
+            Questions? Contact our customer support at support@genuinenutrition
         </div>
     </div>
 </body>

@@ -126,7 +126,17 @@ export default function WishlistPage() {
                 <Link href={`/products/${product.slug}`}>
                   <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
                     <Image
-                      src={product.images[0]}
+                      src={
+                        product.image
+                          ? product.image.startsWith("http")
+                            ? product.image
+                            : `https://desirediv-storage.blr1.digitaloceanspaces.com/${product.image}`
+                          : product.images?.[0]
+                          ? product.images[0].startsWith("http")
+                            ? product.images[0]
+                            : `https://desirediv-storage.blr1.digitaloceanspaces.com/${product.images[0]}`
+                          : "/placeholder.jpg"
+                      }
                       alt={product.name}
                       fill
                       className="object-contain p-4 transition-transform group-hover:scale-105"

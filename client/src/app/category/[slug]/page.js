@@ -243,9 +243,11 @@ export default function CategoryPage() {
                 <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
                   <Image
                     src={
-                      product.images[0]?.url
-                        ? getImageUrl(product.images[0].url)
-                        : "/product-placeholder.jpg"
+                      product.image
+                        ? getImageUrl(product.image)
+                        : product.variants?.[0]?.images?.[0]?.url
+                        ? getImageUrl(product.variants[0].images[0].url)
+                        : "/placeholder.jpg"
                     }
                     alt={product.name}
                     fill

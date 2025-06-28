@@ -301,6 +301,9 @@ export const products = {
   deleteVariantImage: (imageId: string) => {
     return api.delete(`/api/admin/variants/images/${imageId}`);
   },
+  setVariantImageAsPrimary: (imageId: string) => {
+    return api.patch(`/api/admin/variants/images/${imageId}/set-primary`);
+  },
 };
 
 // Flavors Management

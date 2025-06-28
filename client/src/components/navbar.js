@@ -173,10 +173,10 @@ export function Navbar() {
               onClick={() => setIsMenuOpen(false)}
             >
               <Image
-                src="/logo.jpeg"
+                src="/logo.png"
                 alt="Logo"
-                width={120}
-                height={120}
+                width={150}
+                height={150}
                 className="ml-2 p-2 lg:p-0"
               />
             </Link>
@@ -421,14 +421,14 @@ export function Navbar() {
                 <Menu className="h-6 w-6" />
               </button>
             </div>
-  
+
             {/* Logo */}
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center p-2">
               <Image
-                src="/logo.jpeg"
+                src="/logo.png"
                 alt="Logo"
-                width={180}
-                height={180}
+                width={150}
+                height={150}
                 className="ml-2 p-2 lg:p-0"
               />
             </Link>

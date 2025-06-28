@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { fetchApi } from "@/lib/utils";
@@ -9,116 +9,82 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
-import Headtext from "./ui/headtext";
 import Image from "next/image";
+import Headtext from "./ui/headtext";
 
-const CircularCategoryCard = ({ category, index }) => {
+const CategoryCard = ({ category, index }) => {
+  const isOffers =
+    category.name?.toLowerCase().includes("offer") ||
+    category.slug === "offers";
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
       viewport={{ once: true }}
-      className="flex flex-col items-center group"
+      className="flex flex-col items-center group cursor-pointer"
     >
-      {/* Circular Image Container with Rotating Border */}
-      <div className="relative mb-6">
-        {/* Rotating outline */}
-        <motion.div
-          className="absolute inset-0 rounded-full border-2 border-dashed border-[#1C4E80]/30"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-        />
+      {/* Category Card Container */}
+      <motion.div
+        className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-2 mb-4 w-[140px] h-[140px] flex items-center justify-center shadow-sm hover:shadow-lg border border-gray-200/50 overflow-hidden"
+        whileHover={{ y: -4, scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        {/* Background decorative elements */}
+        <div className="absolute top-3 right-3 w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full opacity-40" />
+        <div className="absolute bottom-2 left-2 w-6 h-6 bg-gradient-to-br from-orange-100 to-orange-200 rounded-full opacity-30" />
 
-        {/* Outer circle with position indicator */}
-        <div className="p-2 relative">
-          {/* Position indicator dot */}
-          <motion.div
-            className="absolute w-4 h-4 bg-[#F47C20] rounded-full z-20 shadow-md"
-            style={{ top: "10%", right: "10%" }}
-            whileHover={{ scale: 1.2 }}
-          />
-
-          {/* Inner container with image */}
-          <motion.div
-            className="relative w-48 h-48 md:w-56 md:h-56 overflow-hidden rounded-full cursor-pointer"
-            whileHover={{ scale: 1.03 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            {/* Background gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50 z-10" />
-
-            {/* Image */}
-            <Image
-              width={800}
-              height={800}
-              src={category.image || "/c3.jpg"}
-              alt={category.name}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-
-            {/* Product count badge */}
-            <div className="absolute bottom-6 left-0 right-0 text-center text-white text-sm font-medium z-20">
-              {category._count?.products || category.count || 0} PRODUCTS
-            </div>
-
-            {/* Hover effect center circle */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <motion.div
-                className="w-16 h-16 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-90 transition-opacity duration-300 shadow-lg"
-                initial={{ scale: 0.5 }}
-                whileHover={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 400 }}
+        {isOffers ? (
+          // Special design for offers
+          <div className="relative">
+            <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg">
+              <svg
+                className="w-10 h-10 text-white drop-shadow-sm"
+                fill="currentColor"
+                viewBox="0 0 20 20"
               >
-                <svg
-                  className="w-6 h-6 text-[#1C4E80]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </motion.div>
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
-          </motion.div>
-        </div>
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">%</span>
+            </div>
+          </div>
+        ) : (
+          // Product image
+          <div className="relative w-full h-full rounded-2xl overflow-hidden bg-white shadow-sm flex items-center justify-center ">
+            <Image
+              src={category.image || "/placeholder.jpg"}
+              alt={category.name || "Category"}
+              width={500}
+              height={500}
+              className="object-cover rounded-2xl"
+            />
+          </div>
+        )}
 
-        {/* Decorative elements */}
+        {/* Hover effect overlay */}
         <motion.div
-          className="absolute -z-10 w-12 h-12 bg-[#1C4E80]/10 rounded-full"
-          style={{ bottom: "-5%", right: "15%" }}
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
-        />
-
-        <motion.div
-          className="absolute -z-10 w-8 h-8 border-2 border-[#1C4E80]/20 rounded-full"
-          style={{ top: "0%", left: "15%" }}
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
-        />
-      </div>
-
-      {/* Category Info */}
-      <div className="text-center px-4">
-        <h3 className="text-xl font-bold text-[#333333] mb-1">
-          {category.name}
-        </h3>
-        <p className="text-gray-600 text-sm">{category.description || ""}</p>
-
-        {/* Underline animation on hover */}
-        <motion.div
-          className="h-0.5 w-0 bg-[#F47C20] mx-auto mt-2"
-          animate={{ width: "0%" }}
-          whileHover={{ width: "30%" }}
+          className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          initial={{ scale: 0.8 }}
+          whileHover={{ scale: 1 }}
           transition={{ duration: 0.3 }}
         />
+      </motion.div>
+
+      {/* Category Name */}
+      <div className="text-center px-2">
+        <h3 className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors duration-300 leading-tight max-w-[120px]">
+          {category.name || "Category"}
+        </h3>
+        {/* Product count */}
+        {(category._count?.products || category.count) && (
+          <p className="text-xs text-gray-500 mt-1">
+            {category._count?.products || category.count} items
+          </p>
+        )}
       </div>
     </motion.div>
   );
@@ -127,76 +93,83 @@ const CircularCategoryCard = ({ category, index }) => {
 const SkeletonLoader = () => {
   return (
     <div className="flex flex-col items-center animate-pulse">
-      <div className="w-48 h-48 md:w-56 md:h-56 rounded-full bg-gray-200 mb-6"></div>
-      <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-      <div className="h-3 bg-gray-200 rounded w-16"></div>
+      <div className="bg-gray-200 rounded-3xl w-[140px] h-[140px] mb-4"></div>
+      <div className="h-4 bg-gray-200 rounded w-20 mb-1"></div>
+      <div className="h-3 bg-gray-200 rounded w-12"></div>
     </div>
   );
 };
 
-const FeaturedCategoriesCarousel = ({ categories }) => {
+const CategoriesCarousel = ({ categories }) => {
   const [api, setApi] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
 
-  // Update current slide index when carousel changes
   useEffect(() => {
     if (!api) return;
 
-    const onSelect = () => {
-      setCurrentIndex(api.selectedScrollSnap());
+    const updateButtons = () => {
+      setCanScrollPrev(api.canScrollPrev());
+      setCanScrollNext(api.canScrollNext());
     };
 
-    api.on("select", onSelect);
+    api.on("select", updateButtons);
+    updateButtons();
 
-    return () => {
-      api.off("select", onSelect);
-    };
+    return () => api.off("select", updateButtons);
   }, [api]);
+
+  // Check if we need carousel buttons (more than 6 categories on desktop, 3 on mobile)
+  const needsCarousel = categories.length > 6;
 
   if (!categories || categories.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-12">
         <p className="text-gray-500">No categories available at the moment</p>
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      <Carousel setApi={setApi} opts={{ loop: true }}>
-        <CarouselContent className="-ml-2 md:-ml-4">
+    <div className="relative max-w-7xl mx-auto">
+      <Carousel
+        setApi={setApi}
+        opts={{
+          align: "start",
+          loop: false,
+          skipSnaps: false,
+          dragFree: true,
+        }}
+        className="w-full"
+      >
+        <CarouselContent className="-ml-4">
           {categories.map((category, index) => (
             <CarouselItem
               key={category.id || index}
-              className="pl-2 md:pl-4  md:basis-1/3 lg:basis-1/4"
+              className="pl-4 basis-auto"
             >
               <Link href={`/category/${category.slug || ""}`} className="block">
-                <CircularCategoryCard category={category} index={index} />
+                <CategoryCard category={category} index={index} />
               </Link>
             </CarouselItem>
           ))}
         </CarouselContent>
 
-        <CarouselPrevious className="absolute left-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-[#1C4E80] hover:text-white" />
-        <CarouselNext className="absolute right-2 -translate-x-0 bg-white/80 backdrop-blur-sm border-none shadow-md hover:bg-[#1C4E80] hover:text-white" />
-
-        {/* Dot indicators */}
-        <div className="flex justify-center mt-8 gap-1.5">
-          {Array.from({ length: Math.ceil(categories.length / 4) }).map(
-            (_, idx) => (
-              <button
-                key={idx}
-                onClick={() => api?.scrollTo(idx * 4)}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  Math.floor(currentIndex / 4) === idx
-                    ? "bg-[#F47C20] scale-110"
-                    : "bg-gray-300"
-                }`}
-                aria-label={`Go to slide group ${idx + 1}`}
-              />
-            )
-          )}
-        </div>
+        {/* Conditional Carousel buttons */}
+        {needsCarousel && (
+          <>
+            <CarouselPrevious
+              className={`absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg hover:bg-blue-50 hover:border-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ${
+                !canScrollPrev ? "opacity-0 pointer-events-none" : "opacity-100"
+              }`}
+            />
+            <CarouselNext
+              className={`absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg hover:bg-blue-50 hover:border-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ${
+                !canScrollNext ? "opacity-0 pointer-events-none" : "opacity-100"
+              }`}
+            />
+          </>
+        )}
       </Carousel>
     </div>
   );
@@ -208,7 +181,6 @@ const FeaturedCategoriesSection = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch categories from API
     const fetchCategories = async () => {
       try {
         const categoriesRes = await fetchApi("/public/categories");
@@ -225,66 +197,80 @@ const FeaturedCategoriesSection = () => {
   }, []);
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-12 bg-gradient-to-br from-slate-50 to-blue-50/30">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Headtext text="FEATURED CATEGORIES" />
-            <p className="text-gray-600 my-6 max-w-2xl mx-auto">
-              Discover our collection of premium fitness supplements
-            </p>
-          </motion.div>
-        </div>
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <Headtext text="SHOP BY CATEGORY" />
+
+          <p className="text-gray-600 max-w-2xl mx-auto mt-4">
+            Discover our premium collection of fitness supplements and nutrition
+            products
+          </p>
+        </motion.div>
 
         {categoriesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, index) => (
+          <div className="flex justify-center gap-6 overflow-x-auto pb-4">
+            {[...Array(6)].map((_, index) => (
               <SkeletonLoader key={index} />
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-red-500">Failed to load categories</p>
+          <div className="text-center py-12">
+            <p className="text-red-500 mb-2">Failed to load categories</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              Try again
+            </button>
           </div>
         ) : (
-          <FeaturedCategoriesCarousel categories={categories} />
+          <CategoriesCarousel categories={categories} />
         )}
 
-        <motion.div
-          className="text-center mt-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
-        >
-          <Link href="/categories">
-            <button className="group relative inline-flex items-center  -mt-20 lg:mt-0 justify-center px-8 py-3 font-medium overflow-hidden">
-              <span className="relative z-10 px-3 lg:px-5 py-2 lg:py-3 bg-[#1C4E80] text-nowrap text-white hover:bg-white hover:text-[#1C4E80] border border-[#1C4E80] rounded-full flex items-center">
-                VIEW ALL CATEGORIES
-                <svg
-                  className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </span>
-              <span className="absolute -bottom-1 left-1/2 w-0 h-0.5 bg-[#F47C20] group-hover:w-1/2 group-hover:left-1/4 transition-all duration-300"></span>
-            </button>
-          </Link>
-        </motion.div>
+        {/* View All Button */}
+        {!categoriesLoading && !error && categories.length > 0 && (
+          <motion.div
+            className="text-center mt-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <Link href="/categories">
+              <motion.button
+                className="group relative inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-[#1C5282] to-[#1C5282] text-white font-semibold rounded-md shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <span className="relative z-10 flex items-center">
+                  View All Categories
+                  <svg
+                    className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-800 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+              </motion.button>
+            </Link>
+          </motion.div>
+        )}
       </div>
     </section>
   );

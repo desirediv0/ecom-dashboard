@@ -27,7 +27,13 @@ const CartItem = React.memo(
         <div className="md:col-span-6 flex items-center">
           <div className="relative h-20 w-20 bg-gray-100 rounded overflow-hidden mr-4 flex-shrink-0">
             <Image
-              src={item.product.image}
+              src={
+                item.product.image
+                  ? item.product.image.startsWith("http")
+                    ? item.product.image
+                    : `https://desirediv-storage.blr1.digitaloceanspaces.com/${item.product.image}`
+                  : "/placeholder.jpg"
+              }
               alt={item.product.name}
               fill
               className="object-contain p-2"

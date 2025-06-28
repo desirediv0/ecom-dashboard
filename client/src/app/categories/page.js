@@ -11,7 +11,7 @@ import { AlertCircle } from "lucide-react";
 const CategoryCard = ({ category }) => {
   // Function to get image URL
   const getImageUrl = (image) => {
-    if (!image) return "/images/product-placeholder.jpg";
+    if (!image) return "/placeholder.jpg";
     if (image.startsWith("http")) return image;
     return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
   };
@@ -26,9 +26,7 @@ const CategoryCard = ({ category }) => {
         <div className="relative h-48 w-full bg-gray-100">
           <Image
             src={
-              category.Image
-                ? getImageUrl(category.image)
-                : "/banner-background.jpg"
+              category.Image ? getImageUrl(category.image) : "/placeholder.jpg"
             }
             alt={category.name}
             fill

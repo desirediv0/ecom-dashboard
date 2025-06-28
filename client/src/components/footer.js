@@ -14,30 +14,11 @@ import {
   CreditCard,
   CheckCircle,
 } from "lucide-react";
-import { useState } from "react";
 import Image from "next/image";
 
 export function Footer() {
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email) {
-      console.log("Subscribing email:", email);
-      setSubscribed(true);
-      setEmail("");
-
-      // Reset after 5 seconds
-      setTimeout(() => {
-        setSubscribed(false);
-      }, 5000);
-    }
-  };
-
   return (
     <footer>
-      {/* Feature cards with white/gray background */}
       <div className="bg-[#EEEEEE] py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -179,7 +160,7 @@ export function Footer() {
                     size={18}
                     className="text-[#F47C20] mr-2 mt-0.5 flex-shrink-0"
                   />
-                  <span>123 Fitness Street, Mumbai, Maharashtra, 400001</span>
+                  <span>Gurgaon, Haryana, India</span>
                 </div>
 
                 <div className="flex items-center">

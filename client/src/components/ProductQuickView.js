@@ -316,10 +316,11 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
       const primaryImage = selectedVariant.images.find((img) => img.isPrimary);
       const imageUrl = primaryImage
         ? primaryImage.url
-        : selectedVariant.images[0].url;
+        : selectedVariant.images[0]?.url;
 
-      if (imageUrl.startsWith("http")) return imageUrl;
-      return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+      if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
+      if (imageUrl)
+        return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
     }
 
     // Priority 2: Product images
@@ -327,10 +328,11 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
       const primaryImage = displayProduct.images.find((img) => img.isPrimary);
       const imageUrl = primaryImage
         ? primaryImage.url
-        : displayProduct.images[0].url;
+        : displayProduct.images[0]?.url;
 
-      if (imageUrl.startsWith("http")) return imageUrl;
-      return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+      if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
+      if (imageUrl)
+        return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
     }
 
     // Priority 3: Any variant images from any variant
@@ -344,15 +346,24 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
         );
         const imageUrl = primaryImage
           ? primaryImage.url
-          : variantWithImages.images[0].url;
+          : variantWithImages.images[0]?.url;
 
-        if (imageUrl.startsWith("http")) return imageUrl;
-        return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+        if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
+        if (imageUrl)
+          return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
       }
     }
 
+    // Priority 4: Check product.image property (from API response)
+    if (displayProduct?.image) {
+      const imageUrl = displayProduct.image;
+      if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
+      if (imageUrl)
+        return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+    }
+
     // Final fallback
-    return imgSrc || "/product-placeholder.jpg";
+    return imgSrc || "/placeholder.jpg";
   };
 
   // Format price display
