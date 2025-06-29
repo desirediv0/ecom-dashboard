@@ -13,6 +13,7 @@ import {
   uploadVariantImage,
   deleteVariantImage,
   setVariantImageAsPrimary,
+  reorderVariantImages,
   bulkVariantOperations,
   getFlavors,
   createFlavor,
@@ -136,6 +137,13 @@ router.patch(
   verifyAdminJWT,
   hasPermission("products", "update"),
   setVariantImageAsPrimary
+);
+
+router.patch(
+  "/variants/:variantId/images/reorder",
+  verifyAdminJWT,
+  hasPermission("products", "update"),
+  reorderVariantImages
 );
 
 // Flavor routes

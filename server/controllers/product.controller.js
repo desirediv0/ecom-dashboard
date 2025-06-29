@@ -145,7 +145,9 @@ export const getAllProducts = asyncHandler(async (req, res) => {
         include: {
           flavor: true,
           weight: true,
-          images: true,
+          images: {
+            orderBy: { order: "asc" }, // Sort images by order (0, 1, 2, 3...)
+          },
         },
         orderBy: { price: "asc" },
       },
@@ -277,7 +279,9 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
         include: {
           flavor: true,
           weight: true,
-          images: true,
+          images: {
+            orderBy: { order: "asc" }, // Sort images by order (0, 1, 2, 3...)
+          },
         },
         orderBy: [{ flavor: { name: "asc" } }, { weight: { value: "asc" } }],
       },

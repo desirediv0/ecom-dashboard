@@ -673,6 +673,7 @@ export function ProductForm({
             salePrice: variant.salePrice ? String(variant.salePrice) : "",
             quantity: String(variant.quantity || 0),
             isActive: variant.isActive !== undefined ? variant.isActive : true,
+            removedImageIds: variant.removedImageIds || [], // Include removed image IDs for cleanup
           };
         });
 
@@ -780,7 +781,17 @@ export function ProductForm({
                 // Upload each new image for this variant
                 for (let j = 0; j < newImages.length; j++) {
                   const imageData = newImages[j];
-                  const isPrimary = imageData.isPrimary || j === 0; // First image is primary if none marked
+
+                  // FIXED: Send undefined for non-explicitly-marked images to let backend decide
+                  // Only send true/false when explicitly set, otherwise let backend handle it
+                  const isPrimary =
+                    imageData.isPrimary === true ? true : undefined;
+
+                  console.log(`📸 Upload decision for image ${j + 1}:`, {
+                    imageDataIsPrimary: imageData.isPrimary,
+                    finalIsPrimary: isPrimary,
+                    note: "undefined = let backend decide, true = force primary",
+                  });
 
                   const uploadPromise = products
                     .uploadVariantImage(

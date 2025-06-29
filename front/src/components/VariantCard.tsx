@@ -21,6 +21,7 @@ interface ImageData {
   url: string;
   id?: string;
   isPrimary?: boolean;
+  order?: number;
   file?: File;
   tempId?: string;
   isNew?: boolean;
@@ -40,6 +41,7 @@ interface VariantData {
   weight?: any;
   quantity?: number;
   isActive?: boolean;
+  removedImageIds?: string[]; // Track removed image IDs
 }
 
 interface VariantCardProps {
@@ -61,6 +63,10 @@ export default function VariantCard({
 }: VariantCardProps) {
   const [isExpanded, setIsExpanded] = useState(true); // Default expanded so user can see images
   const [isUploading, setIsUploading] = useState(false);
+  const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(
+    null
+  );
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
     onUpdate(index, field, value);
@@ -123,7 +129,17 @@ export default function VariantCard({
         if (isEditMode && isRealVariantId) {
           for (let i = 0; i < validFiles.length; i++) {
             const file = validFiles[i];
+            // Only set as primary if there are NO existing images AND it's the first file
             const isPrimary = currentImages.length === 0 && i === 0;
+            const order = currentImages.length + i; // Append to end
+
+            console.log(`📸 Uploading image ${i + 1}/${validFiles.length}:`, {
+              fileName: file.name,
+              isPrimary,
+              existingImagesCount: currentImages.length,
+              targetOrder: order,
+              variantId: variant.id,
+            });
 
             try {
               const response = await products.uploadVariantImage(
@@ -132,13 +148,22 @@ export default function VariantCard({
                 isPrimary
               );
 
+              console.log(`📸 Upload response for ${file.name}:`, {
+                success: response.data.success,
+                uploadedImage: response.data.data?.image,
+                sentIsPrimary: isPrimary,
+                receivedIsPrimary: response.data.data?.image?.isPrimary,
+              });
+
               if (response.data.success) {
                 const uploadedImage = response.data.data?.image;
                 if (uploadedImage) {
+                  // FIXED: Don't override with frontend isPrimary, trust backend response
                   newImages.push({
                     url: uploadedImage.url,
                     id: uploadedImage.id,
-                    isPrimary: uploadedImage.isPrimary || isPrimary,
+                    isPrimary: uploadedImage.isPrimary, // Use only server response
+                    order: uploadedImage.order || order,
                     isNew: false,
                   });
                 }
@@ -158,42 +183,60 @@ export default function VariantCard({
           validFiles.forEach((file, i) => {
             const tempId = `temp-${Date.now()}-${index}-${i}-${Math.random()}`;
             const isPrimary = currentImages.length === 0 && i === 0;
+            const order = currentImages.length + i; // Append to end
             const blobUrl = URL.createObjectURL(file);
-
-            console.log(`📸 Creating local image for variant ${index}:`, {
-              fileName: file.name,
-              fileSize: file.size,
-              blobUrl,
-              isPrimary,
-              tempId,
-              variantMode: mode,
-            });
 
             newImages.push({
               url: blobUrl,
               file,
               tempId,
               isPrimary,
+              order,
               isNew: true,
             });
           });
         }
 
-        // Update images array
-        const updatedImages = [...currentImages, ...newImages];
+        // Update images array and fix ordering
+        const allImages = [...currentImages, ...newImages];
+
+        // Ensure proper order and primary image logic
+        const orderedImages = allImages.map((img, i) => ({
+          ...img,
+          order: i,
+          isPrimary:
+            img.isPrimary || (i === 0 && allImages.length === newImages.length), // First image is primary if this is the first upload
+        }));
+
+        // Ensure only one primary image
+        let hasPrimary = false;
+        const finalImages = orderedImages.map((img) => {
+          if (img.isPrimary && !hasPrimary) {
+            hasPrimary = true;
+            return { ...img, isPrimary: true };
+          } else {
+            return { ...img, isPrimary: false };
+          }
+        });
+
+        // If no primary image was found, set the first one as primary
+        if (!hasPrimary && finalImages.length > 0) {
+          finalImages[0].isPrimary = true;
+        }
 
         console.log(`📸 Updated images for variant ${index}:`, {
-          totalImages: updatedImages.length,
+          totalImages: finalImages.length,
           newImagesCount: newImages.length,
-          images: updatedImages.map((img) => ({
+          images: finalImages.map((img) => ({
             url: img.url,
             isPrimary: img.isPrimary,
+            order: img.order,
             isNew: img.isNew,
             id: img.id || img.tempId,
           })),
         });
 
-        onImagesChange(index, updatedImages);
+        onImagesChange(index, finalImages);
 
         if (isEditMode && !isRealVariantId) {
           toast.success(
@@ -250,8 +293,10 @@ export default function VariantCard({
       const isRealVariantId =
         variant.id &&
         typeof variant.id === "string" &&
-        !variant.id.includes("-") &&
-        variant.id.length > 10;
+        variant.id.length >= 30 && // Real UUIDs are longer
+        !variant.id.startsWith("new-") &&
+        !variant.id.startsWith("temp-") &&
+        !variant.id.startsWith("field");
 
       // If it's an existing image with ID and real variant, update on server
       if (imageToSetPrimary.id && isEditMode && isRealVariantId) {
@@ -260,24 +305,67 @@ export default function VariantCard({
         );
 
         if (response.data.success) {
-          // Update local state
-          const updatedImages = currentImages.map((img, i) => ({
+          // Update local state with proper ordering
+          const selectedImage = currentImages[imageIndex];
+
+          // Move the selected image to the front and update orders
+          const updatedImages = [
+            selectedImage,
+            ...currentImages.filter((_, i) => i !== imageIndex),
+          ];
+
+          // Update isPrimary flags and order values
+          const reorderedImages = updatedImages.map((img, i) => ({
             ...img,
-            isPrimary: i === imageIndex,
+            isPrimary: i === 0, // Only first image is primary
+            order: i, // Sequential ordering 0, 1, 2, 3...
           }));
-          onImagesChange(index, updatedImages);
+
+          onImagesChange(index, reorderedImages);
           toast.success("Primary image updated successfully");
+
+          console.log(`✅ Primary image set for variant ${variant.sku}:`, {
+            newPrimaryId: selectedImage.id,
+            newOrder: reorderedImages.map((img) => ({
+              id: img.id,
+              order: img.order,
+              isPrimary: img.isPrimary,
+            })),
+          });
         } else {
           toast.error("Failed to set primary image");
         }
       } else {
-        // Local update for new images
-        const updatedImages = currentImages.map((img, i) => ({
+        // Local update for new images - same logic as server update
+        const selectedImage = currentImages[imageIndex];
+
+        // Move the selected image to the front and update orders
+        const updatedImages = [
+          selectedImage,
+          ...currentImages.filter((_, i) => i !== imageIndex),
+        ];
+
+        // Update isPrimary flags and order values
+        const reorderedImages = updatedImages.map((img, i) => ({
           ...img,
-          isPrimary: i === imageIndex,
+          isPrimary: i === 0, // Only first image is primary
+          order: i, // Sequential ordering 0, 1, 2, 3...
         }));
-        onImagesChange(index, updatedImages);
+
+        onImagesChange(index, reorderedImages);
         toast.success("Primary image set");
+
+        console.log(
+          `✅ Primary image set locally for variant ${variant.sku}:`,
+          {
+            newPrimaryTempId: selectedImage.tempId || selectedImage.id,
+            newOrder: reorderedImages.map((img) => ({
+              id: img.id || img.tempId,
+              order: img.order,
+              isPrimary: img.isPrimary,
+            })),
+          }
+        );
       }
     } catch (error) {
       console.error("Error setting primary image:", error);
@@ -304,10 +392,12 @@ export default function VariantCard({
       const isRealVariantId =
         variant.id &&
         typeof variant.id === "string" &&
-        !variant.id.includes("-") &&
-        variant.id.length > 10;
+        variant.id.length >= 30 && // Real UUIDs are longer
+        !variant.id.startsWith("new-") &&
+        !variant.id.startsWith("temp-") &&
+        !variant.id.startsWith("field");
 
-      // If it's an existing image with ID and real variant, delete from server
+      // If it's an existing image with ID and real variant, delete from server immediately
       if (imageToRemove.id && isEditMode && isRealVariantId) {
         const response = await products.deleteVariantImage(imageToRemove.id);
 
@@ -317,44 +407,181 @@ export default function VariantCard({
             (_, i) => i !== imageIndex
           );
 
+          // Reorder remaining images
+          const reorderedImages = updatedImages.map((img, i) => ({
+            ...img,
+            order: i,
+          }));
+
           // If we removed the primary image, set the first remaining as primary
-          if (imageToRemove.isPrimary && updatedImages.length > 0) {
-            updatedImages[0].isPrimary = true;
+          if (imageToRemove.isPrimary && reorderedImages.length > 0) {
+            reorderedImages[0].isPrimary = true;
 
             // Update primary on server if there's an ID
-            if (updatedImages[0].id) {
+            if (reorderedImages[0].id) {
               try {
-                await products.setVariantImageAsPrimary(updatedImages[0].id);
+                await products.setVariantImageAsPrimary(reorderedImages[0].id);
               } catch (error) {
                 console.error("Error setting new primary image:", error);
               }
             }
           }
 
-          onImagesChange(index, updatedImages);
+          onImagesChange(index, reorderedImages);
           toast.success("Image deleted successfully");
         } else {
           toast.error("Failed to delete image");
         }
       } else {
-        // Local removal for new images
+        // For local images (new ones) or when we want to defer deletion until save
+        // Clean up blob URL if it's a local file
         if (imageToRemove.url && imageToRemove.url.startsWith("blob:")) {
           URL.revokeObjectURL(imageToRemove.url);
         }
 
-        const updatedImages = currentImages.filter((_, i) => i !== imageIndex);
+        // Track removal of database images for batch processing during update
+        if (imageToRemove.id && !imageToRemove.isNew) {
+          // Get current removedImageIds array or initialize empty
+          const currentRemovedIds = variant.removedImageIds || [];
+          const updatedRemovedIds = [...currentRemovedIds, imageToRemove.id];
 
-        // If we removed the primary image, set the first remaining as primary
-        if (imageToRemove.isPrimary && updatedImages.length > 0) {
-          updatedImages[0].isPrimary = true;
+          // Update variant data with removedImageIds
+          onUpdate(index, "removedImageIds", updatedRemovedIds);
+          console.log(
+            `📝 Marked image ${imageToRemove.id} for removal on next save`
+          );
         }
 
-        onImagesChange(index, updatedImages);
-        toast.success("Image removed");
+        const updatedImages = currentImages.filter((_, i) => i !== imageIndex);
+
+        // Reorder remaining images
+        const reorderedImages = updatedImages.map((img, i) => ({
+          ...img,
+          order: i,
+        }));
+
+        // If we removed the primary image, set the first remaining as primary
+        if (imageToRemove.isPrimary && reorderedImages.length > 0) {
+          reorderedImages[0].isPrimary = true;
+        }
+
+        onImagesChange(index, reorderedImages);
+
+        if (imageToRemove.id && !imageToRemove.isNew) {
+          toast.success(
+            "Image marked for removal. Will be deleted when you save the product."
+          );
+        } else {
+          toast.success("Image removed");
+        }
       }
     } catch (error) {
       console.error("Error removing image:", error);
       toast.error("Failed to remove image");
+    }
+  };
+
+  // Handle drag and drop for reordering images
+  const handleDragStart = (e: React.DragEvent, imageIndex: number) => {
+    setDraggedImageIndex(imageIndex);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, imageIndex: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(imageIndex);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+
+    if (draggedImageIndex === null || draggedImageIndex === dropIndex) {
+      setDraggedImageIndex(null);
+      return;
+    }
+
+    const newImages = [...currentImages];
+    const draggedImage = newImages[draggedImageIndex];
+
+    // Remove the dragged image
+    newImages.splice(draggedImageIndex, 1);
+
+    // Insert at new position
+    newImages.splice(dropIndex, 0, draggedImage);
+
+    // Update order values
+    const reorderedImages = newImages.map((img, i) => ({
+      ...img,
+      order: i,
+    }));
+
+    // Handle primary image logic
+    if (dropIndex === 0) {
+      // If we dropped an image at position 0, make it primary
+      reorderedImages[0].isPrimary = true;
+      reorderedImages.forEach((img, i) => {
+        if (i !== 0) img.isPrimary = false;
+      });
+    } else if (draggedImage.isPrimary && dropIndex !== 0) {
+      // If primary image was moved away from position 0, make the image at position 0 primary
+      reorderedImages[0].isPrimary = true;
+      reorderedImages.forEach((img, i) => {
+        if (i !== 0) img.isPrimary = false;
+      });
+    }
+
+    onImagesChange(index, reorderedImages);
+    setDraggedImageIndex(null);
+
+    // If it's a real variant, update the server
+    const isRealVariantId =
+      variant.id &&
+      typeof variant.id === "string" &&
+      variant.id.length >= 30 && // Real UUIDs are longer
+      !variant.id.startsWith("new-") &&
+      !variant.id.startsWith("temp-") &&
+      !variant.id.startsWith("field");
+
+    if (isEditMode && isRealVariantId) {
+      try {
+        const imageOrders = reorderedImages
+          .filter((img) => img.id) // Only include images with IDs (existing images)
+          .map((img, i) => ({
+            imageId: img.id!,
+            order: i,
+          }));
+
+        console.log(`🔄 Reordering images for variant ${variant.id}:`, {
+          imageOrders,
+          draggedFrom: draggedImageIndex,
+          droppedAt: dropIndex,
+        });
+
+        if (imageOrders.length > 0) {
+          const response = await products.reorderVariantImages(
+            variant.id!,
+            imageOrders
+          );
+          console.log(`✅ Reorder response:`, response.data);
+          toast.success("Images reordered successfully");
+        } else {
+          console.log(`⚠️ No images with IDs to reorder`);
+        }
+      } catch (error) {
+        console.error("Error reordering images:", error);
+        toast.error("Failed to reorder images");
+      }
+    } else {
+      console.log(
+        `📝 Local reorder only (variant ID: ${variant.id}, isEditMode: ${isEditMode})`
+      );
+      toast.success("Images reordered");
     }
   };
 
@@ -369,9 +596,9 @@ export default function VariantCard({
   };
 
   return (
-    <Card className="p-4 space-y-4 border-l-4 border-l-blue-500 bg-white">
+    <Card className="p-4 border-l-4 border-l-blue-500 bg-white flex flex-col gap-4">
       {/* Variant Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-shrink-0">
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
@@ -413,7 +640,7 @@ export default function VariantCard({
 
       {/* Collapsed Preview */}
       {!isExpanded && hasImages && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 flex-shrink-0">
           {currentImages.slice(0, 4).map((image, imageIndex) => (
             <div
               key={image.id || image.tempId || imageIndex}
@@ -471,7 +698,7 @@ export default function VariantCard({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1">
           {/* Variant Details */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -587,16 +814,30 @@ export default function VariantCard({
 
             {/* Images Grid */}
             {hasImages && (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
                 {currentImages.map((image, imageIndex) => (
                   <div
                     key={
                       image.id || image.tempId || `img-${index}-${imageIndex}`
                     }
-                    className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, imageIndex)}
+                    onDragOver={(e) => handleDragOver(e, imageIndex)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, imageIndex)}
+                    className={`relative rounded-lg overflow-hidden border-2 transition-all cursor-move ${
                       image.isPrimary
                         ? "border-green-500 ring-2 ring-green-200 shadow-lg"
                         : "border-gray-200"
+                    } ${
+                      draggedImageIndex === imageIndex
+                        ? "opacity-50 scale-95"
+                        : ""
+                    } ${
+                      dragOverIndex === imageIndex &&
+                      draggedImageIndex !== imageIndex
+                        ? "border-blue-400 bg-blue-50"
+                        : ""
                     }`}
                   >
                     {/* Image Container */}
