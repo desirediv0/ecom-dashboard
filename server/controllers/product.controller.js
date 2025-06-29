@@ -446,6 +446,23 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
     regularPrice:
       p.variants.length > 0 ? parseFloat(p.variants[0].price) : null,
     reviewCount: p._count.reviews,
+    variants: p.variants.map((variant) => ({
+      ...variant,
+      flavor: variant.flavor
+        ? {
+            ...variant.flavor,
+            image: variant.flavor.image
+              ? getFileUrl(variant.flavor.image)
+              : null,
+          }
+        : null,
+      images: variant.images
+        ? variant.images.map((image) => ({
+            ...image,
+            url: getFileUrl(image.url),
+          }))
+        : [],
+    })),
   }));
 
   res.status(200).json(

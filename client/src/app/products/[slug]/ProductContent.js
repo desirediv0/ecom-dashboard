@@ -1053,72 +1053,103 @@ export default function ProductContent({ slug }) {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/products/${product.slug}`}
-                className="bg-white rounded-md overflow-hidden transition-all hover:shadow-lg border border-gray-200 group"
-              >
-                <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
-                  <Image
-                    src={product.image || "/product-placeholder.jpg"}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-4 transition-transform group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  />
-                  {product.hasSale && (
-                    <span className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded">
-                      SALE
-                    </span>
-                  )}
+            {relatedProducts.map((product) => {
+              // Get image from lowest weight variant, or fallback
+              const getRelatedProductImage = (product) => {
+                if (product.variants && product.variants.length > 0) {
+                  let selectedVariant = product.variants.reduce((min, v) => {
+                    if (!v.weight || typeof v.weight.value !== "number")
+                      return min;
+                    if (
+                      !min ||
+                      (min.weight && v.weight.value < min.weight.value)
+                    )
+                      return v;
+                    return min;
+                  }, null);
+                  if (!selectedVariant) selectedVariant = product.variants[0];
+                  if (
+                    selectedVariant.images &&
+                    selectedVariant.images.length > 0
+                  ) {
+                    const primaryImg = selectedVariant.images.find(
+                      (img) => img.isPrimary
+                    );
+                    if (primaryImg && primaryImg.url) return primaryImg.url;
+                    if (selectedVariant.images[0].url)
+                      return selectedVariant.images[0].url;
+                  }
+                }
+                if (product.image) return product.image;
+                return "/product-placeholder.jpg";
+              };
+              return (
+                <Link
+                  key={product.id}
+                  href={`/products/${product.slug}`}
+                  className="bg-white rounded-md overflow-hidden transition-all hover:shadow-lg border border-gray-200 group"
+                >
+                  <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
+                    <Image
+                      src={getRelatedProductImage(product)}
+                      alt={product.name}
+                      fill
+                      className="object-contain p-4 transition-transform group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    />
+                    {product.hasSale && (
+                      <span className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded">
+                        SALE
+                      </span>
+                    )}
 
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all"></div>
-                </div>
-
-                <div className="p-4">
-                  <div className="flex items-center mb-2">
-                    <div className="flex text-yellow-400">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-4 w-4"
-                          fill={
-                            i < Math.round(product.avgRating || 0)
-                              ? "currentColor"
-                              : "none"
-                          }
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs text-gray-500 ml-2">
-                      ({product.reviewCount || 0})
-                    </span>
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all"></div>
                   </div>
 
-                  <h3 className="font-bold mb-2 line-clamp-2 hover:text-primary transition-colors">
-                    {product.name}
-                  </h3>
+                  <div className="p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="flex text-yellow-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className="h-4 w-4"
+                            fill={
+                              i < Math.round(product.avgRating || 0)
+                                ? "currentColor"
+                                : "none"
+                            }
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-500 ml-2">
+                        ({product.reviewCount || 0})
+                      </span>
+                    </div>
 
-                  <div>
-                    {product.hasSale ? (
-                      <div className="flex items-center">
+                    <h3 className="font-bold mb-2 line-clamp-2 hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+
+                    <div>
+                      {product.hasSale ? (
+                        <div className="flex items-center">
+                          <span className="font-bold text-primary text-lg">
+                            {formatCurrency(product.basePrice)}
+                          </span>
+                          <span className="text-gray-500 line-through text-sm ml-2">
+                            {formatCurrency(product.regularPrice)}
+                          </span>
+                        </div>
+                      ) : (
                         <span className="font-bold text-primary text-lg">
                           {formatCurrency(product.basePrice)}
                         </span>
-                        <span className="text-gray-500 line-through text-sm ml-2">
-                          {formatCurrency(product.regularPrice)}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="font-bold text-primary text-lg">
-                        {formatCurrency(product.basePrice)}
-                      </span>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

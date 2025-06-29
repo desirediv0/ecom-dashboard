@@ -1011,13 +1011,53 @@ function ProductsContent() {
                       <Link href={`/products/${product.slug}`}>
                         <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
                           <Image
-                            src={
-                              product.image
-                                ? product.image.startsWith("http")
+                            src={(() => {
+                              // Find the variant with the lowest weight
+                              let selectedVariant = null;
+                              if (
+                                product.variants &&
+                                product.variants.length > 0
+                              ) {
+                                selectedVariant = product.variants.reduce(
+                                  (min, v) => {
+                                    if (
+                                      !v.weight ||
+                                      typeof v.weight.value !== "number"
+                                    )
+                                      return min;
+                                    if (
+                                      !min ||
+                                      (min.weight &&
+                                        v.weight.value < min.weight.value)
+                                    )
+                                      return v;
+                                    return min;
+                                  },
+                                  null
+                                );
+                                // fallback: if no variant has weight, use first variant
+                                if (!selectedVariant)
+                                  selectedVariant = product.variants[0];
+                              }
+                              if (
+                                selectedVariant &&
+                                selectedVariant.images &&
+                                selectedVariant.images.length > 0
+                              ) {
+                                const primaryImg = selectedVariant.images.find(
+                                  (img) => img.isPrimary
+                                );
+                                if (primaryImg && primaryImg.url)
+                                  return primaryImg.url;
+                                if (selectedVariant.images[0].url)
+                                  return selectedVariant.images[0].url;
+                              }
+                              if (product.image)
+                                return product.image.startsWith("http")
                                   ? product.image
-                                  : `https://desirediv-storage.blr1.digitaloceanspaces.com/${product.image}`
-                                : "/placeholder.jpg"
-                            }
+                                  : `https://desirediv-storage.blr1.digitaloceanspaces.com/${product.image}`;
+                              return "/placeholder.jpg";
+                            })()}
                             alt={product.name}
                             fill
                             className="object-contain p-4 transition-transform group-hover:scale-105"
@@ -1079,6 +1119,48 @@ function ProductsContent() {
                           <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
                             {product.name}
                           </h3>
+                          {/* Show lowest weight variant's flavor and weight */}
+                          {(() => {
+                            let selectedVariant = null;
+                            if (
+                              product.variants &&
+                              product.variants.length > 0
+                            ) {
+                              selectedVariant = product.variants.reduce(
+                                (min, v) => {
+                                  if (
+                                    !v.weight ||
+                                    typeof v.weight.value !== "number"
+                                  )
+                                    return min;
+                                  if (
+                                    !min ||
+                                    (min.weight &&
+                                      v.weight.value < min.weight.value)
+                                  )
+                                    return v;
+                                  return min;
+                                },
+                                null
+                              );
+                              if (!selectedVariant)
+                                selectedVariant = product.variants[0];
+                            }
+                            if (!selectedVariant) return null;
+                            const flavor = selectedVariant.flavor?.name;
+                            const weight = selectedVariant.weight?.value;
+                            const unit = selectedVariant.weight?.unit;
+                            if (flavor || (weight && unit)) {
+                              return (
+                                <div className="text-xs text-gray-500 mb-1">
+                                  {flavor}
+                                  {flavor && weight && unit ? " • " : ""}
+                                  {weight && unit ? `${weight} ${unit}` : ""}
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                         </Link>
 
                         <div className="flex items-center justify-center mb-2">

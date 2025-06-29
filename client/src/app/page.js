@@ -808,11 +808,11 @@ export default function Home() {
 
   return (
     <div>
+      <FeaturedCategoriesSection />
       <HeroCarousel />
       <AnnouncementBanner />
 
       {/* Featured Categories Section */}
-      <FeaturedCategoriesSection />
 
       {/* Featured Products Section */}
       {featuredProducts.length && (
