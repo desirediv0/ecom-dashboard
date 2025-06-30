@@ -586,14 +586,16 @@ export default function ProductContent({ slug }) {
         <Link href="/products" className="text-gray-500 hover:text-primary">
           Products
         </Link>
-        {product?.categories?.[0] && (
+        {(product?.category || product?.categories?.[0]?.category) && (
           <>
             <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
             <Link
-              href={`/category/${product.categories[0].slug}`}
+              href={`/category/${
+                product.category?.slug || product.categories[0]?.category?.slug
+              }`}
               className="text-gray-500 hover:text-primary"
             >
-              {product.categories[0].name}
+              {product.category?.name || product.categories[0]?.category?.name}
             </Link>
           </>
         )}

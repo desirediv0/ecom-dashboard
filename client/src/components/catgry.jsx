@@ -77,7 +77,7 @@ const CategoriesCarousel = () => {
         className="flex flex-col items-center group cursor-pointer"
       >
         <motion.div
-          className="relative bg-white rounded-xl p-2 mb-1 w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] flex items-center justify-center shadow group-hover:shadow-md border border-gray-100 overflow-hidden transition-all duration-200"
+          className="relative bg-white rounded-xl p-1 mb-1 w-[64px] h-[64px] sm:w-[90px] sm:h-[90px] flex items-center justify-center shadow group-hover:shadow-md border border-gray-100 overflow-hidden transition-all duration-200"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
         >
@@ -97,9 +97,9 @@ const CategoriesCarousel = () => {
               <Image
                 src={category.image || "/placeholder.jpg"}
                 alt={category.name || "Category"}
-                width={40}
-                height={40}
-                className="object-contain w-9 h-9 sm:w-11 sm:h-11"
+                width={100}
+                height={100}
+                className="object-contain w-9 h-9 sm:w-20 sm:h-20"
                 loading="lazy"
               />
             </div>
@@ -191,7 +191,7 @@ const CategoriesCarousel = () => {
   const needsCarousel = categories.length > 6;
 
   return (
-    <section className="py-8 sm:py-12 bg-gradient-to-br from-slate-50 to-blue-50/30">
+    <section className="py-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
       <div className="container mx-auto px-4">
         <div className="relative max-w-7xl mx-auto">
           <Carousel
@@ -204,7 +204,7 @@ const CategoriesCarousel = () => {
             }}
             className="w-full"
           >
-            <CarouselContent className="-ml-1 sm:-ml-2 flex gap-2 sm:gap-3 md:gap-4">
+            <CarouselContent className="-ml-1 sm:-ml-2 flex gap-6">
               {categories.map((category, index) => (
                 <CarouselItem
                   key={category.id}

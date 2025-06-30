@@ -835,6 +835,24 @@ export default function Home() {
       )}
 
       <GymSupplementShowcase />
+      {featuredProducts.length && (
+        <section className="py-10 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <Headtext text="LATEST PRODUCTS" />
+              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+                High-quality supplements to enhance your fitness journey
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={featuredProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
       <BenefitsSec />
       <TestimonialsSection />
       <NewsletterSection />
