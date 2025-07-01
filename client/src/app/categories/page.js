@@ -222,7 +222,7 @@ export default function CategoriesPage() {
               No Categories Found
             </h2>
             <p className="text-gray-600 mb-6">
-              We're adding new categories soon. Check back later!
+              We&apos;re adding new categories soon. Check back later!
             </p>
             <Link href="/products">
               <button className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">
