@@ -60,14 +60,6 @@ export default function CategoryPage() {
             sort = "createdAt";
             order = "asc";
             break;
-          case "price-low":
-            sort = "price";
-            order = "asc";
-            break;
-          case "price-high":
-            sort = "price";
-            order = "desc";
-            break;
           case "name-asc":
             sort = "name";
             order = "asc";
@@ -210,8 +202,6 @@ export default function CategoryPage() {
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
             <option value="name-asc">Name: A-Z</option>
             <option value="name-desc">Name: Z-A</option>
           </select>
