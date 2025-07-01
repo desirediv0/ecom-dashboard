@@ -5,10 +5,33 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchApi } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ShoppingBag, ArrowRight, Package } from "lucide-react";
 
-// Category card component
-const CategoryCard = ({ category }) => {
+// Simple Hero Section Component
+const CategoriesHero = () => {
+  return (
+    <section className="relative py-20 bg-gradient-to-r from-primary to-purple-600 overflow-hidden">
+      <div className="absolute inset-0 bg-black/10" />
+
+      {/* Simple background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-white rounded-full blur-3xl" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 text-center text-white px-4 container mx-auto">
+        <h1 className="text-4xl md:text-6xl font-bold mb-4">Our Categories</h1>
+        <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
+          Discover premium fitness supplements for every goal
+        </p>
+      </div>
+    </section>
+  );
+};
+
+// Simplified Category Card Component
+const CategoryCard = ({ category, index }) => {
   // Function to get image URL
   const getImageUrl = (image) => {
     if (!image) return "/placeholder.jpg";
@@ -18,28 +41,54 @@ const CategoryCard = ({ category }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
+      viewport={{ once: true }}
+      className="group"
     >
       <Link href={`/category/${category.slug}`}>
-        <div className="relative h-48 w-full bg-gray-100">
-          <Image
-            src={
-              category.Image ? getImageUrl(category.image) : "/placeholder.jpg"
-            }
-            alt={category.name}
-            fill
-            className="object-cover"
-          />
-        </div>
-        <div className="p-4 flex flex-col flex-grow">
-          <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
-          <p className="text-gray-600 text-sm flex-grow">
-            {category.description || "Explore our products in this category"}
-          </p>
-          <div className="mt-4 text-primary font-medium text-sm">
-            View Products →
+        <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full">
+          {/* Image container */}
+          <div className="relative h-48 w-full overflow-hidden bg-gray-50">
+            <Image
+              src={
+                category.image
+                  ? getImageUrl(category.image)
+                  : "/placeholder.jpg"
+              }
+              alt={category.name}
+              fill
+              className="object-contain transition-transform duration-300 group-hover:scale-105 p-4"
+            />
+
+            {/* Simple product count badge */}
+            <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-sm font-medium">
+              {category._count?.products || 0}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-5">
+            <h3 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-primary transition-colors">
+              {category.name}
+            </h3>
+
+            <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+              {category.description ||
+                "Explore premium supplements in this category"}
+            </p>
+
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">
+                {category._count?.products || 0} products
+              </span>
+
+              <div className="flex items-center text-primary font-medium text-sm group-hover:gap-2 transition-all">
+                <span>View All</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
           </div>
         </div>
       </Link>
@@ -47,16 +96,54 @@ const CategoryCard = ({ category }) => {
   );
 };
 
-// Category skeleton loader for loading state
+// Simple Loading Skeleton
 const CategoryCardSkeleton = () => {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse">
       <div className="h-48 w-full bg-gray-200"></div>
-      <div className="p-4">
+      <div className="p-5">
         <div className="h-5 bg-gray-200 rounded w-3/4 mb-3"></div>
         <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
         <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+        <div className="flex justify-between items-center">
+          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Simple Stats Section
+const StatsSection = ({ categories }) => {
+  const totalProducts = categories.reduce(
+    (sum, cat) => sum + (cat._count?.products || 0),
+    0
+  );
+
+  return (
+    <div className="mt-12 bg-white rounded-xl p-8 shadow-sm">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        <div>
+          <div className="text-2xl font-bold text-primary mb-1">
+            {categories.length}
+          </div>
+          <div className="text-sm text-gray-600">Categories</div>
+        </div>
+        <div>
+          <div className="text-2xl font-bold text-primary mb-1">
+            {totalProducts}
+          </div>
+          <div className="text-sm text-gray-600">Products</div>
+        </div>
+        <div>
+          <div className="text-2xl font-bold text-primary mb-1">100%</div>
+          <div className="text-sm text-gray-600">Quality</div>
+        </div>
+        <div>
+          <div className="text-2xl font-bold text-primary mb-1">24/7</div>
+          <div className="text-sm text-gray-600">Support</div>
+        </div>
       </div>
     </div>
   );
@@ -85,53 +172,84 @@ export default function CategoriesPage() {
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">All Categories</h1>
-        <div className="flex items-center">
-          <Link href="/" className="text-gray-500 hover:text-primary">
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <CategoriesHero />
+
+      {/* Breadcrumb */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center text-sm">
+          <Link
+            href="/"
+            className="text-gray-500 hover:text-primary transition-colors"
+          >
             Home
           </Link>
-          <span className="mx-2">/</span>
-          <span className="text-primary">Categories</span>
+          <span className="mx-2 text-gray-400">/</span>
+          <span className="text-primary font-medium">Categories</span>
         </div>
       </div>
 
+      {/* Error State */}
       {error && (
-        <div className="bg-red-50 p-4 rounded-md mb-6 flex">
-          <AlertCircle className="text-red-500 mr-3" />
-          <div>
-            <h3 className="font-medium text-red-800">Error</h3>
-            <p className="text-red-700">{error}</p>
+        <div className="container mx-auto px-4 mb-8">
+          <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-start">
+            <AlertCircle className="text-red-500 mr-3 mt-1 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-red-800 mb-1">
+                Error Loading Categories
+              </h3>
+              <p className="text-red-700">{error}</p>
+            </div>
           </div>
         </div>
       )}
 
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, index) => (
-            <CategoryCardSkeleton key={index} />
-          ))}
-        </div>
-      ) : categories.length === 0 ? (
-        <div className="text-center py-12">
-          <h2 className="text-xl font-medium mb-4">No categories found</h2>
-          <p className="text-gray-600 mb-6">
-            Please check back later for categories.
-          </p>
-          <Link href="/products">
-            <button className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
-              Browse All Products
-            </button>
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {categories.map((category) => (
-            <CategoryCard key={category.id} category={category} />
-          ))}
-        </div>
-      )}
+      {/* Main Content */}
+      <div className="container mx-auto px-4 pb-16">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, index) => (
+              <CategoryCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <Package className="w-8 h-8 text-gray-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              No Categories Found
+            </h2>
+            <p className="text-gray-600 mb-6">
+              We're adding new categories soon. Check back later!
+            </p>
+            <Link href="/products">
+              <button className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                Browse All Products
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <>
+            {/* Categories Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {categories.map((category, index) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  index={index}
+                />
+              ))}
+            </div>
+
+            {/* Stats Section */}
+            {!loading && categories.length > 0 && (
+              <StatsSection categories={categories} />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
