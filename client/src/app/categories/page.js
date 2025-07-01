@@ -5,12 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchApi } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { AlertCircle, ShoppingBag, ArrowRight, Package } from "lucide-react";
+import { AlertCircle, ArrowRight, Package } from "lucide-react";
 
 // Simple Hero Section Component
 const CategoriesHero = () => {
   return (
-    <section className="relative py-20 bg-gradient-to-r from-primary to-purple-600 overflow-hidden">
+    <section className="relative py-20 bg-gradient-to-r from-primary to-primary/80 overflow-hidden">
       <div className="absolute inset-0 bg-black/10" />
 
       {/* Simple background pattern */}
