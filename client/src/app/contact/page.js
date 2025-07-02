@@ -223,7 +223,7 @@ export default function ContactPage() {
                         <div>
                           <p className="font-medium">Address</p>
                           <p className="text-gray-600">
-                            {contactInfo?.address || "Gurgaon, Haryana, India"}
+                            {contactInfo?.address || "89/2 Sector 39, Gurugram, Haryana"}
                           </p>
                         </div>
                       </div>
@@ -299,11 +299,9 @@ export default function ContactPage() {
           <div className="mt-12">
             <div className="bg-gray-50 rounded-lg overflow-hidden h-[400px] mb-4">
               <iframe
-                src={`https://maps.google.com/maps?q=${
-                  contactInfo?.mapCoordinates?.lat || 19.076
-                },${
-                  contactInfo?.mapCoordinates?.lng || 72.8777
-                }&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                src={`https://maps.google.com/maps?q=${28.4423
+                  },${77.0493
+                  }&t=&z=13&ie=UTF8&iwloc=&output=embed`}
                 title="GenuineNutrition Location"
                 width="100%"
                 height="100%"
@@ -315,7 +313,7 @@ export default function ContactPage() {
             </div>
             <p className="text-center text-gray-600">
               Visit our store at{" "}
-              {contactInfo?.address || "Gurgaon, Haryana, India"}
+              {contactInfo?.address || "89/2 Sector 39, Gurugram, Haryana"}
             </p>
           </div>
         </div>

@@ -160,7 +160,7 @@ export function Footer() {
                     size={18}
                     className="text-[#F47C20] mr-2 mt-0.5 flex-shrink-0"
                   />
-                  <span>Gurgaon, Haryana, India</span>
+                  <span>89/2 Sector 39, Gurugram, Haryana</span>
                 </div>
 
                 <div className="flex items-center">
