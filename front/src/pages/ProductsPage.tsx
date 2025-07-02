@@ -84,6 +84,7 @@ export function ProductForm({
     quantity: 0,
     isSupplement: false,
     featured: false,
+    productType: [] as string[],
     isActive: true,
     ingredients: "",
     nutritionInfo: {
@@ -330,6 +331,7 @@ export function ProductForm({
                   : 0,
               isSupplement: productData.isSupplement || false,
               featured: productData.featured || false,
+              productType: productData.productType || [],
               isActive:
                 productData.isActive !== undefined
                   ? productData.isActive
@@ -626,6 +628,7 @@ export function ProductForm({
       formData.append("name", product.name);
       formData.append("description", product.description || "");
       formData.append("featured", String(product.featured));
+      formData.append("productType", JSON.stringify(product.productType));
       formData.append("isActive", String(product.isActive));
       formData.append("hasVariants", String(hasVariants));
       formData.append("isSupplement", String(product.isSupplement));
@@ -1130,6 +1133,92 @@ export function ProductForm({
                   checked={hasVariants}
                   onCheckedChange={handleVariantsToggle}
                 />
+              </div>
+
+              {/* Product Settings */}
+              <div className="space-y-4 rounded-lg border p-4 bg-gray-50">
+                <h3 className="text-lg font-semibold">Product Settings</h3>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="isSupplement"
+                      name="isSupplement"
+                      checked={product.isSupplement}
+                      onCheckedChange={(checked) =>
+                        setProduct((prev) => ({
+                          ...prev,
+                          isSupplement: !!checked,
+                        }))
+                      }
+                    />
+                    <Label htmlFor="isSupplement">Is Supplement</Label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="featured"
+                      name="featured"
+                      checked={product.featured}
+                      onCheckedChange={(checked) =>
+                        setProduct((prev) => ({ ...prev, featured: !!checked }))
+                      }
+                    />
+                    <Label htmlFor="featured">Featured Product</Label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="isActive"
+                      name="isActive"
+                      checked={product.isActive}
+                      onCheckedChange={(checked) =>
+                        setProduct((prev) => ({ ...prev, isActive: !!checked }))
+                      }
+                    />
+                    <Label htmlFor="isActive">Active</Label>
+                  </div>
+                </div>
+
+                {/* Product Type Selection */}
+                <div className="space-y-2">
+                  <Label>Product Categories</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Select which categories this product belongs to
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[
+                      { key: "featured", label: "Featured", icon: "⭐" },
+                      { key: "bestseller", label: "Bestseller", icon: "📈" },
+                      { key: "trending", label: "Trending", icon: "🔥" },
+                      { key: "new", label: "New Arrivals", icon: "🆕" },
+                    ].map((type) => (
+                      <div key={type.key} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`productType-${type.key}`}
+                          checked={product.productType.includes(type.key)}
+                          onCheckedChange={(checked) => {
+                            setProduct((prev) => ({
+                              ...prev,
+                              productType: checked
+                                ? [...prev.productType, type.key]
+                                : prev.productType.filter(
+                                    (t) => t !== type.key
+                                  ),
+                            }));
+                          }}
+                        />
+                        <Label
+                          htmlFor={`productType-${type.key}`}
+                          className="flex items-center gap-1"
+                        >
+                          <span>{type.icon}</span>
+                          {type.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {!hasVariants && (

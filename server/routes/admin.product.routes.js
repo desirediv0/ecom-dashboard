@@ -2,6 +2,7 @@ import express from "express";
 import {
   getProducts,
   getProductById,
+  getProductsByType,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -45,6 +46,14 @@ router.get(
   verifyAdminJWT,
   hasPermission("products", "read"),
   getProductById
+);
+
+// Get products by type (featured, bestseller, trending, new, etc.)
+router.get(
+  "/products/type/:productType",
+  verifyAdminJWT,
+  hasPermission("products", "read"),
+  getProductsByType
 );
 
 router.post(

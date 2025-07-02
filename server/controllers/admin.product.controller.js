@@ -5,7 +5,126 @@ import { prisma } from "../config/db.js";
 import { deleteFromS3, getFileUrl } from "../utils/deleteFromS3.js";
 import { processAndUploadImage } from "../middlewares/multer.middlerware.js";
 import { createSlug } from "../helper/Slug.js";
-import { generateSKU, generateVariantSKUs } from "../utils/generateSKU.js";
+import { generateSKU } from "../utils/generateSKU.js";
+
+// Get products by type (featured, bestseller, trending, new, etc.)
+export const getProductsByType = asyncHandler(async (req, res, next) => {
+  const { productType } = req.params;
+  const {
+    page = 1,
+    limit = 10,
+    sort = "createdAt",
+    order = "desc",
+  } = req.query;
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  // Build filter conditions for product type
+  const filterConditions = {
+    isActive: true,
+    productType: {
+      array_contains: [productType],
+    },
+  };
+
+  // Get total count for pagination
+  const totalProducts = await prisma.product.count({
+    where: filterConditions,
+  });
+
+  // Get products with sorting
+  const products = await prisma.product.findMany({
+    where: filterConditions,
+    include: {
+      categories: {
+        include: {
+          category: true,
+        },
+      },
+      images: {
+        orderBy: { order: "asc" },
+      },
+      variants: {
+        include: {
+          flavor: true,
+          weight: true,
+          images: {
+            orderBy: { order: "asc" },
+          },
+        },
+      },
+      _count: {
+        select: {
+          reviews: true,
+        },
+      },
+    },
+    orderBy: {
+      [sort]: order,
+    },
+    skip,
+    take: parseInt(limit),
+  });
+
+  // Format the response data
+  const formattedProducts = products.map((product) => {
+    // Add image URLs and clean up the data
+    return {
+      ...product,
+      // Extract categories into a more usable format
+      categories: product.categories.map((pc) => ({
+        id: pc.category.id,
+        name: pc.category.name,
+        description: pc.category.description,
+        image: pc.category.image ? getFileUrl(pc.category.image) : null,
+        slug: pc.category.slug,
+        isPrimary: pc.isPrimary,
+      })),
+      primaryCategory:
+        product.categories.find((pc) => pc.isPrimary)?.category ||
+        (product.categories.length > 0 ? product.categories[0].category : null),
+      images: product.images.map((image) => ({
+        ...image,
+        url: getFileUrl(image.url),
+      })),
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        flavor: variant.flavor
+          ? {
+              ...variant.flavor,
+              image: variant.flavor.image
+                ? getFileUrl(variant.flavor.image)
+                : null,
+            }
+          : null,
+        images: variant.images
+          ? variant.images
+              .sort((a, b) => a.order - b.order)
+              .map((image) => ({
+                ...image,
+                url: getFileUrl(image.url),
+              }))
+          : [],
+      })),
+    };
+  });
+
+  res.status(200).json(
+    new ApiResponsive(
+      200,
+      {
+        products: formattedProducts,
+        pagination: {
+          total: totalProducts,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(totalProducts / parseInt(limit)),
+        },
+      },
+      `${productType} products fetched successfully`
+    )
+  );
+});
 
 // Get all products with pagination, filtering, and sorting
 export const getProducts = asyncHandler(async (req, res, next) => {
@@ -243,19 +362,6 @@ export const createProduct = asyncHandler(async (req, res, next) => {
   // Initialize variantIdsWithOrders for new product creation (empty since no existing variants)
   let variantIdsWithOrders = [];
 
-  // COMPREHENSIVE DEBUG LOGGING
-  console.log("🔍 ===== CREATE PRODUCT DEBUG =====");
-  console.log("🔍 Request headers:", {
-    "content-type": req.headers["content-type"],
-    "content-length": req.headers["content-length"],
-  });
-  console.log("🔍 Request body keys:", Object.keys(req.body || {}));
-  console.log("🔍 Request body:", req.body);
-  console.log("🔍 req.files:", req.files);
-  console.log("🔍 req.file:", req.file);
-  console.log("🔍 Files length:", req.files ? req.files.length : 0);
-  console.log("🔍 ================================");
-
   // Check if body is completely empty
   if (!req.body || Object.keys(req.body).length === 0) {
     throw new ApiError(400, "Product data is missing. Empty request received.");
@@ -270,6 +376,7 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     ingredients,
     nutritionInfo,
     featured,
+    productType,
     isActive,
     hasVariants,
     variants: variantsJson,
@@ -377,6 +484,23 @@ export const createProduct = asyncHandler(async (req, res, next) => {
         }
       }
 
+      // Parse productType if provided
+      let parsedProductType = [];
+      if (productType) {
+        try {
+          parsedProductType =
+            typeof productType === "string"
+              ? JSON.parse(productType)
+              : productType;
+          if (!Array.isArray(parsedProductType)) {
+            parsedProductType = [];
+          }
+        } catch (error) {
+          console.error("Error parsing productType:", error);
+          parsedProductType = [];
+        }
+      }
+
       const newProduct = await prisma.product.create({
         data: {
           name: cleanName,
@@ -387,6 +511,7 @@ export const createProduct = asyncHandler(async (req, res, next) => {
           ingredients,
           nutritionInfo: parsedNutritionInfo,
           featured: featured === "true" || featured === true,
+          productType: parsedProductType,
           isActive: isActive === "true" || isActive === true || true,
           metaTitle: metaTitle || cleanName,
           metaDescription: metaDescription || description,
@@ -841,6 +966,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
     ingredients,
     nutritionInfo,
     featured,
+    productType,
     isActive,
     hasVariants,
     variants: variantsJson,
@@ -985,6 +1111,12 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           ...(nutritionInfo && { nutritionInfo: JSON.parse(nutritionInfo) }),
           ...(featured !== undefined && {
             featured: featured === "true" || featured === true,
+          }),
+          ...(productType !== undefined && {
+            productType:
+              typeof productType === "string"
+                ? JSON.parse(productType)
+                : productType,
           }),
           ...(isActive !== undefined && {
             isActive: isActive === "true" || isActive === true,

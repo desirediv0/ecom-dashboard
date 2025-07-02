@@ -18,6 +18,7 @@ export const getAllProducts = asyncHandler(async (req, res) => {
     minPrice,
     maxPrice,
     featured,
+    productType,
   } = req.query;
 
   // Build filter conditions
@@ -42,6 +43,12 @@ export const getAllProducts = asyncHandler(async (req, res) => {
     }),
     // Filter by featured
     ...(featured === "true" && { featured: true }),
+    // Filter by product type
+    ...(productType && {
+      productType: {
+        array_contains: [productType],
+      },
+    }),
     // Filter by price range via variants
     ...((minPrice || maxPrice) && {
       variants: {

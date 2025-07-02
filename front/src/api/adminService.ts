@@ -174,6 +174,9 @@ export const products = {
   getFeaturedProducts: (limit: number = 8) => {
     return api.get(`/api/public/products?featured=true&limit=${limit}`);
   },
+  getProductsByType: (productType: string, limit: number = 8) => {
+    return api.get(`/api/admin/products/type/${productType}?limit=${limit}`);
+  },
   createProduct: (data: ProductData) => {
     // Check if data is already FormData
     if (data instanceof FormData) {
