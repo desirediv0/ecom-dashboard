@@ -20,6 +20,7 @@ import FeaturedCategoriesSection from "@/components/catgry";
 import Headtext from "@/components/ui/headtext";
 import ProductQuickView from "@/components/ProductQuickView";
 import { useRouter } from "next/navigation";
+import { bg1, bg1sm, bg2, bg2sm, bg3, bg3sm, bg4, bg4sm } from "@/assets";
 
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -32,29 +33,29 @@ const HeroCarousel = () => {
   const slides = [
     {
       ctaLink: "/products",
-      img: "/bg1.jpg",
-      smimg: "/bg1-sm.jpg",
+      img: bg1,
+      smimg: bg1sm,
       title: "Premium Supplements",
       subtitle: "Boost Your Performance",
     },
     {
       ctaLink: "/category/protein",
-      img: "/bg2.jpg",
-      smimg: "/bg2-sm.jpg",
+      img: bg2,
+      smimg: bg2sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
       ctaLink: "/category/pre-workout",
-      img: "/bg3.jpg",
-      smimg: "/bg3-sm.jpg",
+      img: bg3,
+      smimg: bg3sm,
       title: "Pre-Workout Power",
       subtitle: "Maximize Your Energy",
     },
     {
       ctaLink: "/category/protein",
-      img: "/bg4.jpg",
-      smimg: "/bg4-sm.jpg",
+      img: bg4,
+      smimg: bg4sm,
       title: "Vitamins & Minerals",
       subtitle: "Support Your Health",
     },
