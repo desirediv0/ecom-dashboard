@@ -20,7 +20,7 @@ import FeaturedCategoriesSection from "@/components/catgry";
 import Headtext from "@/components/ui/headtext";
 import ProductQuickView from "@/components/ProductQuickView";
 import { useRouter } from "next/navigation";
-import { bg1, bg1sm, bg2, bg2sm, bg3, bg3sm, bg4, bg4sm } from "@/assets";
+import { bg2, bg2sm, bg3, bg3sm, bg4, bg4sm } from "@/assets";
 
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -31,13 +31,6 @@ const HeroCarousel = () => {
   const router = useRouter();
 
   const slides = [
-    {
-      ctaLink: "/products",
-      img: bg1,
-      smimg: bg1sm,
-      title: "Premium Supplements",
-      subtitle: "Boost Your Performance",
-    },
     {
       ctaLink: "/category/protein",
       img: bg2,
