@@ -282,7 +282,7 @@ function useWindowSize() {
   return size;
 }
 
-// Featured Products Component with modern card design
+// Featured Products Component with modern card design and carousel
 const FeaturedProducts = ({
   products = [],
   isLoading = false,
@@ -290,6 +290,22 @@ const FeaturedProducts = ({
 }) => {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [api, setApi] = useState(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Handle slide change
+  useEffect(() => {
+    if (!api) return;
+
+    const onSelect = () => {
+      setCurrentSlide(api.selectedScrollSnap());
+    };
+
+    api.on("select", onSelect);
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
 
   if (isLoading) {
     return (
@@ -319,115 +335,150 @@ const FeaturedProducts = ({
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-        {products.map((product) => (
-          <div
-            key={product.id || product.slug || Math.random().toString()}
-            className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
-          >
-            <Link href={`/products/${product.slug || ""}`}>
-              <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
-                {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.name || "Product"}
-                    fill
-                    className="object-contain p-4 transition-transform group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                ) : (
-                  <Image
-                    src="/product-placeholder.jpg"
-                    alt={product.name || "Product"}
-                    fill
-                    className="object-contain p-4 transition-transform group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                )}
-                {product.hasSale && (
-                  <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-sm">
-                    SALE
-                  </span>
-                )}
-
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setQuickViewProduct(product);
-                      setQuickViewOpen(true);
-                    }}
-                  >
-                    <Eye className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
-                  >
-                    <Heart className="h-5 w-5" />
-                  </Button>
-                </div>
-              </div>
-            </Link>
-
-            <div className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="h-4 w-4"
-                      fill={
-                        i < Math.round(product.avgRating || 0)
-                          ? "currentColor"
-                          : "none"
-                      }
-                    />
-                  ))}
-                </div>
-                <span className="text-xs text-gray-500 ml-2">
-                  ({product.reviewCount || 0})
-                </span>
-              </div>
-
-              <Link
-                href={`/products/${product.slug || ""}`}
-                className="hover:text-primary"
+      <div className="relative">
+        <Carousel
+          setApi={setApi}
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {products.map((product, index) => (
+              <CarouselItem
+                key={product.id || product.slug || index}
+                className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4"
               >
-                <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
-                  {product.name || "Product"}
-                </h3>
-              </Link>
+                <div className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full">
+                  <Link href={`/products/${product.slug || ""}`}>
+                    <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
+                      {product.image ? (
+                        <Image
+                          src={product.image}
+                          alt={product.name || "Product"}
+                          fill
+                          className="object-contain p-4 transition-transform group-hover:scale-105"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        />
+                      ) : (
+                        <Image
+                          src="/product-placeholder.jpg"
+                          alt={product.name || "Product"}
+                          fill
+                          className="object-contain p-4 transition-transform group-hover:scale-105"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        />
+                      )}
+                      {product.hasSale && (
+                        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-sm">
+                          SALE
+                        </span>
+                      )}
 
-              <div className="flex items-center justify-center mb-2">
-                {product.hasSale ? (
-                  <div className="flex items-center">
-                    <span className="font-bold text-lg text-primary">
-                      ₹{product.basePrice || 0}
-                    </span>
-                    <span className="text-gray-500 line-through text-sm ml-2">
-                      ₹{product.regularPrice || 0}
-                    </span>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setQuickViewProduct(product);
+                            setQuickViewOpen(true);
+                          }}
+                        >
+                          <Eye className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
+                        >
+                          <Heart className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <div className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className="flex text-yellow-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className="h-4 w-4"
+                            fill={
+                              i < Math.round(product.avgRating || 0)
+                                ? "currentColor"
+                                : "none"
+                            }
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-500 ml-2">
+                        ({product.reviewCount || 0})
+                      </span>
+                    </div>
+
+                    <Link
+                      href={`/products/${product.slug || ""}`}
+                      className="hover:text-primary"
+                    >
+                      <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
+                        {product.name || "Product"}
+                      </h3>
+                    </Link>
+
+                    <div className="flex items-center justify-center mb-2">
+                      {product.hasSale ? (
+                        <div className="flex items-center">
+                          <span className="font-bold text-lg text-primary">
+                            ₹{product.basePrice || 0}
+                          </span>
+                          <span className="text-gray-500 line-through text-sm ml-2">
+                            ₹{product.regularPrice || 0}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="font-bold text-lg text-primary">
+                          ₹{product.basePrice || 0}
+                        </span>
+                      )}
+                    </div>
+
+                    {(product.flavors || 0) > 1 && (
+                      <span className="text-xs text-gray-500 block">
+                        {product.flavors} variants
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <span className="font-bold text-lg text-primary">
-                    ₹{product.basePrice || 0}
-                  </span>
-                )}
-              </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
 
-              {(product.flavors || 0) > 1 && (
-                <span className="text-xs text-gray-500 block">
-                  {product.flavors} variants
-                </span>
-              )}
-            </div>
+          {/* Navigation Controls */}
+          <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg" />
+          <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg" />
+
+          {/* Dot Indicators */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
+            {Array.from({ length: Math.ceil(products.length / 4) }).map(
+              (_, index) => (
+                <button
+                  key={index}
+                  onClick={() => api?.scrollTo(index * 4)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    Math.floor(currentSlide / 4) === index
+                      ? "bg-primary scale-125 shadow-lg"
+                      : "bg-gray-300 hover:bg-gray-400"
+                  }`}
+                  aria-label={`Go to slide group ${index + 1}`}
+                />
+              )
+            )}
           </div>
-        ))}
+        </Carousel>
       </div>
 
       <div className="text-center mt-10">

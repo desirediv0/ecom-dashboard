@@ -996,7 +996,7 @@ function ProductsContent() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {loading
                 ? // Show skeleton cards when loading with existing data
                   [...Array(pagination.limit || 12)].map((_, index) => (
