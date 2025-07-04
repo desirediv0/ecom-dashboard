@@ -615,3 +615,157 @@ export const getMaxPrice = asyncHandler(async (req, res) => {
       new ApiResponsive(200, { maxPrice }, "Maximum price fetched successfully")
     );
 });
+
+// Get products by type (featured, bestseller, trending, new, etc.)
+export const getProductsByType = asyncHandler(async (req, res) => {
+  const { productType } = req.params;
+  const {
+    page = 1,
+    limit = 10,
+    sort = "createdAt",
+    order = "desc",
+  } = req.query;
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  // Build filter conditions for product type
+  const filterConditions = {
+    isActive: true,
+    productType: {
+      array_contains: [productType],
+    },
+  };
+
+  // Get total count for pagination
+  const totalProducts = await prisma.product.count({
+    where: filterConditions,
+  });
+
+  // Get products with sorting
+  const products = await prisma.product.findMany({
+    where: filterConditions,
+    include: {
+      categories: {
+        include: {
+          category: true,
+        },
+      },
+      images: {
+        where: { isPrimary: true },
+        take: 1,
+      },
+      variants: {
+        where: { isActive: true },
+        include: {
+          flavor: true,
+          weight: true,
+          images: {
+            orderBy: { order: "asc" },
+          },
+        },
+        orderBy: { price: "asc" },
+      },
+      _count: {
+        select: {
+          reviews: {
+            where: {
+              status: "APPROVED",
+            },
+          },
+          variants: true,
+        },
+      },
+    },
+    orderBy: {
+      [sort]: order,
+    },
+    skip,
+    take: parseInt(limit),
+  });
+
+  // Format the response data
+  const formattedProducts = products.map((product) => {
+    // Get primary category
+    const primaryCategory =
+      product.categories.length > 0 ? product.categories[0].category : null;
+
+    // Get image with fallback logic
+    let imageUrl = null;
+
+    // Priority 1: Product images
+    if (product.images && product.images.length > 0) {
+      const primaryImage = product.images.find((img) => img.isPrimary);
+      imageUrl = primaryImage ? primaryImage.url : product.images[0].url;
+    }
+    // Priority 2: Any variant images
+    else if (product.variants && product.variants.length > 0) {
+      const variantWithImages = product.variants.find(
+        (variant) => variant.images && variant.images.length > 0
+      );
+      if (variantWithImages) {
+        const primaryImage = variantWithImages.images.find(
+          (img) => img.isPrimary
+        );
+        imageUrl = primaryImage
+          ? primaryImage.url
+          : variantWithImages.images[0].url;
+      }
+    }
+
+    return {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      featured: product.featured,
+      description: product.description,
+      category: primaryCategory
+        ? {
+            id: primaryCategory.id,
+            name: primaryCategory.name,
+            slug: primaryCategory.slug,
+          }
+        : null,
+      image: imageUrl ? getFileUrl(imageUrl) : null,
+      // Add variants for frontend fallback
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        images: variant.images
+          ? variant.images.map((image) => ({
+              ...image,
+              url: getFileUrl(image.url),
+            }))
+          : [],
+      })),
+      basePrice:
+        product.variants.length > 0
+          ? parseFloat(
+              product.variants[0].salePrice || product.variants[0].price
+            )
+          : null,
+      hasSale:
+        product.variants.length > 0 && product.variants[0].salePrice !== null,
+      regularPrice:
+        product.variants.length > 0
+          ? parseFloat(product.variants[0].price)
+          : null,
+      flavors: product._count.variants,
+      reviewCount: product._count.reviews,
+    };
+  });
+
+  res.status(200).json(
+    new ApiResponsive(
+      200,
+      {
+        products: formattedProducts,
+        pagination: {
+          total: totalProducts,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(totalProducts / parseInt(limit)),
+        },
+      },
+      `${productType} products fetched successfully`
+    )
+  );
+});

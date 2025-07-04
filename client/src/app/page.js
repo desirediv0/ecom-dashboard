@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { fetchApi } from "@/lib/utils";
+import { fetchApi, fetchProductsByType } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, ChevronRight, Heart, Eye } from "lucide-react";
+import { ArrowRight, Star, Heart, Eye } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -199,88 +199,6 @@ const AnnouncementBanner = () => {
     </div>
   );
 };
-
-// Utility functions for colors
-// Function to get a consistent color based on category name
-const getCategoryColor = (name) => {
-  const colors = [
-    "from-blue-700 to-blue-500",
-    "from-purple-700 to-purple-500",
-    "from-red-700 to-red-500",
-    "from-green-700 to-green-500",
-    "from-yellow-700 to-yellow-500",
-    "from-indigo-700 to-indigo-500",
-    "from-pink-700 to-pink-500",
-    "from-teal-700 to-teal-500",
-  ];
-
-  // Simple hash function to get consistent color for same category name
-  const index =
-    name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-    colors.length;
-  return colors[index];
-};
-
-// Function to get a consistent color based on product name
-const getProductColor = (name) => {
-  const colors = [
-    "bg-blue-100",
-    "bg-purple-100",
-    "bg-red-100",
-    "bg-green-100",
-    "bg-yellow-100",
-    "bg-indigo-100",
-    "bg-pink-100",
-    "bg-teal-100",
-  ];
-
-  // Simple hash function to get consistent color for same product name
-  const index =
-    name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-    colors.length;
-  return colors[index];
-};
-
-// This returns a gradient background for categories without images
-const getCategoryGradient = (name) => {
-  const gradients = {
-    Protein: "from-orange-400 to-amber-600",
-    "Pre-Workout": "from-purple-500 to-indigo-600",
-    "Weight Loss": "from-green-400 to-teal-500",
-    Vitamins: "from-blue-400 to-cyan-500",
-    Performance: "from-red-400 to-rose-600",
-    Wellness: "from-pink-400 to-fuchsia-600",
-    Accessories: "from-gray-400 to-slate-600",
-  };
-
-  return gradients[name] || "from-primary/60 to-primary";
-};
-
-// Calculate number of items to show based on screen size
-function useWindowSize() {
-  const [size, setSize] = useState(4);
-
-  useEffect(() => {
-    function updateSize() {
-      if (window.innerWidth < 640) {
-        setSize(1);
-      } else if (window.innerWidth < 768) {
-        setSize(2);
-      } else if (window.innerWidth < 1024) {
-        setSize(3);
-      } else {
-        setSize(4);
-      }
-    }
-
-    window.addEventListener("resize", updateSize);
-    updateSize();
-
-    return () => window.removeEventListener("resize", updateSize);
-  }, []);
-
-  return size;
-}
 
 // Featured Products Component with modern card design and carousel
 const FeaturedProducts = ({
@@ -843,18 +761,59 @@ const ProductSkeleton = () => (
 // Home page component
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [latestProducts, setLatestProducts] = useState([]);
+  const [bestsellerProducts, setBestsellerProducts] = useState([]);
+  const [trendingProducts, setTrendingProducts] = useState([]);
+  const [newProducts, setNewProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch featured products
+    // Fetch products by different types
     const fetchData = async () => {
       try {
-        // Fetch products
-        const productsRes = await fetchApi(
-          "/public/products?featured=true&limit=8"
-        );
-        setFeaturedProducts(productsRes?.data?.products || []);
+        setProductsLoading(true);
+
+        // Fetch products by different types
+        const [featuredRes, latestRes, bestsellerRes, trendingRes, newRes] =
+          await Promise.allSettled([
+            fetchProductsByType("featured", 8),
+            fetchProductsByType("latest", 8),
+            fetchProductsByType("bestseller", 8),
+            fetchProductsByType("trending", 8),
+            fetchProductsByType("new", 8),
+          ]);
+
+        // Set featured products (fallback to regular featured if type doesn't exist)
+        if (featuredRes.status === "fulfilled") {
+          setFeaturedProducts(featuredRes.value?.data?.products || []);
+        } else {
+          // Fallback to regular featured products
+          const fallbackRes = await fetchApi(
+            "/public/products?featured=true&limit=8"
+          );
+          setFeaturedProducts(fallbackRes?.data?.products || []);
+        }
+
+        // Set latest products
+        if (latestRes.status === "fulfilled") {
+          setLatestProducts(latestRes.value?.data?.products || []);
+        }
+
+        // Set bestseller products
+        if (bestsellerRes.status === "fulfilled") {
+          setBestsellerProducts(bestsellerRes.value?.data?.products || []);
+        }
+
+        // Set trending products
+        if (trendingRes.status === "fulfilled") {
+          setTrendingProducts(trendingRes.value?.data?.products || []);
+        }
+
+        // Set new products
+        if (newRes.status === "fulfilled") {
+          setNewProducts(newRes.value?.data?.products || []);
+        }
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err?.message || "Failed to fetch data");
@@ -875,7 +834,7 @@ export default function Home() {
       {/* Featured Categories Section */}
 
       {/* Featured Products Section */}
-      {featuredProducts.length && (
+      {featuredProducts.length > 0 && (
         <section className="py-10 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -895,18 +854,80 @@ export default function Home() {
       )}
 
       <GymSupplementShowcase />
-      {featuredProducts.length && (
-        <section className="py-10 bg-gray-50">
+
+      {/* Latest Products Section */}
+      {latestProducts.length > 0 && (
+        <section className="py-10 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <Headtext text="LATEST PRODUCTS" />
               <p className="text-gray-600 my-6 max-w-2xl mx-auto">
-                High-quality supplements to enhance your fitness journey
+                Discover our newest additions to the collection
               </p>
             </div>
 
             <FeaturedProducts
-              products={featuredProducts}
+              products={latestProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Bestseller Products Section */}
+      {bestsellerProducts.length > 0 && (
+        <section className="py-10 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <Headtext text="BESTSELLERS" />
+              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+                Our most popular products loved by customers
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={bestsellerProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Trending Products Section */}
+      {trendingProducts.length > 0 && (
+        <section className="py-10 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <Headtext text="TRENDING NOW" />
+              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+                Products that are currently trending in the fitness community
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={trendingProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* New Products Section */}
+      {newProducts.length > 0 && (
+        <section className="py-10 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <Headtext text="NEW ARRIVALS" />
+              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+                Fresh products just added to our collection
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={newProducts}
               isLoading={productsLoading}
               error={error}
             />

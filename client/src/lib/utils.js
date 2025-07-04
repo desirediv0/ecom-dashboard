@@ -188,3 +188,16 @@ export const loadScript = (src) => {
     document.body.appendChild(script);
   });
 };
+
+// Fetch products by type
+export async function fetchProductsByType(productType, limit = 8) {
+  try {
+    const response = await fetchApi(
+      `/public/products/type/${productType}?limit=${limit}`
+    );
+    return response;
+  } catch (error) {
+    console.error(`Error fetching ${productType} products:`, error);
+    throw error;
+  }
+}
