@@ -33,6 +33,13 @@ const HeroCarousel = () => {
   const slides = [
     {
       ctaLink: "/category/protein",
+      img: bg4,
+      smimg: bg4sm,
+      title: "Vitamins & Minerals",
+      subtitle: "Support Your Health",
+    },
+    {
+      ctaLink: "/category/protein",
       img: bg2,
       smimg: bg2sm,
       title: "Protein Collection",
@@ -44,13 +51,6 @@ const HeroCarousel = () => {
       smimg: bg3sm,
       title: "Pre-Workout Power",
       subtitle: "Maximize Your Energy",
-    },
-    {
-      ctaLink: "/category/protein",
-      img: bg4,
-      smimg: bg4sm,
-      title: "Vitamins & Minerals",
-      subtitle: "Support Your Health",
     },
   ];
 
