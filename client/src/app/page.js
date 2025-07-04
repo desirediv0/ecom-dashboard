@@ -19,33 +19,58 @@ import BenefitsSec from "@/components/benifit-sec";
 import FeaturedCategoriesSection from "@/components/catgry";
 import Headtext from "@/components/ui/headtext";
 import ProductQuickView from "@/components/ProductQuickView";
+import { useRouter } from "next/navigation";
 
-// Hero Carousel Component
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [api, setApi] = useState(null);
   const [autoplay, setAutoplay] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const router = useRouter();
 
   const slides = [
     {
-      title: "PREMIUM SUPPLEMENTS",
-      subtitle: "Fuel your workouts with high-quality ingredients",
-      cta: "SHOP NOW",
       ctaLink: "/products",
+      img: "/bg1.jpg",
+      smimg: "/bg1-sm.jpg",
+      title: "Premium Supplements",
+      subtitle: "Boost Your Performance",
     },
     {
-      title: "ADVANCED PROTEIN FORMULA",
-      subtitle: "30g protein per serving with zero added sugar",
-      cta: "EXPLORE",
       ctaLink: "/category/protein",
+      img: "/bg2.jpg",
+      smimg: "/bg2-sm.jpg",
+      title: "Protein Collection",
+      subtitle: "Build Muscle Faster",
     },
     {
-      title: "SUPERCHARGE YOUR WORKOUT",
-      subtitle: "Pre-workout supplements that deliver real results",
-      cta: "SHOP PRE-WORKOUT",
       ctaLink: "/category/pre-workout",
+      img: "/bg3.jpg",
+      smimg: "/bg3-sm.jpg",
+      title: "Pre-Workout Power",
+      subtitle: "Maximize Your Energy",
+    },
+    {
+      ctaLink: "/category/protein",
+      img: "/bg4.jpg",
+      smimg: "/bg4-sm.jpg",
+      title: "Vitamins & Minerals",
+      subtitle: "Support Your Health",
     },
   ];
+
+  // Handle responsive detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Handle autoplay functionality
   useEffect(() => {
@@ -67,99 +92,82 @@ const HeroCarousel = () => {
     };
 
     api.on("select", onSelect);
-
     return () => {
       api.off("select", onSelect);
     };
   }, [api]);
 
+  const handleSlideClick = (ctaLink) => {
+    router.push(ctaLink);
+  };
+
   return (
-    <div className="relative overflow-hidden h-[500px] md:h-[600px]">
-      {/* Single background video that stays consistent across all slides */}
-      <div className="absolute inset-0 w-full h-full z-0">
-        <video
-          className="w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-        >
-          <source src="/video.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-black/60 z-10" />
-      </div>
-
-      <Carousel setApi={setApi} className="h-full relative z-20">
-        <CarouselContent className="h-full">
-          {slides.map((slide, index) => (
-            <CarouselItem key={index} className="h-full p-0">
-              <div className="relative h-full w-full overflow-hidden flex items-center justify-center">
-                {/* Content */}
-                <div className="container mx-auto px-4">
-                  <div className="max-w-2xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mt-32 lg:mt-48 text-white mb-4 uppercase tracking-wider">
-                      {slide.title}
-                    </h1>
-                    <p className="text-xl md:text-2xl text-white/90 mb-8">
-                      {slide.subtitle}
-                    </p>
-                    <Link href={slide.ctaLink}>
-                      <Button
-                        size="lg"
-                        className="text-lg px-4 lg:px-12 py-6 font-bold"
-                      >
-                        {slide.cta}
-                        <ChevronRight className="ml-2 h-5 w-5" />
-                      </Button>
-                    </Link>
-                  </div>
+    <div className="relative w-full">
+      {/* Mobile: Smaller height, Desktop: Larger height */}
+      <div className="relative overflow-hidden ">
+        <Carousel setApi={setApi} className="h-full w-full">
+          <CarouselContent className="h-full">
+            {slides.map((slide, index) => (
+              <CarouselItem key={index} className="h-full p-0">
+                <div
+                  className="relative h-[180px] sm:h-[250px] md:h-[350px] w-full cursor-pointer group overflow-hidden"
+                  onClick={() => handleSlideClick(slide.ctaLink)}
+                >
+                  {/* Background Image */}
+                  <Image
+                    src={isMobile ? slide.smimg : slide.img}
+                    alt={slide.title || "Hero banner"}
+                    fill
+                    className="object-cover transition-transform duration-700  "
+                    priority={index === 0}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+                  />
                 </div>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
 
-        {/* Navigation Controls */}
-        <CarouselPrevious
-          className="left-8 h-10 w-10 z-30 opacity-70 hover:opacity-100"
-          variant="secondary"
-        />
-        <CarouselNext
-          className="right-8 h-10 w-10 z-30 opacity-70 hover:opacity-100"
-          variant="secondary"
-        />
+          {/* Navigation Controls - Better positioned and sized */}
+          <CarouselPrevious className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
+          <CarouselNext className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
 
-        {/* Dot Indicators */}
-        <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center space-x-2">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => api?.scrollTo(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentSlide ? "bg-white scale-125" : "bg-white/50"
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
+          {/* Dot Indicators - Better responsive sizing */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => api?.scrollTo(index)}
+                className={`w-2 h-2  rounded-full transition-all duration-300 ${
+                  index === currentSlide
+                    ? "bg-white scale-125 shadow-lg"
+                    : "bg-white/50 hover:bg-white/70"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
 
-        {/* Autoplay Toggle */}
-        <div className="absolute bottom-6 right-6 z-30">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 bg-white/20 hover:bg-white/30"
-            onClick={() => setAutoplay(!autoplay)}
-            aria-label={autoplay ? "Pause slideshow" : "Play slideshow"}
-          >
-            {autoplay ? (
-              <span className="block w-3 h-3 bg-current"></span>
-            ) : (
-              <span className="block w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[8px] border-l-current ml-0.5"></span>
-            )}
-          </Button>
-        </div>
-      </Carousel>
+          {/* Autoplay Toggle - Better positioned */}
+          <div className="absolute top-4 right-4 z-30">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 w-6  bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm"
+              onClick={() => setAutoplay(!autoplay)}
+              aria-label={autoplay ? "Pause slideshow" : "Play slideshow"}
+            >
+              {autoplay ? (
+                <div className="w-2 h-2 flex space-x-0.5">
+                  <div className="w-1 h-full bg-current"></div>
+                  <div className="w-1 h-full bg-current"></div>
+                </div>
+              ) : (
+                <div className="w-0 h-0 border-t-[4px] sm:border-t-[6px] border-t-transparent border-b-[4px] sm:border-b-[6px] border-b-transparent border-l-[6px] sm:border-l-[8px] border-l-current ml-0.5"></div>
+              )}
+            </Button>
+          </div>
+        </Carousel>
+      </div>
     </div>
   );
 };
