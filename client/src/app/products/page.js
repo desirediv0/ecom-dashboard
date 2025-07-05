@@ -996,7 +996,7 @@ function ProductsContent() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {loading
                 ? // Show skeleton cards when loading with existing data
                   [...Array(pagination.limit || 12)].map((_, index) => (
@@ -1009,7 +1009,7 @@ function ProductsContent() {
                       className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
                     >
                       <Link href={`/products/${product.slug}`}>
-                        <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
+                        <div className="relative h-64 w-full overflow-hidden">
                           <Image
                             src={(() => {
                               // Find the variant with the lowest weight
@@ -1060,7 +1060,7 @@ function ProductsContent() {
                             })()}
                             alt={product.name}
                             fill
-                            className="object-contain p-4 transition-transform group-hover:scale-105"
+                            className="object-contain px-4 transition-transform group-hover:scale-105"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           />
                           {product.hasSale && (

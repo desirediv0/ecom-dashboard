@@ -169,11 +169,11 @@ const HeroCarousel = () => {
 // Announcement Banner
 const AnnouncementBanner = () => {
   return (
-    <div className="bg-primary/10 py-4 overflow-hidden">
+    <div className="bg-primary/10 py-2 md:py-4 overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-center">
           <div className="flex items-center">
-            <span className="text-sm md:text-base font-medium">
+            <span className="text-xs md:text-base font-medium">
               ⚡ FREE SHIPPING ON ORDERS ABOVE ₹999
             </span>
           </div>
@@ -182,7 +182,7 @@ const AnnouncementBanner = () => {
               🎁 GET A FREE SHAKER WITH PROTEIN PURCHASES
             </span>
           </div>
-          <div className="flex items-center">
+          <div className="hidden md:flex items-center ">
             <span className="text-sm md:text-base font-medium">
               🔥 USE CODE <strong>FIT10</strong> FOR 10% OFF
             </span>
@@ -259,7 +259,7 @@ const FeaturedProducts = ({
             {products.map((product, index) => (
               <CarouselItem
                 key={product.id || product.slug || index}
-                className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4"
+                className="pl-4 basis-1/2 md:basis-1/4 lg:basis-1/6"
               >
                 <div className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full">
                   <Link href={`/products/${product.slug || ""}`}>
@@ -287,7 +287,7 @@ const FeaturedProducts = ({
                         </span>
                       )}
 
-                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 backdrop-blur-[2px] flex justify-center py-1 md:py-3 md:bg-opacity-0 md:group-hover:bg-opacity-70 md:translate-y-full md:group-hover:translate-y-0 transition-transform">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -371,24 +371,6 @@ const FeaturedProducts = ({
           {/* Navigation Controls */}
           <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg" />
           <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg" />
-
-          {/* Dot Indicators */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
-            {Array.from({ length: Math.ceil(products.length / 4) }).map(
-              (_, index) => (
-                <button
-                  key={index}
-                  onClick={() => api?.scrollTo(index * 4)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    Math.floor(currentSlide / 4) === index
-                      ? "bg-primary scale-125 shadow-lg"
-                      : "bg-gray-300 hover:bg-gray-400"
-                  }`}
-                  aria-label={`Go to slide group ${index + 1}`}
-                />
-              )
-            )}
-          </div>
         </Carousel>
       </div>
 
