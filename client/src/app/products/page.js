@@ -94,8 +94,6 @@ function ProductsContent() {
     setLoading(true);
   };
 
-  // IMPORTANT: Group all useEffect hooks together in the same order on every render
-
   // Fetch products based on filters useEffect
   useEffect(() => {
     const fetchProducts = async () => {
@@ -137,8 +135,6 @@ function ProductsContent() {
         if (selectedWeights.length > 0) {
           queryParams.append("weight", selectedWeights[0]);
         }
-
-        console.log("Query params being sent:", queryParams.toString());
 
         const response = await fetchApi(
           `/public/products?${queryParams.toString()}`
@@ -1069,7 +1065,7 @@ function ProductsContent() {
                             </span>
                           )}
 
-                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
+                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 backdrop-blur-[2px] flex justify-center py-1 md:py-3 md:bg-opacity-0 md:group-hover:bg-opacity-70 md:translate-y-full md:group-hover:translate-y-0 transition-transform">
                             <Button
                               variant="ghost"
                               size="sm"

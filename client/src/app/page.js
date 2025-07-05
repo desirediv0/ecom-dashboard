@@ -263,13 +263,13 @@ const FeaturedProducts = ({
               >
                 <div className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full">
                   <Link href={`/products/${product.slug || ""}`}>
-                    <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
+                    <div className="relative h-64 w-full  overflow-hidden">
                       {product.image ? (
                         <Image
                           src={product.image}
                           alt={product.name || "Product"}
                           fill
-                          className="object-contain p-4 transition-transform group-hover:scale-105"
+                          className="object-contain px-4 transition-transform group-hover:scale-105"
                           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
                       ) : (
@@ -277,7 +277,7 @@ const FeaturedProducts = ({
                           src="/product-placeholder.jpg"
                           alt={product.name || "Product"}
                           fill
-                          className="object-contain p-4 transition-transform group-hover:scale-105"
+                          className="object-contain px-4 transition-transform group-hover:scale-105"
                           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
                       )}

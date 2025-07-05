@@ -50,7 +50,7 @@ const CategoryCard = ({ category, index }) => {
       <Link href={`/category/${category.slug}`}>
         <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full">
           {/* Image container */}
-          <div className="relative h-48 w-full overflow-hidden bg-gray-50">
+          <div className="relative h-48 w-full overflow-hidden">
             <Image
               src={
                 category.image
@@ -59,7 +59,7 @@ const CategoryCard = ({ category, index }) => {
               }
               alt={category.name}
               fill
-              className="object-contain transition-transform duration-300 group-hover:scale-105 p-4"
+              className="object-contain transition-transform duration-300 group-hover:scale-105 px-4"
             />
 
             {/* Simple product count badge */}
@@ -233,7 +233,7 @@ export default function CategoriesPage() {
         ) : (
           <>
             {/* Categories Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {categories.map((category, index) => (
                 <CategoryCard
                   key={category.id}

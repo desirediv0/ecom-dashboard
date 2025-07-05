@@ -223,14 +223,14 @@ export default function CategoryPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
           {products.map((product) => (
             <div
               key={product.id}
               className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
             >
               <Link href={`/products/${product.slug}`}>
-                <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
+                <div className="relative h-64 w-full overflow-hidden">
                   <Image
                     src={
                       product.image
@@ -241,7 +241,7 @@ export default function CategoryPage() {
                     }
                     alt={product.name}
                     fill
-                    className="object-contain p-4 transition-transform group-hover:scale-105"
+                    className="object-contain px-4 transition-transform group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   {product.variants[0]?.salePrice && (
@@ -250,7 +250,7 @@ export default function CategoryPage() {
                     </span>
                   )}
 
-                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 backdrop-blur-[2px] flex justify-center py-3 translate-y-full group-hover:translate-y-0 transition-transform">
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 backdrop-blur-[2px] flex justify-center py-1 md:py-3 md:bg-opacity-0 md:group-hover:bg-opacity-70 md:translate-y-full md:group-hover:translate-y-0 transition-transform">
                     <Button
                       variant="ghost"
                       size="sm"
