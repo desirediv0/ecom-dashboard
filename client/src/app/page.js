@@ -22,6 +22,7 @@ import ProductQuickView from "@/components/ProductQuickView";
 import { useRouter } from "next/navigation";
 import { bg2, bg2sm, bg3, bg3sm, bg4, bg4sm } from "@/assets";
 import SupplementStoreUI from "@/components/SupplementStoreUI";
+import { useAuth } from "@/lib/auth-context";
 
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -204,6 +205,77 @@ const FeaturedProducts = ({
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [api, setApi] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [wishlistItems, setWishlistItems] = useState({});
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState({});
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  // Fetch wishlist status for all products
+  useEffect(() => {
+    const fetchWishlistStatus = async () => {
+      if (!isAuthenticated) return;
+
+      try {
+        const response = await fetchApi("/users/wishlist", {
+          credentials: "include",
+        });
+        const items = response.data.wishlistItems.reduce((acc, item) => {
+          acc[item.productId] = true;
+          return acc;
+        }, {});
+        setWishlistItems(items);
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+      }
+    };
+
+    fetchWishlistStatus();
+  }, [isAuthenticated]);
+
+  const handleAddToWishlist = async (product, e) => {
+    e.preventDefault(); // Prevent navigation
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/products/${product.slug}`);
+      return;
+    }
+
+    setIsAddingToWishlist((prev) => ({ ...prev, [product.id]: true }));
+
+    try {
+      if (wishlistItems[product.id]) {
+        // Get wishlist to find the item ID
+        const wishlistResponse = await fetchApi("/users/wishlist", {
+          credentials: "include",
+        });
+
+        const wishlistItem = wishlistResponse.data.wishlistItems.find(
+          (item) => item.productId === product.id
+        );
+
+        if (wishlistItem) {
+          await fetchApi(`/users/wishlist/${wishlistItem.id}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+
+          setWishlistItems((prev) => ({ ...prev, [product.id]: false }));
+        }
+      } else {
+        // Add to wishlist
+        await fetchApi("/users/wishlist", {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({ productId: product.id }),
+        });
+
+        setWishlistItems((prev) => ({ ...prev, [product.id]: true }));
+      }
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+    } finally {
+      setIsAddingToWishlist((prev) => ({ ...prev, [product.id]: false }));
+    }
+  };
 
   // Handle slide change
   useEffect(() => {
@@ -304,9 +376,17 @@ const FeaturedProducts = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
+                          className={`text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2 ${
+                            wishlistItems[product.id] ? "text-red-500" : ""
+                          }`}
+                          onClick={(e) => handleAddToWishlist(product, e)}
+                          disabled={isAddingToWishlist[product.id]}
                         >
-                          <Heart className="h-5 w-5" />
+                          <Heart
+                            className={`h-5 w-5 ${
+                              wishlistItems[product.id] ? "fill-current" : ""
+                            }`}
+                          />
                         </Button>
                       </div>
                     </div>
