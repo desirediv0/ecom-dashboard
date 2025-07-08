@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { fetchApi, formatCurrency } from "@/lib/utils";
@@ -15,6 +15,8 @@ import {
   Heart,
 } from "lucide-react";
 import ProductQuickView from "@/components/ProductQuickView";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 // Helper function to format image URLs correctly
 const getImageUrl = (image) => {
@@ -25,7 +27,9 @@ const getImageUrl = (image) => {
 
 export default function CategoryPage() {
   const params = useParams();
+  const router = useRouter();
   const { slug } = params;
+  const { isAuthenticated } = useAuth();
 
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
@@ -34,6 +38,8 @@ export default function CategoryPage() {
   const [sortOption, setSortOption] = useState("newest");
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState({});
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState({});
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -91,6 +97,77 @@ export default function CategoryPage() {
       fetchCategoryAndProducts();
     }
   }, [slug, pagination.page, pagination.limit, sortOption]);
+
+  // Add handleAddToWishlist function
+  const handleAddToWishlist = async (product, e) => {
+    e.preventDefault(); // Prevent navigation
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/category/${slug}`);
+      return;
+    }
+
+    setIsAddingToWishlist((prev) => ({ ...prev, [product.id]: true }));
+
+    try {
+      if (wishlistItems[product.id]) {
+        // Get wishlist to find the item ID
+        const wishlistResponse = await fetchApi("/users/wishlist", {
+          credentials: "include",
+        });
+
+        const wishlistItem = wishlistResponse.data.wishlistItems.find(
+          (item) => item.productId === product.id
+        );
+
+        if (wishlistItem) {
+          await fetchApi(`/users/wishlist/${wishlistItem.id}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+
+          setWishlistItems((prev) => ({ ...prev, [product.id]: false }));
+          toast.success("Removed from wishlist");
+        }
+      } else {
+        // Add to wishlist
+        await fetchApi("/users/wishlist", {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({ productId: product.id }),
+        });
+
+        setWishlistItems((prev) => ({ ...prev, [product.id]: true }));
+        toast.success("Added to wishlist");
+      }
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+      toast.error("Failed to update wishlist");
+    } finally {
+      setIsAddingToWishlist((prev) => ({ ...prev, [product.id]: false }));
+    }
+  };
+
+  // Add useEffect to fetch wishlist status
+  useEffect(() => {
+    const fetchWishlistStatus = async () => {
+      if (!isAuthenticated) return;
+
+      try {
+        const response = await fetchApi("/users/wishlist", {
+          credentials: "include",
+        });
+        const items = response.data.wishlistItems.reduce((acc, item) => {
+          acc[item.productId] = true;
+          return acc;
+        }, {});
+        setWishlistItems(items);
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+      }
+    };
+
+    fetchWishlistStatus();
+  }, [isAuthenticated]);
 
   // Handle pagination
   const handlePageChange = (newPage) => {
@@ -265,9 +342,17 @@ export default function CategoryPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
+                      className={`text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2 ${
+                        wishlistItems[product.id] ? "text-red-500" : ""
+                      }`}
+                      onClick={(e) => handleAddToWishlist(product, e)}
+                      disabled={isAddingToWishlist[product.id]}
                     >
-                      <Heart className="h-5 w-5" />
+                      <Heart
+                        className={`h-5 w-5 ${
+                          wishlistItems[product.id] ? "fill-current" : ""
+                        }`}
+                      />
                     </Button>
                   </div>
                 </div>
