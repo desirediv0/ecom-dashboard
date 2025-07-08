@@ -260,7 +260,7 @@ const FeaturedProducts = ({
             {products.map((product, index) => (
               <CarouselItem
                 key={product.id || product.slug || index}
-                className="pl-4 basis-1/2 md:basis-1/4 lg:basis-1/6"
+                className="pl-4 basis-1/2 md:basis-1/4 lg:basis-1/6 py-5 md:py-10"
               >
                 <div className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full">
                   <Link href={`/products/${product.slug || ""}`}>
@@ -370,8 +370,8 @@ const FeaturedProducts = ({
           </CarouselContent>
 
           {/* Navigation Controls */}
-          <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg" />
-          <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg" />
+          <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 bg-white/90 hover:bg-white hover:text-black border-gray-200 text-gray-700 shadow-lg" />
+          <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 bg-white/90 hover:bg-white hover:text-black border-gray-200 text-gray-700 shadow-lg" />
         </Carousel>
       </div>
 
