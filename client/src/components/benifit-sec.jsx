@@ -170,7 +170,7 @@ const BenefitsSec = () => {
         </div>
 
         {/* Stats section */}
-        <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="mt-20 grid sm:grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { number: "100%", label: "Quality Tested" },
             { number: "1000+", label: "Happy Customers" },

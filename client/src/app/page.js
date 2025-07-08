@@ -21,6 +21,7 @@ import Headtext from "@/components/ui/headtext";
 import ProductQuickView from "@/components/ProductQuickView";
 import { useRouter } from "next/navigation";
 import { bg2, bg2sm, bg3, bg3sm, bg4, bg4sm } from "@/assets";
+import SupplementStoreUI from "@/components/SupplementStoreUI";
 
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -870,6 +871,7 @@ export default function Home() {
         </section>
       )}
 
+      <SupplementStoreUI />
       {/* Trending Products Section */}
       {trendingProducts.length > 0 && (
         <section className="py-10 bg-white">
