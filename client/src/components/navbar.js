@@ -352,10 +352,6 @@ export function Navbar() {
                 <Phone className="h-5 w-5 text-primary" />
                 <span className="font-medium">+91 98765 43210</span>
               </div>
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-primary" />
-                <span className="font-medium">Store Locator</span>
-              </div>
             </div>
           </div>
         </div>
@@ -367,38 +363,38 @@ export function Navbar() {
     <header className="sticky top-0 z-50 bg-white shadow-sm" ref={navbarRef}>
       <Toaster position="top-center" />
       {/* Top bar */}
-      <div className="bg-gradient-to-r from-orange-500 to-blue-500/80 text-white py-2 md:py-1.5 text-center text-xs md:text-sm font-medium">
-        Free shipping on orders over ₹999 | Use code FIT10 for 10% off your
-        first order
-      </div>
-
-      {/* Contact info bar - Desktop only */}
-      <div className="hidden md:block bg-gray-100 py-1.5">
+      <div className="bg-gradient-to-r from-orange-500 to-blue-500/80 text-white py-1.5">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center text-xs text-gray-700">
-                <Phone className="h-3.5 w-3.5 mr-1.5" />
-                <span>+91 98765 43210</span>
-              </div>
+            {/* Left - Phone number */}
+            <div className="hidden md:flex items-center text-xs">
+              <Phone className="h-3.5 w-3.5 mr-1.5" />
+              <span>+91 98765 43210</span>
             </div>
 
-            <div className="hidden lg:flex items-center space-x-4 text-xs">
+            {/* Center - Free shipping text */}
+            <div className="text-center text-xs md:text-sm font-medium mx-auto md:mx-0">
+              Free shipping on orders over ₹999 | Use code FIT10 for 10% off
+              your first order
+            </div>
+
+            {/* Right - Navigation links */}
+            <div className="hidden md:flex items-center space-x-4 text-xs">
               <Link
                 href="/shipping"
-                className="text-gray-700 hover:text-primary transition-colors"
+                className="hover:text-gray-200 transition-colors"
               >
                 Shipping
               </Link>
               <Link
                 href="/faqs"
-                className="text-gray-700 hover:text-primary transition-colors"
+                className="hover:text-gray-200 transition-colors"
               >
                 FAQs
               </Link>
               <Link
                 href="/contact"
-                className="text-gray-700 hover:text-primary transition-colors"
+                className="hover:text-gray-200 transition-colors"
               >
                 Contact Us
               </Link>
