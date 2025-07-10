@@ -507,10 +507,8 @@ export const orders = {
     return api.patch(`/api/admin/orders/${orderId}/status`, data);
   },
   getOrderStats: async () => {
-    console.log("Calling order stats API endpoint");
     try {
       const response = await api.get("/api/admin/orders-stats");
-      console.log("Raw order stats API response:", response);
 
       // Check if data is nested in a success response wrapper
       if (response.data.success && response.data.data) {

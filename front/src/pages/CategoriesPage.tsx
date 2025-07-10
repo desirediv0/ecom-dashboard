@@ -56,7 +56,6 @@ function CategoriesList() {
       try {
         setIsLoading(true);
         const response = await categories.getCategories();
-        console.log("Categories response:", response);
 
         if (response.data.success) {
           setCategoriesList(response.data.data?.categories || []);

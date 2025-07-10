@@ -112,9 +112,6 @@ export default function FeaturedProductsPage() {
         order: "desc",
       });
 
-      console.log("Products by type:", productsByTypeMap);
-      console.log("All products response:", allResponse.data);
-
       if (allResponse.data.success) {
         setProductsByType(productsByTypeMap);
         setAllProducts(allResponse.data.data.products || []);
