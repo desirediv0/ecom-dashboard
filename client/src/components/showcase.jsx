@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { cover } from "@/assets";
+import { useRouter } from "next/navigation";
 
 export default function GymSupplementBanner() {
   const [isVisible, setIsVisible] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setIsVisible(true);
@@ -78,6 +81,7 @@ export default function GymSupplementBanner() {
                 className="bg-[#F47C20] text-white hover:bg-[#F47C20]/80 font-bold py-3 px-8 rounded-none shadow-lg"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={() => router.push("/products")}
               >
                 SHOP NOW
               </motion.button>
@@ -86,6 +90,7 @@ export default function GymSupplementBanner() {
                 className="bg-transparent border border-white hover:bg-white/10 text-white font-bold py-3 px-8 rounded-none shadow-lg"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={() => router.push("/about")}
               >
                 LEARN MORE
               </motion.button>
@@ -134,10 +139,10 @@ export default function GymSupplementBanner() {
                 transition={{ delay: 0.5, duration: 0.8 }}
               >
                 <Image
-                  src="/c3.jpg"
+                  src={cover}
                   alt="Protein Supplement"
-                  width={400}
-                  height={400}
+                  width={550}
+                  height={550}
                   className="max-h-full max-w-full object-contain"
                 />
               </motion.div>

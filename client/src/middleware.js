@@ -5,7 +5,6 @@ const privateRoutes = [
   "/account",
   "/checkout",
   "/wishlist",
-  "/shipping",
   "/cart",
   "/orders",
 ];

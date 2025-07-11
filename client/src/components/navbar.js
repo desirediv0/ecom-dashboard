@@ -280,7 +280,7 @@ export function Navbar() {
 
             <div className="border-b pb-4 mb-4">
               <Link
-                href="/shipping"
+                href="/shipping-policy"
                 className="block py-3 text-lg font-medium hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -381,7 +381,7 @@ export function Navbar() {
             {/* Right - Navigation links */}
             <div className="hidden md:flex items-center space-x-4 text-xs">
               <Link
-                href="/shipping"
+                href="/shipping-policy"
                 className="hover:text-gray-200 transition-colors"
               >
                 Shipping

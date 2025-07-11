@@ -19,6 +19,7 @@ import Image from "next/image";
 export function Footer() {
   return (
     <footer>
+      {/* Top Feature Section */}
       <div className="bg-[#EEEEEE] py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -61,7 +62,7 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Main footer with dark background */}
+      {/* Main Footer */}
       <div className="bg-[#0f2b47] py-12 md:py-32">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -83,7 +84,7 @@ export function Footer() {
                 results and overall wellness.
               </p>
 
-              {/* Social media links */}
+              {/* Social media icons */}
               <div className="flex space-x-3">
                 {[
                   { icon: <Instagram size={18} />, href: "#" },
@@ -132,9 +133,10 @@ export function Footer() {
                 {[
                   { label: "Contact Us", href: "/contact" },
                   { label: "FAQ", href: "/faqs" },
-                  { label: "Shipping Policy", href: "/shipping" },
-                  { label: "Returns", href: "/returns" },
-                  { label: "Privacy Policy", href: "/privacy" },
+                  { label: "Shipping Policy", href: "/shipping-policy" },
+                  { label: "Cancellation & Refund", href: "/refund-policy" },
+                  { label: "Terms & Conditions", href: "/terms-conditions" },
+                  { label: "Privacy Policy", href: "/privacy-policy" },
                 ].map((link, idx) => (
                   <li key={idx}>
                     <Link
@@ -148,12 +150,11 @@ export function Footer() {
               </ul>
             </div>
 
-            {/* Column 4 - Contact */}
+            {/* Column 4 - Contact Info */}
             <div>
               <h3 className="text-white font-semibold text-lg mb-4">
                 Contact Us
               </h3>
-
               <div className="space-y-3 text-white/80 text-sm">
                 <div className="flex items-start">
                   <MapPin
