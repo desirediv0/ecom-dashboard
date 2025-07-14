@@ -775,6 +775,88 @@ export function Navbar() {
           </div>
         </form>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+        <div className="grid grid-cols-5 gap-1">
+          <Link
+            href="/"
+            className={`flex flex-col items-center justify-center py-2 px-1 ${
+              pathname === "/" ? "text-primary" : "text-gray-600"
+            }`}
+          >
+            <svg
+              className="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span className="text-xs mt-1">Home</span>
+          </Link>
+
+          <Link
+            href={isAuthenticated ? "/account" : "/login"}
+            className={`flex flex-col items-center justify-center py-2 px-1 ${
+              pathname.includes("/account") || pathname === "/login"
+                ? "text-primary"
+                : "text-gray-600"
+            }`}
+          >
+            {isAuthenticated ? (
+              <User className="h-6 w-6" />
+            ) : (
+              <LogIn className="h-6 w-6" />
+            )}
+            <span className="text-xs mt-1">You</span>
+          </Link>
+
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="flex flex-col items-center justify-center py-2 px-1 text-gray-600 w-full"
+          >
+            <svg
+              className="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span className="text-xs mt-1">More</span>
+          </button>
+
+          <Link
+            href="/cart"
+            className={`flex flex-col items-center justify-center py-2 px-1 relative ${
+              pathname === "/cart" ? "text-primary" : "text-gray-600"
+            }`}
+          >
+            <div className="relative">
+              <ShoppingCart className="h-6 w-6" />
+              {cart && cart.items?.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                  {cart.items.reduce((acc, item) => acc + item.quantity, 0)}
+                </span>
+              )}
+            </div>
+            <span className="text-xs mt-1">Cart</span>
+          </Link>
+
+          <Link
+            href="/wishlist"
+            className={`flex flex-col items-center justify-center py-2 px-1 ${
+              pathname === "/wishlist" ? "text-primary" : "text-gray-600"
+            }`}
+          >
+            <Heart className="h-6 w-6" />
+            <span className="text-xs mt-1">Wishlist</span>
+          </Link>
+        </div>
+      </div>
     </>
   );
 }
