@@ -97,9 +97,9 @@ const CategoriesCarousel = () => {
               <Image
                 src={category.image || "/placeholder.jpg"}
                 alt={category.name || "Category"}
-                width={100}
-                height={100}
-                className="object-contain w-9 h-9 sm:w-20 sm:h-20"
+                width={200}
+                height={200}
+                className="object-contain sm:w-20 sm:h-20"
                 loading="lazy"
               />
             </div>
@@ -204,7 +204,7 @@ const CategoriesCarousel = () => {
             }}
             className="w-full"
           >
-            <CarouselContent className="-ml-1 sm:-ml-2 flex gap-6">
+            <CarouselContent className="-ml-1 sm:-ml-2 flex gap-2 md:gap-6">
               {categories.map((category, index) => (
                 <CarouselItem
                   key={category.id}
