@@ -223,7 +223,8 @@ export default function ContactPage() {
                         <div>
                           <p className="font-medium">Address</p>
                           <p className="text-gray-600">
-                            {contactInfo?.address || "89/2 Sector 39, Gurugram, Haryana"}
+                            {contactInfo?.address ||
+                              "89/2 Sector 39, Gurugram, Haryana"}
                           </p>
                         </div>
                       </div>
@@ -232,7 +233,7 @@ export default function ContactPage() {
                         <div>
                           <p className="font-medium">Phone</p>
                           <p className="text-gray-600">
-                            {contactInfo?.phone || "+91 98765 43210"}
+                            {contactInfo?.phone || "+91 8053210008"}
                           </p>
                         </div>
                       </div>
@@ -299,9 +300,7 @@ export default function ContactPage() {
           <div className="mt-12">
             <div className="bg-gray-50 rounded-lg overflow-hidden h-[400px] mb-4">
               <iframe
-                src={`https://maps.google.com/maps?q=${28.4423
-                  },${77.0493
-                  }&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                src={`https://maps.google.com/maps?q=${28.4423},${77.0493}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
                 title="GenuineNutrition Location"
                 width="100%"
                 height="100%"

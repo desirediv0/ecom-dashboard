@@ -169,7 +169,7 @@ export function Footer() {
                     size={18}
                     className="text-[#F47C20] mr-2 flex-shrink-0"
                   />
-                  <span>+91 98765 43210</span>
+                  <span>+91 8053210008</span>
                 </div>
 
                 <div className="flex items-center">
