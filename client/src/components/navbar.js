@@ -739,7 +739,7 @@ export function Navbar() {
       </header>
 
       {/* Mobile Search Bar - Below Header */}
-      <div className="md:hidden sticky top-[89px] z-40 bg-white shadow-sm px-4 py-2">
+      <div className="md:hidden sticky top-[102px] z-40 bg-white shadow-sm px-4 py-2">
         <form onSubmit={handleSearch} className="relative">
           <div className="relative flex items-center">
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
