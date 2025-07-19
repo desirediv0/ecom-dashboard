@@ -119,6 +119,7 @@ model Product {
   metaTitle         String?
   metaDescription   String?
   keywords          String?
+  ourProduct        Boolean           @default(false)
   orderItems        OrderItem[]
   categories        ProductCategory[]
   images            ProductImage[]

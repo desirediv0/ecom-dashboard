@@ -59,9 +59,7 @@ export const getProductsByType = asyncHandler(async (req, res, next) => {
         },
       },
     },
-    orderBy: {
-      [sort]: order,
-    },
+    orderBy: [{ ourProduct: "desc" }, { [sort]: order }],
     skip,
     take: parseInt(limit),
   });
@@ -91,19 +89,19 @@ export const getProductsByType = asyncHandler(async (req, res, next) => {
         ...variant,
         flavor: variant.flavor
           ? {
-            ...variant.flavor,
-            image: variant.flavor.image
-              ? getFileUrl(variant.flavor.image)
-              : null,
-          }
+              ...variant.flavor,
+              image: variant.flavor.image
+                ? getFileUrl(variant.flavor.image)
+                : null,
+            }
           : null,
         images: variant.images
           ? variant.images
-            .sort((a, b) => a.order - b.order)
-            .map((image) => ({
-              ...image,
-              url: getFileUrl(image.url),
-            }))
+              .sort((a, b) => a.order - b.order)
+              .map((image) => ({
+                ...image,
+                url: getFileUrl(image.url),
+              }))
           : [],
       })),
     };
@@ -194,9 +192,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
         },
       },
     },
-    orderBy: {
-      [sort]: order,
-    },
+    orderBy: [{ ourProduct: "desc" }, { [sort]: order }],
     skip,
     take: parseInt(limit),
   });
@@ -226,19 +222,19 @@ export const getProducts = asyncHandler(async (req, res, next) => {
         ...variant,
         flavor: variant.flavor
           ? {
-            ...variant.flavor,
-            image: variant.flavor.image
-              ? getFileUrl(variant.flavor.image)
-              : null,
-          }
+              ...variant.flavor,
+              image: variant.flavor.image
+                ? getFileUrl(variant.flavor.image)
+                : null,
+            }
           : null,
         images: variant.images
           ? variant.images
-            .sort((a, b) => a.order - b.order)
-            .map((image) => ({
-              ...image,
-              url: getFileUrl(image.url),
-            }))
+              .sort((a, b) => a.order - b.order)
+              .map((image) => ({
+                ...image,
+                url: getFileUrl(image.url),
+              }))
           : [],
       })),
     };
@@ -327,17 +323,17 @@ export const getProductById = asyncHandler(async (req, res, next) => {
       ...variant,
       flavor: variant.flavor
         ? {
-          ...variant.flavor,
-          image: variant.flavor.image
-            ? getFileUrl(variant.flavor.image)
-            : null,
-        }
+            ...variant.flavor,
+            image: variant.flavor.image
+              ? getFileUrl(variant.flavor.image)
+              : null,
+          }
         : null,
       images: variant.images
         ? variant.images.map((image) => ({
-          ...image,
-          url: getFileUrl(image.url),
-        }))
+            ...image,
+            url: getFileUrl(image.url),
+          }))
         : [],
     })),
     // Include SEO fields
@@ -383,6 +379,7 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     metaTitle,
     metaDescription,
     keywords,
+    ourProduct,
   } = req.body;
 
   // Validation checks with better error handling
@@ -516,6 +513,7 @@ export const createProduct = asyncHandler(async (req, res, next) => {
           metaTitle: metaTitle || cleanName,
           metaDescription: metaDescription || description,
           keywords,
+          ourProduct: ourProduct === "true" || ourProduct === true,
         },
       });
 
@@ -695,8 +693,8 @@ export const createProduct = asyncHandler(async (req, res, next) => {
         const price = req.body.price ? parseFloat(req.body.price) : 0;
         const salePrice =
           req.body.salePrice &&
-            req.body.salePrice !== "null" &&
-            req.body.salePrice !== ""
+          req.body.salePrice !== "null" &&
+          req.body.salePrice !== ""
             ? parseFloat(req.body.salePrice)
             : null;
         const quantity = req.body.quantity ? parseInt(req.body.quantity) : 0;
@@ -839,8 +837,9 @@ export const createProduct = asyncHandler(async (req, res, next) => {
                   data: {
                     variantId: variant._dbId,
                     url: imageUrl,
-                    alt: `${variant.name || newProduct.name} - Variant Image ${i + 1
-                      }`,
+                    alt: `${variant.name || newProduct.name} - Variant Image ${
+                      i + 1
+                    }`,
                     isPrimary: i === 0, // First image is primary
                     order: i, // Set proper order
                   },
@@ -900,17 +899,17 @@ export const createProduct = asyncHandler(async (req, res, next) => {
           ...variant,
           flavor: variant.flavor
             ? {
-              ...variant.flavor,
-              image: variant.flavor.image
-                ? getFileUrl(variant.flavor.image)
-                : null,
-            }
+                ...variant.flavor,
+                image: variant.flavor.image
+                  ? getFileUrl(variant.flavor.image)
+                  : null,
+              }
             : null,
           images: variant.images
             ? variant.images.map((image) => ({
-              ...image,
-              url: getFileUrl(image.url),
-            }))
+                ...image,
+                url: getFileUrl(image.url),
+              }))
             : [],
         })),
         // Include message when variants couldn't be deleted due to orders
@@ -975,6 +974,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
     metaTitle,
     metaDescription,
     keywords,
+    ourProduct,
   } = req.body;
 
   // Check if product exists
@@ -1123,6 +1123,9 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           ...(metaTitle !== undefined && { metaTitle }),
           ...(metaDescription !== undefined && { metaDescription }),
           ...(keywords !== undefined && { keywords }),
+          ...(ourProduct !== undefined && {
+            ourProduct: ourProduct === "true" || ourProduct === true,
+          }),
         },
       });
 
@@ -1196,13 +1199,13 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         const variantIdsToDelete =
           requestExistingVariantIds.length > 0
             ? // Delete only variants that exist in DB but not in the request's existingVariantIds
-            existingVariantIds.filter(
-              (id) => !requestExistingVariantIds.includes(id)
-            )
+              existingVariantIds.filter(
+                (id) => !requestExistingVariantIds.includes(id)
+              )
             : // Fallback to the traditional approach - delete variants not in the updated list
-            existingVariantIds.filter(
-              (id) => !updatedVariantIds.includes(id)
-            );
+              existingVariantIds.filter(
+                (id) => !updatedVariantIds.includes(id)
+              );
 
         // Delete removed variants safely
         if (variantIdsToDelete.length > 0) {
@@ -1841,9 +1844,10 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           if (salePrice !== undefined) {
             await prisma.$executeRaw`
               UPDATE "ProductVariant" 
-              SET "salePrice" = ${updateData.salePrice === null
-                ? null
-                : String(updateData.salePrice)
+              SET "salePrice" = ${
+                updateData.salePrice === null
+                  ? null
+                  : String(updateData.salePrice)
               }, 
                   "updatedAt" = NOW() 
               WHERE "id" = ${product.variants[0].id};
@@ -2018,11 +2022,11 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         ...variant,
         flavor: variant.flavor
           ? {
-            ...variant.flavor,
-            image: variant.flavor.image
-              ? getFileUrl(variant.flavor.image)
-              : null,
-          }
+              ...variant.flavor,
+              image: variant.flavor.image
+                ? getFileUrl(variant.flavor.image)
+                : null,
+            }
           : null,
       })),
       // Include message when variants couldn't be deleted due to orders
@@ -3564,9 +3568,9 @@ export const bulkVariantOperations = asyncHandler(async (req, res) => {
     ...variant,
     flavor: variant.flavor
       ? {
-        ...variant.flavor,
-        image: variant.flavor.image ? getFileUrl(variant.flavor.image) : null,
-      }
+          ...variant.flavor,
+          image: variant.flavor.image ? getFileUrl(variant.flavor.image) : null,
+        }
       : null,
   }));
 
@@ -3643,15 +3647,6 @@ export const setVariantImageAsPrimary = asyncHandler(async (req, res, next) => {
           const currentOrder = currentImage.order;
           const variantId = currentImage.variant.id;
 
-          console.log(
-            `🔑 Setting image ${imageId} as primary (attempt ${retryCount + 1
-            }):`,
-            {
-              currentOrder,
-              variantId,
-            }
-          );
-
           // Step 1: Remove primary flag from all images in this variant
           await tx.productVariantImage.updateMany({
             where: {
@@ -3699,18 +3694,11 @@ export const setVariantImageAsPrimary = asyncHandler(async (req, res, next) => {
         break;
       } catch (error) {
         retryCount++;
-        console.log(
-          `⚠️ Primary image transaction attempt ${retryCount} failed:`,
-          error.code
-        );
 
         if (error.code === "P2034" && retryCount < maxRetries) {
           // Wait a bit before retrying for deadlock/write conflict
           await new Promise((resolve) => setTimeout(resolve, 100 * retryCount));
-          console.log(
-            `🔄 Retrying primary image transaction (attempt ${retryCount + 1
-            }/${maxRetries})`
-          );
+
           continue;
         } else {
           throw error;
