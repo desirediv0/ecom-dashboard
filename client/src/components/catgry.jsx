@@ -93,7 +93,7 @@ const CategoriesCarousel = () => {
               </div>
             </div>
           ) : (
-            <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-50 flex items-center justify-center">
+            <div className="relative w-full h-full  overflow-hidden bg-gray-50 flex items-center justify-center">
               <Image
                 src={category.image || "/placeholder.jpg"}
                 alt={category.name || "Category"}

@@ -25,6 +25,7 @@ import SupplementStoreUI from "@/components/SupplementStoreUI";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { toast } from "sonner";
+import CategoryGrid from "@/components/CategoryGrid";
 
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -965,6 +966,7 @@ export default function Home() {
       )}
 
       <GymSupplementShowcase />
+      <CategoryGrid />
 
       {/* Latest Products Section */}
       {latestProducts.length > 0 && (
