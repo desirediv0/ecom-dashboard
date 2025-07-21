@@ -340,6 +340,9 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Compute isAuthenticated based on user state and loading state
+  const isAuthenticated = !loading && !!user;
+
   const value = {
     user,
     loading,
@@ -352,30 +355,7 @@ export function AuthProvider({ children }) {
     forgotPassword,
     resetPassword,
     updateProfile,
-    isAuthenticated: (() => {
-      // First check cookie
-      if (typeof window !== "undefined") {
-        const userSessionCookie = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("user_session="));
-
-        if (userSessionCookie) {
-          try {
-            const sessionData = JSON.parse(
-              decodeURIComponent(userSessionCookie.split("=")[1])
-            );
-            if (sessionData.isAuthenticated) {
-              return true;
-            }
-          } catch (e) {
-            console.error("Failed to parse user session cookie", e);
-          }
-        }
-      }
-
-      // Fallback to user state
-      return !!user;
-    })(),
+    isAuthenticated,
     // Add helper methods
     isCustomer: user?.role === "CUSTOMER",
     userId: user?.id,

@@ -22,6 +22,7 @@ import {
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import ProductQuickView from "@/components/ProductQuickView";
+import { ClientOnly } from "@/components/client-only";
 import { toast } from "sonner";
 
 // Add ProductCardSkeleton component
@@ -79,6 +80,7 @@ function ProductsContent() {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [wishlistItems, setWishlistItems] = useState({});
   const [isAddingToWishlist, setIsAddingToWishlist] = useState({});
+  const [isAddingToCart, setIsAddingToCart] = useState({});
 
   // Initialize selected filters from URL params
   const [selectedFlavors, setSelectedFlavors] = useState(
@@ -322,7 +324,7 @@ function ProductsContent() {
   // Fetch wishlist status for all products
   useEffect(() => {
     const fetchWishlistStatus = async () => {
-      if (!isAuthenticated) return;
+      if (!isAuthenticated || typeof window === "undefined") return;
 
       try {
         const response = await fetchApi("/users/wishlist", {
@@ -511,7 +513,14 @@ function ProductsContent() {
 
   // Handle add to cart click
   const handleAddToCart = async (product) => {
+    setIsAddingToCart((prev) => ({ ...prev, [product.id]: true }));
     try {
+      if (!isAuthenticated) {
+        router.push(
+          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
       // If product has no variants, show error
       if (!product || !product.variants || product.variants.length === 0) {
         // Try to get default variant from backend
@@ -538,6 +547,8 @@ function ProductsContent() {
     } catch (err) {
       console.error("Error adding to cart:", err);
       toast.error("Failed to add product to cart");
+    } finally {
+      setIsAddingToCart((prev) => ({ ...prev, [product.id]: false }));
     }
   };
 
@@ -1344,11 +1355,23 @@ function ProductsContent() {
                             )}
                           </div>
 
-                          {product.flavors > 1 && (
+                          {/* {product.flavors > 1 && (
                             <span className="text-xs text-gray-500 block">
                               {product.flavors} variants
                             </span>
-                          )}
+                          )} */}
+
+                          <Button
+                            onClick={() => handleAddToCart(product)}
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            disabled={isAddingToCart[product.id]}
+                          >
+                            {isAddingToCart[product.id]
+                              ? "Adding..."
+                              : "Add to Cart"}
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -1438,7 +1461,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense
+    <ClientOnly
       fallback={
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
@@ -1447,7 +1470,17 @@ export default function ProductsPage() {
         </div>
       }
     >
-      <ProductsContent />
-    </Suspense>
+      <Suspense
+        fallback={
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex justify-center items-center h-64">
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
+        }
+      >
+        <ProductsContent />
+      </Suspense>
+    </ClientOnly>
   );
 }

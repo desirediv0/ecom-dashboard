@@ -169,7 +169,7 @@ export const getAllProducts = asyncHandler(async (req, res) => {
         },
       },
     },
-    orderBy: [{ ourProduct: "desc" }, { [sort]: order }],
+    orderBy: [{ [sort]: order }],
     skip: (parseInt(page) - 1) * parseInt(limit),
     take: parseInt(limit),
   });
@@ -674,7 +674,7 @@ export const getProductsByType = asyncHandler(async (req, res) => {
         },
       },
     },
-    orderBy: [{ ourProduct: "desc" }, { [sort]: order }],
+    orderBy: [{ [sort]: order }],
     skip,
     take: parseInt(limit),
   });

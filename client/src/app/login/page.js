@@ -41,7 +41,8 @@ export default function LoginPage() {
       toast.success("Login successful! Redirecting...");
 
       // Get return URL from query parameters if available
-      const returnUrl = searchParams.get("returnUrl");
+      const returnUrl =
+        searchParams.get("returnUrl") || searchParams.get("redirect");
 
       // Add a small delay to allow the toast to be seen (300ms)
       setTimeout(() => {

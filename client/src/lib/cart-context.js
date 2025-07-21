@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { fetchApi } from "./utils";
 import { useAuth } from "./auth-context";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [cart, setCart] = useState({
     items: [],
     subtotal: 0,
@@ -20,17 +22,23 @@ export function CartProvider({ children }) {
   const [error, setError] = useState(null);
   const [coupon, setCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state to prevent hydration issues
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch cart on mount and when auth state changes
   useEffect(() => {
-    if (isAuthenticated) {
+    if (mounted && isAuthenticated) {
       fetchCart();
-    } else {
+    } else if (mounted && !isAuthenticated) {
       // Clear cart when user logs out
       setCart({ items: [], subtotal: 0, itemCount: 0, totalQuantity: 0 });
       setCoupon(null);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, mounted]);
 
   // Get cart
   const fetchCart = async () => {
@@ -50,19 +58,21 @@ export function CartProvider({ children }) {
 
   // Add to cart
   const addToCart = async (productVariantId, quantity = 1) => {
+    if (!mounted) {
+      console.warn("Cart not mounted yet, skipping add to cart");
+      return;
+    }
+
     setLoading(true);
     try {
       // Check if user is authenticated
       if (!isAuthenticated) {
         // User is not logged in, redirect to login page
-        if (typeof window !== "undefined") {
-          // Create a URL with the return path
-          const returnUrl = encodeURIComponent(window.location.pathname);
-          window.location.href = `/login?returnUrl=${returnUrl}`;
+        const returnUrl = encodeURIComponent(window.location.pathname);
+        router.push(`/login?redirect=${returnUrl}`);
 
-          // Show toast notification
-          toast.info("Please log in to add items to your cart");
-        }
+        // Show toast notification
+        toast.info("Please log in to add items to your cart");
         setLoading(false);
         return;
       }
@@ -88,7 +98,6 @@ export function CartProvider({ children }) {
         }
 
         // Show success toast
-        toast.success("Item added to cart");
       }
 
       return res.data;

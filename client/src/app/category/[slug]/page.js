@@ -17,6 +17,7 @@ import {
 import ProductQuickView from "@/components/ProductQuickView";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { useCart } from "@/lib/cart-context";
 
 // Helper function to format image URLs correctly
 const getImageUrl = (image) => {
@@ -30,7 +31,7 @@ export default function CategoryPage() {
   const router = useRouter();
   const { slug } = params;
   const { isAuthenticated } = useAuth();
-
+  const { addToCart } = useCart();
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,7 @@ export default function CategoryPage() {
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [wishlistItems, setWishlistItems] = useState({});
   const [isAddingToWishlist, setIsAddingToWishlist] = useState({});
+  const [isAddingToCart, setIsAddingToCart] = useState({});
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -168,6 +170,46 @@ export default function CategoryPage() {
 
     fetchWishlistStatus();
   }, [isAuthenticated]);
+
+  const handleAddToCart = async (product) => {
+    setIsAddingToCart((prev) => ({ ...prev, [product.id]: true }));
+    try {
+      if (!isAuthenticated) {
+        router.push(
+          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
+      // If product has no variants, show error
+      if (!product || !product.variants || product.variants.length === 0) {
+        // Try to get default variant from backend
+        const response = await fetchApi(
+          `/public/products/${product.id}/variants`
+        );
+        const variants = response.data.variants || [];
+
+        if (variants.length === 0) {
+          toast.error("This product is currently not available");
+          return;
+        }
+
+        // Use first variant as default
+        const variantId = variants[0].id;
+        await addToCart(variantId, 1);
+        toast.success(`${product.name} added to cart`);
+      } else {
+        // Get the first variant (default)
+        const variantId = product.variants[0].id;
+        await addToCart(variantId, 1);
+        toast.success(`${product.name} added to cart`);
+      }
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+      toast.error("Failed to add product to cart");
+    } finally {
+      setIsAddingToCart((prev) => ({ ...prev, [product.id]: false }));
+    }
+  };
 
   // Handle pagination
   const handlePageChange = (newPage) => {
@@ -411,6 +453,16 @@ export default function CategoryPage() {
                     {product.flavors} variants
                   </span>
                 )}
+
+                <Button
+                  onClick={() => handleAddToCart(product)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled={isAddingToCart[product.id]}
+                >
+                  {isAddingToCart[product.id] ? "Adding..." : "Add to Cart"}
+                </Button>
               </div>
             </div>
           ))}
