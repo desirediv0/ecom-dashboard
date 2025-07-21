@@ -18,6 +18,7 @@ import ProductQuickView from "@/components/ProductQuickView";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart-context";
+import CategoriesCarousel from "@/components/catgry";
 
 // Helper function to format image URLs correctly
 const getImageUrl = (image) => {
@@ -260,6 +261,7 @@ export default function CategoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <CategoriesCarousel />
       {/* Category header */}
       {category && (
         <div className="mb-10">

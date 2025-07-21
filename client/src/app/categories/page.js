@@ -6,6 +6,7 @@ import Image from "next/image";
 import { fetchApi } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { AlertCircle, ArrowRight, Package } from "lucide-react";
+import CategoriesCarousel from "@/components/catgry";
 
 // Simple Hero Section Component
 const CategoriesHero = () => {
@@ -173,6 +174,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <CategoriesCarousel />
       {/* Hero Section */}
       <CategoriesHero />
 

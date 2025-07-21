@@ -16,7 +16,7 @@ import {
 import { motion } from "framer-motion";
 import GymSupplementShowcase from "@/components/showcase";
 import BenefitsSec from "@/components/benifit-sec";
-import FeaturedCategoriesSection from "@/components/catgry";
+import CategoriesCarousel from "@/components/catgry";
 import Headtext from "@/components/ui/headtext";
 import ProductQuickView from "@/components/ProductQuickView";
 import { useRouter } from "next/navigation";
@@ -938,7 +938,7 @@ export default function Home() {
 
   return (
     <div>
-      <FeaturedCategoriesSection />
+      <CategoriesCarousel />
       <HeroCarousel />
       <AnnouncementBanner />
 

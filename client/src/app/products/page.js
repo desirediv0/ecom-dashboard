@@ -24,6 +24,7 @@ import { useAuth } from "@/lib/auth-context";
 import ProductQuickView from "@/components/ProductQuickView";
 import { ClientOnly } from "@/components/client-only";
 import { toast } from "sonner";
+import CategoriesCarousel from "@/components/catgry";
 
 // Add ProductCardSkeleton component
 function ProductCardSkeleton() {
@@ -616,6 +617,7 @@ function ProductsContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <CategoriesCarousel />
       <div id="products-main" className="container mx-auto px-4 py-8">
         {/* Hero Banner - add triple click handler for debug mode */}
         <div
