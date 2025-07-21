@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { fetchApi } from "@/lib/utils";
+import Headtext from "./ui/headtext";
 
 const CategoryCard = ({ category, index }) => {
   const isOffers =
@@ -101,9 +102,7 @@ const CategoryGrid = () => {
       <section className="py-8 sm:py-12 bg-gradient-to-br from-slate-50 to-blue-50/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-              Shop by Category
-            </h2>
+            <Headtext text="SHOP BY CATEGORY" />
             <p className="text-gray-600 text-sm sm:text-base">
               Discover our wide range of health and fitness products
             </p>
@@ -150,10 +149,8 @@ const CategoryGrid = () => {
     <section className="py-8 sm:py-12 bg-gradient-to-br from-slate-50 to-blue-50/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            Shop by Category
-          </h2>
-          <p className="text-gray-600 text-sm sm:text-base">
+          <Headtext text="SHOP BY CATEGORY" />
+          <p className="text-gray-600 text-sm sm:text-base my-6 ">
             Discover our wide range of health and fitness products
           </p>
         </div>
