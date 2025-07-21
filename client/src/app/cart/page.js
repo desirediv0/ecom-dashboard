@@ -300,7 +300,7 @@ export default function CartPage() {
               <Button
                 variant="outline"
                 onClick={handleClearCart}
-                className="text-red-500 border-red-200 hover:bg-red-50"
+                className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-500"
                 disabled={loading}
               >
                 {loading ? (

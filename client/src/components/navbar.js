@@ -534,9 +534,9 @@ export function Navbar() {
                               <div className="flex flex-wrap gap-2">
                                 {[
                                   "Protein Powder",
-                                  "Dumbbells",
-                                  "Resistance Bands",
-                                  "Pre-Workout",
+                                  "Gainer",
+                                  "Bcaa",
+                                  "Creatine",
                                 ].map((term) => (
                                   <button
                                     key={term}
