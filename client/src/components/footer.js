@@ -65,7 +65,7 @@ export function Footer() {
       {/* Main Footer */}
       <div className="bg-[#0f2b47] py-12 md:py-32">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {/* Column 1 - About */}
             <div className="md:col-span-1">
               <div className="mb-6">
@@ -75,11 +75,11 @@ export function Footer() {
                     alt="Logo"
                     width={150}
                     height={150}
-                    className="ml-2 p-2 lg:p-0"
+                    className=" lg:p-0"
                   />
                 </Link>
               </div>
-              <p className="text-white/80 mb-6 text-sm">
+              <p className="text-white/80 mb-6 text-xs md:text-sm">
                 Premium quality fitness supplements to enhance your workout
                 results and overall wellness.
               </p>
@@ -117,7 +117,7 @@ export function Footer() {
                   <li key={idx}>
                     <Link
                       href={link.href}
-                      className="text-white/80 hover:text-[#F47C20] transition-colors duration-300 block"
+                      className="text-white/80 hover:text-[#F47C20] transition-colors duration-300 block text-xs md:text-sm"
                     >
                       {link.label}
                     </Link>
@@ -141,7 +141,7 @@ export function Footer() {
                   <li key={idx}>
                     <Link
                       href={link.href}
-                      className="text-white/80 hover:text-[#F47C20] transition-colors duration-300 block"
+                      className="text-white/80 hover:text-[#F47C20] transition-colors duration-300 block text-xs md:text-sm"
                     >
                       {link.label}
                     </Link>
@@ -152,10 +152,10 @@ export function Footer() {
 
             {/* Column 4 - Contact Info */}
             <div>
-              <h3 className="text-white font-semibold text-lg mb-4">
+              <h3 className="text-white font-semibold text-lg mb-4 ">
                 Contact Us
               </h3>
-              <div className="space-y-3 text-white/80 text-sm">
+              <div className="space-y-3 text-white/80 text-xs md:text-sm">
                 <div className="flex items-start">
                   <MapPin
                     size={18}
@@ -171,14 +171,14 @@ export function Footer() {
                   />
                   <span>+91 8053210008</span>
                 </div>
-
+                {/* 
                 <div className="flex items-center">
                   <Mail
                     size={18}
-                    className="text-[#F47C20] mr-2 flex-shrink-0"
+                    className="text-[#F47C20] mr-2 flex-shrink-0 text-wrap flex text-xs"
                   />
                   <span>info@GenuineNutrition.com</span>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
