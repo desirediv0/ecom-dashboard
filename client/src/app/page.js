@@ -511,7 +511,7 @@ const FeaturedProducts = ({
         </Carousel>
       </div>
 
-      <div className="text-center mt-10">
+      <div className="text-center mt-2">
         <Link href="/products">
           <Button
             variant="outline"
@@ -949,7 +949,7 @@ export default function Home() {
       {featuredProducts.length > 0 && (
         <section className="py-10 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center">
               <Headtext text="FEATURED PRODUCTS" />
               <p className="text-gray-600 my-6 max-w-2xl mx-auto">
                 High-quality supplements to enhance your fitness journey
@@ -972,7 +972,7 @@ export default function Home() {
       {latestProducts.length > 0 && (
         <section className="py-10 bg-white">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center">
               <Headtext text="LATEST PRODUCTS" />
               <p className="text-gray-600 my-6 max-w-2xl mx-auto">
                 Discover our newest additions to the collection
@@ -992,7 +992,7 @@ export default function Home() {
       {bestsellerProducts.length > 0 && (
         <section className="py-10 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center">
               <Headtext text="BESTSELLERS" />
               <p className="text-gray-600 my-6 max-w-2xl mx-auto">
                 Our most popular products loved by customers
@@ -1013,7 +1013,7 @@ export default function Home() {
       {trendingProducts.length > 0 && (
         <section className="py-10 bg-white">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center">
               <Headtext text="TRENDING NOW" />
               <p className="text-gray-600 my-6 max-w-2xl mx-auto">
                 Products that are currently trending in the fitness community
@@ -1033,7 +1033,7 @@ export default function Home() {
       {newProducts.length > 0 && (
         <section className="py-10 bg-gray-50">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center">
               <Headtext text="NEW ARRIVALS" />
               <p className="text-gray-600 my-6 max-w-2xl mx-auto">
                 Fresh products just added to our collection
