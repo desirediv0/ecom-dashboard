@@ -8,6 +8,8 @@ import bg4 from "./bg4.jpg";
 import bg4sm from "./bg4-sm.jpg";
 import bg5 from "./bg5.png";
 import bg6 from "./bg6.png";
+import bg5sm from "./bg5-sm.png";
+import bg6sm from "./bg6-sm.png";
 
 import card1 from "./card1.jpg";
 import card2 from "./card2.jpg";
@@ -26,6 +28,8 @@ export {
   bg4sm,
   bg5,
   bg6,
+  bg5sm,
+  bg6sm,
   card1,
   card2,
   card3,

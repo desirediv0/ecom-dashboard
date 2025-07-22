@@ -20,7 +20,18 @@ import CategoriesCarousel from "@/components/catgry";
 import Headtext from "@/components/ui/headtext";
 import ProductQuickView from "@/components/ProductQuickView";
 import { useRouter } from "next/navigation";
-import { bg2, bg2sm, bg3, bg3sm, bg4, bg4sm } from "@/assets";
+import {
+  bg2,
+  bg2sm,
+  bg3,
+  bg3sm,
+  bg4,
+  bg4sm,
+  bg5,
+  bg5sm,
+  bg6,
+  bg6sm,
+} from "@/assets";
 import SupplementStoreUI from "@/components/SupplementStoreUI";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
@@ -55,6 +66,20 @@ const HeroCarousel = () => {
       ctaLink: "/category/pre-workout",
       img: bg3,
       smimg: bg3sm,
+      title: "Pre-Workout Power",
+      subtitle: "Maximize Your Energy",
+    },
+    {
+      ctaLink: "/category/pre-workout",
+      img: bg5,
+      smimg: bg5sm,
+      title: "Pre-Workout Power",
+      subtitle: "Maximize Your Energy",
+    },
+    {
+      ctaLink: "/category/pre-workout",
+      img: bg6,
+      smimg: bg6sm,
       title: "Pre-Workout Power",
       subtitle: "Maximize Your Energy",
     },
@@ -118,7 +143,7 @@ const HeroCarousel = () => {
                     src={isMobile ? slide.smimg : slide.img}
                     alt={slide.title || "Hero banner"}
                     fill
-                    className="object-cover transition-transform duration-700  "
+                    className="object-fill transition-transform duration-700"
                     priority={index === 0}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
                   />
