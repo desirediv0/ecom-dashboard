@@ -10,6 +10,10 @@ import bg5 from "./bg5.png";
 import bg6 from "./bg6.png";
 import bg5sm from "./bg5-sm.png";
 import bg6sm from "./bg6-sm.png";
+import bg7 from "./bg7.jpg";
+import bg8 from "./bg8.jpg";
+import bg7sm from "./bg7-sm.jpg";
+import bg8sm from "./bg8-sm.jpg";
 
 import card1 from "./card1.jpg";
 import card2 from "./card2.jpg";
@@ -30,6 +34,10 @@ export {
   bg6,
   bg5sm,
   bg6sm,
+  bg7,
+  bg8,
+  bg7sm,
+  bg8sm,
   card1,
   card2,
   card3,
