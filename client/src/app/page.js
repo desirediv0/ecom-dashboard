@@ -62,13 +62,13 @@ const HeroCarousel = () => {
     //   title: "Protein Collection",
     //   subtitle: "Build Muscle Faster",
     // },
-    {
-      ctaLink: "/category/pre-workout",
-      img: bg3,
-      smimg: bg3sm,
-      title: "Pre-Workout Power",
-      subtitle: "Maximize Your Energy",
-    },
+    // {
+    //   ctaLink: "/category/pre-workout",
+    //   img: bg3,
+    //   smimg: bg3sm,
+    //   title: "Pre-Workout Power",
+    //   subtitle: "Maximize Your Energy",
+    // },
     {
       ctaLink: "/category/pre-workout",
       img: bg5,
