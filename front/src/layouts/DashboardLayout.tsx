@@ -166,6 +166,16 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
+                href="/brands"
+                icon={<Tags className="h-5 w-5" />}
+                title="Brands"
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.BRANDS,
+                  Action.READ
+                )}
+              />
+              <NavItem
                 href="/featured-products"
                 icon={<Star className="h-5 w-5" />}
                 title="Featured"
@@ -365,6 +375,17 @@ export default function DashboardLayout() {
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.PRODUCTS,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/brands"
+                icon={<Tags className="h-5 w-5" />}
+                title="Brands"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.BRANDS,
                   Action.READ
                 )}
               />

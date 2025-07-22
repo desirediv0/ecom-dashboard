@@ -13,6 +13,10 @@ import {
   getProductsByType,
 } from "../controllers/product.controller.js";
 import { trackProductView } from "../middlewares/tracking.middleware.js";
+import {
+  getBrandsByTag,
+  getBrandBySlug,
+} from "../controllers/public.controller.js";
 
 const router = express.Router();
 
@@ -30,5 +34,9 @@ router.get("/product-variant", getProductVariant);
 // Flavors and Weights
 router.get("/flavors", getAllFlavors);
 router.get("/weights", getAllWeights);
+
+// Brands
+router.get("/brands-by-tag", getBrandsByTag);
+router.get("/brand/:slug", getBrandBySlug);
 
 export default router;

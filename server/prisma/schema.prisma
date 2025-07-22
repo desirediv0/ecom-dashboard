@@ -119,7 +119,13 @@ model Product {
   metaTitle         String?
   metaDescription   String?
   keywords          String?
+  tags              String[]          @default([])
+  topBrandIds       String[]          @default([])
+  newBrandIds       String[]          @default([])
+  hotBrandIds       String[]          @default([])
   ourProduct        Boolean           @default(false)
+  brandId           String?
+  brand             Brand?            @relation(fields: [brandId], references: [id])
   orderItems        OrderItem[]
   categories        ProductCategory[]
   images            ProductImage[]
@@ -505,6 +511,17 @@ model ProductView {
 
   @@index([productId])
   @@index([userId])
+}
+
+model Brand {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  image     String
+  tags      String[]  @default([])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 }
 
 enum UserRole {

@@ -701,3 +701,37 @@ export const settings = {
     });
   },
 };
+
+// Brands Management
+export const brands = {
+  getBrands: (params: any = {}) => {
+    return api.get("/api/admin/brands", { params });
+  },
+  createBrand: (data: { name: string; image: File; tags?: string[] }) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("image", data.image);
+    if (data.tags) data.tags.forEach((tag) => formData.append("tags", tag));
+    return api.post("/api/admin/brands", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  updateBrand: (
+    brandId: string,
+    data: { name?: string; image?: File; tags?: string[] }
+  ) => {
+    const formData = new FormData();
+    if (data.name) formData.append("name", data.name);
+    if (data.image) formData.append("image", data.image);
+    if (data.tags) data.tags.forEach((tag) => formData.append("tags", tag));
+    return api.patch(`/api/admin/brands/${brandId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  deleteBrand: (brandId: string) => {
+    return api.delete(`/api/admin/brands/${brandId}`);
+  },
+  removeProductFromBrand: (brandId: string, productId: string) => {
+    return api.delete(`/api/admin/brands/${brandId}/products/${productId}`);
+  },
+};

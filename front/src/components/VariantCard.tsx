@@ -557,12 +557,6 @@ export default function VariantCard({
             order: i,
           }));
 
-        console.log(`🔄 Reordering images for variant ${variant.id}:`, {
-          imageOrders,
-          draggedFrom: draggedImageIndex,
-          droppedAt: dropIndex,
-        });
-
         if (imageOrders.length > 0) {
           const response = await products.reorderVariantImages(
             variant.id!,
@@ -847,11 +841,6 @@ export default function VariantCard({
                           src={image.url}
                           alt={`Variant image ${imageIndex + 1}`}
                           className="h-full w-full object-cover"
-                          onLoad={() => {
-                            console.log(
-                              `✅ Image loaded successfully: ${image.url}`
-                            );
-                          }}
                           onError={(e) => {
                             console.error(
                               `❌ Failed to load image: ${image.url}`

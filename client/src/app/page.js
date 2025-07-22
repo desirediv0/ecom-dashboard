@@ -26,6 +26,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { toast } from "sonner";
 import CategoryGrid from "@/components/CategoryGrid";
+import BrandCarousel from "@/components/BrandCarousel";
 
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -994,6 +995,11 @@ export default function Home() {
       <CategoriesCarousel />
       <HeroCarousel />
       <AnnouncementBanner />
+
+      {/* Brand Carousels */}
+      <BrandCarousel tag="TOP" title="Top Brands" />
+      <BrandCarousel tag="NEW" title="New Brands" />
+      <BrandCarousel tag="HOT" title="Hot Brands" />
 
       {/* Featured Categories Section */}
 

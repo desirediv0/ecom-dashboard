@@ -513,6 +513,26 @@ export const createProduct = asyncHandler(async (req, res, next) => {
           metaTitle: metaTitle || cleanName,
           metaDescription: metaDescription || description,
           keywords,
+          tags: req.body.tags
+            ? Array.isArray(req.body.tags)
+              ? req.body.tags
+              : [req.body.tags]
+            : [],
+          topBrandIds: req.body.topBrandIds
+            ? typeof req.body.topBrandIds === "string"
+              ? JSON.parse(req.body.topBrandIds)
+              : req.body.topBrandIds
+            : [],
+          newBrandIds: req.body.newBrandIds
+            ? typeof req.body.newBrandIds === "string"
+              ? JSON.parse(req.body.newBrandIds)
+              : req.body.newBrandIds
+            : [],
+          hotBrandIds: req.body.hotBrandIds
+            ? typeof req.body.hotBrandIds === "string"
+              ? JSON.parse(req.body.hotBrandIds)
+              : req.body.hotBrandIds
+            : [],
           ourProduct: ourProduct === "true" || ourProduct === true,
         },
       });
@@ -1123,9 +1143,33 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           ...(metaTitle !== undefined && { metaTitle }),
           ...(metaDescription !== undefined && { metaDescription }),
           ...(keywords !== undefined && { keywords }),
+          ...(req.body.tags !== undefined && {
+            tags: Array.isArray(req.body.tags)
+              ? req.body.tags
+              : [req.body.tags],
+          }),
+          ...(req.body.topBrandIds !== undefined && {
+            topBrandIds:
+              typeof req.body.topBrandIds === "string"
+                ? JSON.parse(req.body.topBrandIds)
+                : req.body.topBrandIds,
+          }),
+          ...(req.body.newBrandIds !== undefined && {
+            newBrandIds:
+              typeof req.body.newBrandIds === "string"
+                ? JSON.parse(req.body.newBrandIds)
+                : req.body.newBrandIds,
+          }),
+          ...(req.body.hotBrandIds !== undefined && {
+            hotBrandIds:
+              typeof req.body.hotBrandIds === "string"
+                ? JSON.parse(req.body.hotBrandIds)
+                : req.body.hotBrandIds,
+          }),
           ...(ourProduct !== undefined && {
             ourProduct: ourProduct === "true" || ourProduct === true,
           }),
+          ...(req.body.brandId !== undefined && { brandId: req.body.brandId }),
         },
       });
 
