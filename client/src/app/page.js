@@ -48,20 +48,20 @@ const HeroCarousel = () => {
   const router = useRouter();
 
   const slides = [
-    {
-      ctaLink: "/category/protein",
-      img: bg4,
-      smimg: bg4sm,
-      title: "Vitamins & Minerals",
-      subtitle: "Support Your Health",
-    },
-    {
-      ctaLink: "/category/protein",
-      img: bg2,
-      smimg: bg2sm,
-      title: "Protein Collection",
-      subtitle: "Build Muscle Faster",
-    },
+    // {
+    //   ctaLink: "/category/protein",
+    //   img: bg4,
+    //   smimg: bg4sm,
+    //   title: "Vitamins & Minerals",
+    //   subtitle: "Support Your Health",
+    // },
+    // {
+    //   ctaLink: "/category/protein",
+    //   img: bg2,
+    //   smimg: bg2sm,
+    //   title: "Protein Collection",
+    //   subtitle: "Build Muscle Faster",
+    // },
     {
       ctaLink: "/category/pre-workout",
       img: bg3,
@@ -77,7 +77,7 @@ const HeroCarousel = () => {
       subtitle: "Maximize Your Energy",
     },
     {
-      ctaLink: "/category/pre-workout",
+      ctaLink: "/category/protein",
       img: bg6,
       smimg: bg6sm,
       title: "Pre-Workout Power",
