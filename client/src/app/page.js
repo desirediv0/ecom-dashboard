@@ -19,7 +19,18 @@ import CategoriesCarousel from "@/components/catgry";
 import Headtext from "@/components/ui/headtext";
 import ProductQuickView from "@/components/ProductQuickView";
 import { useRouter } from "next/navigation";
-import { bg5, bg5sm, bg6, bg6sm, bg7, bg7sm, bg8, bg8sm } from "@/assets";
+import {
+  bg1,
+  bg1sm,
+  bg2,
+  bg2sm,
+  bg3,
+  bg3sm,
+  bg5,
+  bg5sm,
+  bg6,
+  bg6sm,
+} from "@/assets";
 import SupplementStoreUI from "@/components/SupplementStoreUI";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
@@ -47,22 +58,29 @@ const HeroCarousel = () => {
       ctaLink: "/category/protein",
       img: bg6,
       smimg: bg6sm,
-      title: "Pre-Workout Power",
-      subtitle: "Maximize Your Energy",
-    },
-    {
-      ctaLink: "/category/protein",
-      img: bg7,
-      smimg: bg7sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/pre-workout",
-      img: bg8,
-      smimg: bg8sm,
-      title: "Pre-Workout Power",
-      subtitle: "Maximize Your Energy",
+      ctaLink: "/category/protein",
+      img: bg1,
+      smimg: bg1sm,
+      title: "Protein Collection",
+      subtitle: "Build Muscle Faster",
+    },
+    {
+      ctaLink: "/category/protein",
+      img: bg2,
+      smimg: bg2sm,
+      title: "Protein Collection",
+      subtitle: "Build Muscle Faster",
+    },
+    {
+      ctaLink: "/category/protein",
+      img: bg3,
+      smimg: bg3sm,
+      title: "Protein Collection",
+      subtitle: "Build Muscle Faster",
     },
   ];
 
@@ -124,7 +142,7 @@ const HeroCarousel = () => {
                     src={isMobile ? slide.smimg : slide.img}
                     alt={slide.title || "Hero banner"}
                     fill
-                    className="object-fill transition-transform duration-700"
+                    className="object-cover md:object-fill transition-transform duration-700"
                     priority={index === 0}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
                   />
