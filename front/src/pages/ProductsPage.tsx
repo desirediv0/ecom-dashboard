@@ -501,7 +501,6 @@ export function ProductForm({
 
     // Generate combinations of flavors and weights
     const newVariants: any[] = [];
-    let duplicateFound = false;
 
     // Helper to check for duplicate
     const isDuplicate = (flavorId: string | null, weightId: string | null) => {
@@ -516,7 +515,6 @@ export function ProductForm({
       selectedFlavorObjects.forEach((flavor) => {
         selectedWeightObjects.forEach((weight) => {
           if (isDuplicate(flavor.id, weight.id)) {
-            duplicateFound = true;
             return;
           }
           const skuBase = product.sku || "";
@@ -543,7 +541,6 @@ export function ProductForm({
     } else if (selectedFlavorObjects.length > 0) {
       selectedFlavorObjects.forEach((flavor) => {
         if (isDuplicate(flavor.id, null)) {
-          duplicateFound = true;
           return;
         }
         const skuBase = product.sku || "";
@@ -568,7 +565,6 @@ export function ProductForm({
     } else if (selectedWeightObjects.length > 0) {
       selectedWeightObjects.forEach((weight) => {
         if (isDuplicate(null, weight.id)) {
-          duplicateFound = true;
           return;
         }
         const skuBase = product.sku || "";
@@ -1064,25 +1060,25 @@ export function ProductForm({
   ]);
 
   // ... inside ProductForm, after brands state:
-  const [brands, setBrands] = useState<{ label: string; value: string }[]>([]);
+  // const [brands, setBrands] = useState<{ label: string; value: string }[]>([]); // Removed unused brands state
 
-  useEffect(() => {
-    async function fetchBrands() {
-      try {
-        const res = await import("@/api/adminService").then((m) =>
-          m.brands.getBrands()
-        );
-        const brandOptions = (res.data.data.brands || []).map((b: any) => ({
-          label: b.name,
-          value: b.id,
-        }));
-        setBrands(brandOptions);
-      } catch (e) {
-        // ignore
-      }
-    }
-    fetchBrands();
-  }, []);
+  // useEffect(() => {
+  //   async function fetchBrands() {
+  //     try {
+  //       const res = await import("@/api/adminService").then((m) =>
+  //         m.brands.getBrands()
+  //       );
+  //       const brandOptions = (res.data.data.brands || []).map((b: any) => ({
+  //         label: b.name,
+  //         value: b.id,
+  //       }));
+  //       setBrands(brandOptions);
+  //     } catch (e) {
+  //       // ignore
+  //     }
+  //   }
+  //   fetchBrands();
+  // }, []);
 
   if (formLoading) {
     return (

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/carousel";
 import Headtext from "@/components/ui/headtext";
 import { fetchApi } from "@/lib/utils";
+import Image from "next/image";
 
 export default function BrandCarousel({ tag, title }) {
   const [brands, setBrands] = useState([]);
@@ -59,7 +60,9 @@ export default function BrandCarousel({ tag, title }) {
                   className="block group text-center"
                 >
                   <div className="relative h-24 w-24 mx-auto mb-2 bg-white rounded-lg border flex items-center justify-center shadow">
-                    <img
+                    <Image
+                      width={100}
+                      height={100}
                       src={
                         brand.image?.startsWith("http")
                           ? brand.image
