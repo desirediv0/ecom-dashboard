@@ -997,9 +997,7 @@ export default function Home() {
       <AnnouncementBanner />
 
       {/* Brand Carousels */}
-      <BrandCarousel tag="TOP" title="Top Brands" />
-      <BrandCarousel tag="NEW" title="New Brands" />
-      <BrandCarousel tag="HOT" title="Hot Brands" />
+      <BrandCarousel tag="TOP" title="TOP BRANDS" />
 
       {/* Featured Categories Section */}
 
@@ -1022,6 +1020,8 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      <BrandCarousel tag="NEW" title="NEW BRANDS" />
 
       {/* <GymSupplementShowcase /> */}
       <CategoryGrid />
@@ -1106,6 +1106,8 @@ export default function Home() {
           </div>
         </section>
       )}
+      <BrandCarousel tag="HOT" title="HOT BRANDS" />
+
       <BenefitsSec />
       <TestimonialsSection />
       <NewsletterSection />
