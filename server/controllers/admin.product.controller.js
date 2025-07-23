@@ -2721,7 +2721,22 @@ export const deleteProductVariant = asyncHandler(async (req, res, next) => {
 
 // Get all flavors
 export const getFlavors = asyncHandler(async (req, res, next) => {
-  const flavors = await prisma.flavor.findMany();
+  const { search } = req.query;
+  let where = {};
+
+  if (search) {
+    where = {
+      name: {
+        contains: search,
+        mode: "insensitive",
+      },
+    };
+  }
+
+  const flavors = await prisma.flavor.findMany({
+    where,
+    orderBy: { name: "asc" },
+  });
 
   // Format flavors with proper image URLs
   const formattedFlavors = flavors.map((flavor) => ({
@@ -2941,7 +2956,30 @@ export const deleteFlavor = asyncHandler(async (req, res, next) => {
 
 // Get all weights
 export const getWeights = asyncHandler(async (req, res, next) => {
+  const { search } = req.query;
+  let where = {};
+
+  if (search) {
+    // Try to match value (as string) or unit
+    where = {
+      OR: [
+        {
+          value: {
+            equals: isNaN(Number(search)) ? undefined : Number(search),
+          },
+        },
+        {
+          unit: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    };
+  }
+
   const weights = await prisma.weight.findMany({
+    where,
     orderBy: { value: "asc" },
   });
 

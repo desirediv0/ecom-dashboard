@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorDialog } from "@/components/ErrorDialog";
+import { useDebounce } from "@/utils/debounce";
 
 export default function FlavorsPage() {
   const { id } = useParams();
@@ -54,12 +55,17 @@ function FlavorsList() {
     description: "",
   });
 
+  // Search state
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
   // Fetch flavors
   useEffect(() => {
     const fetchFlavors = async () => {
       try {
         setIsLoading(true);
-        const response = await flavors.getFlavors();
+        const params = debouncedSearch ? { search: debouncedSearch } : {};
+        const response = await flavors.getFlavors(params);
 
         if (response.data.success) {
           setFlavorsList(response.data.data?.flavors || []);
@@ -75,7 +81,7 @@ function FlavorsList() {
     };
 
     fetchFlavors();
-  }, []);
+  }, [debouncedSearch]);
 
   // Handle flavor deletion
   const handleDeleteFlavor = async (
@@ -191,6 +197,16 @@ function FlavorsList() {
             Add Flavor
           </Link>
         </Button>
+      </div>
+
+      {/* Search Input */}
+      <div className="max-w-xs mb-2">
+        <Input
+          type="text"
+          placeholder="Search flavors..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       {/* Flavors List */}

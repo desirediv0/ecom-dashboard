@@ -324,8 +324,8 @@ export const products = {
 
 // Flavors Management
 export const flavors = {
-  getFlavors: () => {
-    return api.get("/api/admin/flavors");
+  getFlavors: (params = {}) => {
+    return api.get("/api/admin/flavors", { params });
   },
   getFlavorById: (flavorId: string) => {
     return api.get(`/api/admin/flavors/${flavorId}`);
@@ -432,8 +432,8 @@ export const inventory = {
 
 // Weights Management
 export const weights = {
-  getWeights: () => {
-    return api.get("/api/admin/weights");
+  getWeights: (params = {}) => {
+    return api.get("/api/admin/weights", { params });
   },
   getWeightById: (weightId: string) => {
     return api.get(`/api/admin/weights/${weightId}`);

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorDialog } from "@/components/ErrorDialog";
+import { useDebounce } from "@/utils/debounce";
 
 export default function WeightsPage() {
   const { id } = useParams();
@@ -52,12 +53,17 @@ function WeightsList() {
     description: "",
   });
 
+  // Search state
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
   // Fetch weights
   useEffect(() => {
     const fetchWeights = async () => {
       try {
         setIsLoading(true);
-        const response = await weights.getWeights();
+        const params = debouncedSearch ? { search: debouncedSearch } : {};
+        const response = await weights.getWeights(params);
 
         if (response.data.success) {
           setWeightsList(response.data.data?.weights || []);
@@ -73,7 +79,7 @@ function WeightsList() {
     };
 
     fetchWeights();
-  }, []);
+  }, [debouncedSearch]);
 
   // Handle weight deletion confirmation
   const confirmDeleteWeight = (weightId: string, weightName: string) => {
@@ -202,6 +208,16 @@ function WeightsList() {
             Add Weight
           </Link>
         </Button>
+      </div>
+
+      {/* Search Input */}
+      <div className="max-w-xs mb-2">
+        <Input
+          type="text"
+          placeholder="Search weights..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       {/* Weights List */}

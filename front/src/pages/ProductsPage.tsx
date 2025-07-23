@@ -27,6 +27,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DeleteProductDialog } from "@/components/DeleteProductDialog";
 import VariantCard from "@/components/VariantCard";
+import { useDebounce } from "@/utils/debounce";
 // import { MultiSelect } from "@/components/ui/multiselect";
 
 function useCategories() {
@@ -2127,6 +2128,7 @@ function ProductsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -2146,7 +2148,7 @@ function ProductsList() {
         const params = {
           page: currentPage,
           limit: 10,
-          ...(searchQuery && { search: searchQuery }),
+          ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
           ...(selectedCategory && { category: selectedCategory }),
         };
 
@@ -2169,7 +2171,7 @@ function ProductsList() {
     };
 
     fetchProducts();
-  }, [currentPage, searchQuery, selectedCategory]);
+  }, [currentPage, debouncedSearchQuery, selectedCategory]);
 
   // Fetch categories for filter
   useEffect(() => {
