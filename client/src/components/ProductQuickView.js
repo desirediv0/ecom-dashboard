@@ -114,8 +114,22 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
                   setSelectedVariant(matchingVariant.variant);
                 }
               }
+            } else if (
+              productData.weightOptions?.length > 0 &&
+              combinations.length > 0
+            ) {
+              // No flavors, but weights and variants exist
+              const firstWeight = productData.weightOptions[0];
+              setSelectedWeight(firstWeight);
+              // Find the variant for this weight
+              const matchingVariant = combinations.find(
+                (combo) => combo.weightId === firstWeight.id
+              );
+              if (matchingVariant) {
+                setSelectedVariant(matchingVariant.variant);
+              }
             } else if (productData.variants.length > 0) {
-              // If no flavor/weight options but variants exist, use the first variant
+              // Fallback: just pick the first variant
               setSelectedVariant(productData.variants[0]);
             }
           }
@@ -212,13 +226,9 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
   const handleWeightChange = (weight) => {
     setSelectedWeight(weight);
 
-    // Find available flavors for this weight
-    const availableFlavorIds = getAvailableFlavorsForWeight(weight.id);
-
-    if (
-      productDetails?.flavorOptions?.length > 0 &&
-      availableFlavorIds.length > 0
-    ) {
+    if (productDetails?.flavorOptions?.length > 0) {
+      // Find available flavors for this weight
+      const availableFlavorIds = getAvailableFlavorsForWeight(weight.id);
       // Use currently selected flavor if it's compatible with the new weight
       if (selectedFlavor && availableFlavorIds.includes(selectedFlavor.id)) {
         // Current flavor is compatible, keep it selected
@@ -226,7 +236,6 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
           (combo) =>
             combo.weightId === weight.id && combo.flavorId === selectedFlavor.id
         );
-
         if (matchingVariant) {
           setSelectedVariant(matchingVariant.variant);
         }
@@ -235,25 +244,27 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
         const firstAvailableFlavor = productDetails.flavorOptions.find(
           (flavor) => availableFlavorIds.includes(flavor.id)
         );
-
         if (firstAvailableFlavor) {
           setSelectedFlavor(firstAvailableFlavor);
-
           // Find the corresponding variant
           const matchingVariant = availableCombinations.find(
             (combo) =>
               combo.weightId === weight.id &&
               combo.flavorId === firstAvailableFlavor.id
           );
-
           if (matchingVariant) {
             setSelectedVariant(matchingVariant.variant);
           }
         }
       }
     } else {
-      setSelectedFlavor(null);
-      setSelectedVariant(null);
+      // No flavors, just pick the variant for this weight
+      const matchingVariant = availableCombinations.find(
+        (combo) => combo.weightId === weight.id
+      );
+      if (matchingVariant) {
+        setSelectedVariant(matchingVariant.variant);
+      }
     }
   };
 

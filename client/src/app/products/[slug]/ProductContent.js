@@ -97,8 +97,22 @@ export default function ProductContent({ slug }) {
                 setSelectedVariant(matchingVariant.variant);
               }
             }
+          } else if (
+            productData.weightOptions?.length > 0 &&
+            combinations.length > 0
+          ) {
+            // No flavors, but weights and variants exist
+            const firstWeight = productData.weightOptions[0];
+            setSelectedWeight(firstWeight);
+            // Find the variant for this weight
+            const matchingVariant = combinations.find(
+              (combo) => combo.weightId === firstWeight.id
+            );
+            if (matchingVariant) {
+              setSelectedVariant(matchingVariant.variant);
+            }
           } else if (productData.variants.length > 0) {
-            // If no flavor/weight options but we have variants, select the first one
+            // Fallback: just pick the first variant
             setSelectedVariant(productData.variants[0]);
           }
         }
@@ -228,8 +242,13 @@ export default function ProductContent({ slug }) {
         }
       }
     } else {
-      setSelectedFlavor(null);
-      setSelectedVariant(null);
+      // No flavors, just pick the variant for this weight
+      const matchingVariant = availableCombinations.find(
+        (combo) => combo.weightId === weight.id
+      );
+      if (matchingVariant) {
+        setSelectedVariant(matchingVariant.variant);
+      }
     }
   };
 
@@ -861,7 +880,7 @@ export default function ProductContent({ slug }) {
               </div>
             )}
 
-            {product.tags && product.tags.length > 0 && (
+            {/* {product.tags && product.tags.length > 0 && (
               <div className="flex">
                 <span className="font-medium w-32 text-gray-700">Tags:</span>
                 <div className="text-gray-600">
@@ -878,7 +897,7 @@ export default function ProductContent({ slug }) {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
