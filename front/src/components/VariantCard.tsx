@@ -638,11 +638,10 @@ export default function VariantCard({
           {currentImages.slice(0, 4).map((image, imageIndex) => (
             <div
               key={image.id || image.tempId || imageIndex}
-              className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${
-                image.isPrimary
+              className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${image.isPrimary
                   ? "border-green-500 ring-1 ring-green-200"
                   : "border-gray-200"
-              }`}
+                }`}
             >
               <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                 {image.url ? (
@@ -732,7 +731,7 @@ export default function VariantCard({
                 id={`price-${index}`}
                 type="number"
                 min="0"
-                step="0.01"
+
                 value={variant.price}
                 onChange={(e) => handleInputChange("price", e.target.value)}
                 className="h-8"
@@ -748,7 +747,7 @@ export default function VariantCard({
                 id={`salePrice-${index}`}
                 type="number"
                 min="0"
-                step="0.01"
+
                 value={variant.salePrice || ""}
                 onChange={(e) => handleInputChange("salePrice", e.target.value)}
                 className="h-8"
@@ -770,13 +769,12 @@ export default function VariantCard({
             {remainingSlots > 0 && (
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
-                  isDragActive
+                className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${isDragActive
                     ? isDragReject
                       ? "border-red-400 bg-red-50"
                       : "border-blue-400 bg-blue-50"
                     : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-                } ${isUploading ? "opacity-50 pointer-events-none" : ""} ${remainingSlots <= 0 ? "opacity-50 pointer-events-none" : ""}`}
+                  } ${isUploading ? "opacity-50 pointer-events-none" : ""} ${remainingSlots <= 0 ? "opacity-50 pointer-events-none" : ""}`}
               >
                 <input {...getInputProps()} />
                 <div className="flex flex-col items-center space-y-2">
@@ -819,20 +817,17 @@ export default function VariantCard({
                     onDragOver={(e) => handleDragOver(e, imageIndex)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, imageIndex)}
-                    className={`relative rounded-lg overflow-hidden border-2 transition-all cursor-move ${
-                      image.isPrimary
+                    className={`relative rounded-lg overflow-hidden border-2 transition-all cursor-move ${image.isPrimary
                         ? "border-green-500 ring-2 ring-green-200 shadow-lg"
                         : "border-gray-200"
-                    } ${
-                      draggedImageIndex === imageIndex
+                      } ${draggedImageIndex === imageIndex
                         ? "opacity-50 scale-95"
                         : ""
-                    } ${
-                      dragOverIndex === imageIndex &&
-                      draggedImageIndex !== imageIndex
+                      } ${dragOverIndex === imageIndex &&
+                        draggedImageIndex !== imageIndex
                         ? "border-blue-400 bg-blue-50"
                         : ""
-                    }`}
+                      }`}
                   >
                     {/* Image Container */}
                     <div className="aspect-square bg-gray-100 flex items-center justify-center">

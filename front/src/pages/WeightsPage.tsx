@@ -127,7 +127,7 @@ function WeightsList() {
       } else {
         toast.error(
           error.response?.data?.message ||
-            "An error occurred while deleting the weight"
+          "An error occurred while deleting the weight"
         );
       }
     }
@@ -176,26 +176,26 @@ function WeightsList() {
         secondaryAction={
           errorDialogContent.title === "Weight in Use"
             ? {
-                label: "Force Delete",
-                onClick: () => {
-                  setIsErrorDialogOpen(false);
-                  // Extract weightId and weightName from current context
-                  const weightToDelete = weightsList.find((w) =>
-                    errorDialogContent.description.includes(w.value.toString())
+              label: "Force Delete",
+              onClick: () => {
+                setIsErrorDialogOpen(false);
+                // Extract weightId and weightName from current context
+                const weightToDelete = weightsList.find((w) =>
+                  errorDialogContent.description.includes(w.value.toString())
+                );
+                if (weightToDelete) {
+                  handleDeleteWeight(
+                    weightToDelete.id,
+                    `${weightToDelete.value} ${weightToDelete.unit}`,
+                    true
                   );
-                  if (weightToDelete) {
-                    handleDeleteWeight(
-                      weightToDelete.id,
-                      `${weightToDelete.value} ${weightToDelete.unit}`,
-                      true
-                    );
-                  }
-                },
-              }
+                }
+              },
+            }
             : {
-                label: "View Products",
-                onClick: () => navigate("/products"),
-              }
+              label: "View Products",
+              onClick: () => navigate("/products"),
+            }
         }
       />
 
@@ -398,7 +398,7 @@ function WeightForm({
       } else {
         setError(
           response.data.message ||
-            `Failed to ${mode === "create" ? "create" : "update"} weight`
+          `Failed to ${mode === "create" ? "create" : "update"} weight`
         );
       }
     } catch (error: any) {
@@ -457,7 +457,7 @@ function WeightForm({
                 id="value"
                 name="value"
                 type="number"
-                step="0.01"
+
                 min="0"
                 placeholder="e.g., 50, 100, 250"
                 value={formData.value}
