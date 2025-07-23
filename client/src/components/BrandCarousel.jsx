@@ -79,8 +79,8 @@ export default function BrandCarousel({ tag, title }) {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="left-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg" />
-          <CarouselNext className="right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg" />
+          <CarouselPrevious className="-left-3 md:-left-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg hover:text-gray-800" />
+          <CarouselNext className="-right-1 md:right-0 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 hover:bg-white border-gray-200 text-gray-700 shadow-lg hover:text-gray-800" />
         </Carousel>
       </div>
     </section>
