@@ -322,6 +322,7 @@ function WeightForm({
     { value: "pcs", label: "Pieces (pcs)" },
     { value: "tabs", label: "Tabs (tabs)" },
     { value: "capsules", label: "Capsules (capsules)" },
+    { value: "servings", label: "Servings (servings)" },
   ];
 
   // Fetch weight details if in edit mode
