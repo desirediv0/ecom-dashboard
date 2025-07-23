@@ -44,7 +44,7 @@ export default function BrandCarousel({ tag, title }) {
 
   return (
     <section className="py-8 bg-white">
-      <div className="container mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-4">
           <Headtext text={title} />
         </div>
@@ -53,13 +53,13 @@ export default function BrandCarousel({ tag, title }) {
             {brands.map((brand) => (
               <CarouselItem
                 key={brand.id}
-                className="basis-1/2 md:basis-1/4 lg:basis-1/6 p-4"
+                className="basis-1/2 md:basis-1/4 lg:basis-1/5 p-4"
               >
                 <Link
                   href={`/brand/${brand.slug}`}
                   className="block group text-center"
                 >
-                  <div className="relative h-24 w-24 mx-auto mb-2 bg-white rounded-lg border flex items-center justify-center shadow">
+                  <div className="relative h-32 w-32 mx-auto mb-2 bg-white rounded-lg border flex items-center justify-center shadow p-2">
                     <Image
                       width={100}
                       height={100}
@@ -69,7 +69,7 @@ export default function BrandCarousel({ tag, title }) {
                           : `https://desirediv-storage.blr1.digitaloceanspaces.com/${brand.image}`
                       }
                       alt={brand.name}
-                      className="object-contain h-16 w-16 md:h-20 md:w-20 group-hover:scale-105 transition-transform"
+                      className="object-contain h-28 w-28 md:h-32 md:w-32 group-hover:scale-105 transition-transform"
                     />
                   </div>
                   <div className="font-medium text-sm mt-2 group-hover:text-primary transition-colors whitespace-nowrap overflow-hidden text-ellipsis">
