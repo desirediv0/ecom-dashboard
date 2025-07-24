@@ -403,7 +403,7 @@ const FeaturedProducts = ({
             {products.map((product, index) => (
               <CarouselItem
                 key={product.id || product.slug || index}
-                className="pl-4 basis-1/2 md:basis-1/4 lg:basis-1/6 py-5 md:py-10"
+                className="pl-4 basis-1/2 md:basis-1/4 lg:basis-1/6 py-5 md:py-6"
               >
                 <div className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full">
                   <Link href={`/products/${product.slug || ""}`}>
@@ -413,7 +413,7 @@ const FeaturedProducts = ({
                           src={product.image}
                           alt={product.name || "Product"}
                           fill
-                          className="object-contain px-4 transition-transform group-hover:scale-105"
+                          className="object-contain px-4 transition-transform group-hover:scale-110 scale-105"
                           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
                       ) : (
@@ -748,7 +748,7 @@ const NewsletterSection = () => {
   };
 
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section className="relative py-10 md:py-12 overflow-hidden">
       {/* Background with gradient overlay */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 to-black/90 z-10" />
@@ -1027,11 +1027,11 @@ export default function Home() {
 
       {/* Featured Products Section */}
       {featuredProducts.length > 0 && (
-        <section className="py-10 bg-gray-50">
+          <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <Headtext text="FEATURED PRODUCTS" />
-              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
                 High-quality supplements to enhance your fitness journey
               </p>
             </div>
@@ -1044,6 +1044,7 @@ export default function Home() {
           </div>
         </section>
       )}
+      <SupplementStoreUI />
 
       <BrandCarousel tag="NEW" title="NEW BRANDS" />
 
@@ -1072,11 +1073,11 @@ export default function Home() {
 
       {/* Bestseller Products Section */}
       {bestsellerProducts.length > 0 && (
-        <section className="py-10 bg-gray-50">
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <Headtext text="BEST SELLERS" />
-              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
                 Our most popular products loved by customers
               </p>
             </div>
@@ -1090,14 +1091,14 @@ export default function Home() {
         </section>
       )}
 
-      <SupplementStoreUI />
+      {/* <SupplementStoreUI /> */}
       {/* Trending Products Section */}
       {trendingProducts.length > 0 && (
-        <section className="py-10 bg-white">
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <Headtext text="TRENDING NOW" />
-              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
                 Products that are currently trending in the fitness community
               </p>
             </div>
@@ -1113,11 +1114,11 @@ export default function Home() {
 
       {/* New Products Section */}
       {newProducts.length > 0 && (
-        <section className="py-10 bg-gray-50">
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <Headtext text="NEW ARRIVALS" />
-              <p className="text-gray-600 my-6 max-w-2xl mx-auto">
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
                 Fresh products just added to our collection
               </p>
             </div>

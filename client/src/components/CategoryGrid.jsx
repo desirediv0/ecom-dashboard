@@ -99,7 +99,7 @@ const CategoryGrid = () => {
 
   if (loading) {
     return (
-      <section className="py-8 sm:py-12 bg-gradient-to-br from-slate-50 to-blue-50/30">
+      <section className="py-5 md:py-6 my-3 md:my-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-6 sm:mb-8">
             <Headtext text="SHOP BY CATEGORY" />
@@ -146,8 +146,8 @@ const CategoryGrid = () => {
   }
 
   return (
-    <section className="py-8 sm:py-12 bg-gradient-to-br from-slate-50 to-blue-50/30">
-      <div className="container mx-auto px-4">
+    <section className="py-5 md:py-6 my-3 md:my-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
+      <div className="container max-w-7xl mx-auto px-4">
         <div className="text-center mb-6 sm:mb-8">
           <Headtext text="SHOP BY CATEGORY" />
           <p className="text-gray-600 text-sm sm:text-base my-6 ">

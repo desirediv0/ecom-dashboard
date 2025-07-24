@@ -92,10 +92,10 @@ const BenefitsSec = () => {
   ];
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-8 md:py-10 bg-gray-50">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-8 md:mb-10">
           <Headtext text="WHY CHOOSE US" />
           <p className="text-gray-600 mt-6 max-w-2xl mx-auto text-lg">
             We&apos;re committed to providing you with the best fitness
@@ -170,7 +170,7 @@ const BenefitsSec = () => {
         </div>
 
         {/* Stats section */}
-        <div className="mt-20 grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="mt-8 md:mt-10 grid sm:grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { number: "100%", label: "Quality Tested" },
             { number: "1000+", label: "Happy Customers" },

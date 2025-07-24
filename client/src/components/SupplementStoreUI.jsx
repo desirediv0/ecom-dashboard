@@ -1,6 +1,6 @@
 import React from "react";
 
-import { card2, card3 } from "@/assets";
+import { card2, card3, card4 } from "@/assets";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -20,7 +20,7 @@ const SupplementStoreUI = () => {
     },
     {
       id: 3,
-      image: card3,
+      image: card4,
       link: "/category/protein",
     },
   ];
