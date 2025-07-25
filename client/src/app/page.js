@@ -26,10 +26,6 @@ import {
   bg2sm,
   bg3,
   bg3sm,
-  bg5,
-  bg5sm,
-  bg6,
-  bg6sm,
 } from "@/assets";
 import SupplementStoreUI from "@/components/SupplementStoreUI";
 import { useAuth } from "@/lib/auth-context";
@@ -47,20 +43,20 @@ const HeroCarousel = () => {
   const router = useRouter();
 
   const slides = [
-    {
-      ctaLink: "/category/pre-workout",
-      img: bg5,
-      smimg: bg5sm,
-      title: "Pre-Workout Power",
-      subtitle: "Maximize Your Energy",
-    },
-    {
-      ctaLink: "/category/protein",
-      img: bg6,
-      smimg: bg6sm,
-      title: "Protein Collection",
-      subtitle: "Build Muscle Faster",
-    },
+    // {
+    //   ctaLink: "/category/pre-workout",
+    //   img: bg5,
+    //   smimg: bg5sm,
+    //   title: "Pre-Workout Power",
+    //   subtitle: "Maximize Your Energy",
+    // },
+    // {
+    //   ctaLink: "/category/protein",
+    //   img: bg6,
+    //   smimg: bg6sm,
+    //   title: "Protein Collection",
+    //   subtitle: "Build Muscle Faster",
+    // },
     {
       ctaLink: "/category/protein",
       img: bg1,
