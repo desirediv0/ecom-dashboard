@@ -15,6 +15,10 @@ import bg2 from "./2.png";
 import bg2sm from "./2-m.png";
 import bg3 from "./3.png";
 import bg3sm from "./3-m.png";
+import bg4 from "./4.png";
+import bg4sm from "./4-m.png";
+import bg5 from "./5.png";
+import bg5sm from "./5-m.png";
 
 
 import card1 from "./card1.jpg";
@@ -31,6 +35,10 @@ export {
   bg2sm,
   bg3,
   bg3sm,
+  bg4,
+  bg4sm,
+  bg5,
+  bg5sm,
   card1,
   card2,
   card3,

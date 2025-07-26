@@ -26,6 +26,10 @@ import {
   bg2sm,
   bg3,
   bg3sm,
+  bg4,
+  bg4sm,
+  bg5,
+  bg5sm,
 } from "@/assets";
 import SupplementStoreUI from "@/components/SupplementStoreUI";
 import { useAuth } from "@/lib/auth-context";
@@ -78,6 +82,20 @@ const HeroCarousel = () => {
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
+    {
+      ctaLink: "/category/protein",
+      img: bg4,
+      smimg: bg4sm,
+      title: "Protein Collection",
+      subtitle: "Build Muscle Faster",
+    },
+    {
+      ctaLink: "/category/protein",
+      img: bg5,
+      smimg: bg5sm,
+      title: "Protein Collection",
+      subtitle: "Build Muscle Faster",
+    },
   ];
 
   // Handle responsive detection
@@ -125,7 +143,14 @@ const HeroCarousel = () => {
     <div className="relative w-full">
       {/* Mobile: Smaller height, Desktop: Larger height */}
       <div className="relative overflow-hidden ">
-        <Carousel setApi={setApi} className="h-full w-full">
+        <Carousel 
+          setApi={setApi} 
+          className="h-full w-full"
+          opts={{
+            loop: true,
+            align: "start"
+          }}
+        >
           <CarouselContent className="h-full">
             {slides.map((slide, index) => (
               <CarouselItem key={index} className="h-full p-0">
