@@ -434,7 +434,7 @@ const FeaturedProducts = ({
                           src={product.image}
                           alt={product.name || "Product"}
                           fill
-                          className="object-contain px-4 transition-transform group-hover:scale-110 scale-105"
+                          className="object-contain px-4 transition-transform scale-[120%] sm:scale-110 sm:group-hover:scale-[115%]"
                           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
                       ) : (
