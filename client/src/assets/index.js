@@ -19,6 +19,14 @@ import bg4 from "./4.png";
 import bg4sm from "./4-m.png";
 import bg5 from "./5.png";
 import bg5sm from "./5-m.png";
+import bg6 from "./6.png";
+import bg6sm from "./6-m.png";
+import bg7 from "./7.png";
+import bg7sm from "./7-m.png";
+import bg8 from "./8.png";
+import bg8sm from "./8-m.png";
+import bg9 from "./9.png";
+import bg9sm from "./9-m.png";
 
 
 import card1 from "./card1.jpg";
@@ -39,6 +47,14 @@ export {
   bg4sm,
   bg5,
   bg5sm,
+  bg6,
+  bg6sm,
+  bg7,
+  bg7sm,
+  bg8,
+  bg8sm,
+  bg9,
+  bg9sm,
   card1,
   card2,
   card3,
