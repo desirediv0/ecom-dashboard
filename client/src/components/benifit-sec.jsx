@@ -168,38 +168,6 @@ const BenefitsSec = () => {
             ))}
           </div>
         </div>
-
-        {/* Stats section */}
-        <div className="mt-8 md:mt-10 grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { number: "100%", label: "Quality Tested" },
-            { number: "1000+", label: "Happy Customers" },
-            { number: "50+", label: "Products" },
-            { number: "24/7", label: "Customer Support" },
-          ].map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              className="text-center p-6"
-            >
-              <motion.h4
-                className="text-4xl font-bold text-primary mb-2"
-                initial={{ y: 20 }}
-                whileInView={{ y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
-                viewport={{ once: true }}
-              >
-                {stat.number}
-              </motion.h4>
-              <p className="text-gray-600 uppercase tracking-wide text-sm font-medium">
-                {stat.label}
-              </p>
-            </motion.div>
-          ))}
-        </div>
       </div>
     </section>
   );

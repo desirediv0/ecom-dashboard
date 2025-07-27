@@ -55,20 +55,6 @@ const HeroCarousel = () => {
   const router = useRouter();
 
   const slides = [
-    // {
-    //   ctaLink: "/category/pre-workout",
-    //   img: bg5,
-    //   smimg: bg5sm,
-    //   title: "Pre-Workout Power",
-    //   subtitle: "Maximize Your Energy",
-    // },
-    // {
-    //   ctaLink: "/category/protein",
-    //   img: bg6,
-    //   smimg: bg6sm,
-    //   title: "Protein Collection",
-    //   subtitle: "Build Muscle Faster",
-    // },
     {
       ctaLink: "/category/protein",
       img: bg1,
@@ -178,13 +164,13 @@ const HeroCarousel = () => {
   return (
     <div className="relative w-full">
       {/* Mobile: Smaller height, Desktop: Larger height */}
-      <div className="relative overflow-hidden ">
-        <Carousel 
-          setApi={setApi} 
+      <div className="relative overflow-hidden">
+        <Carousel
+          setApi={setApi}
           className="h-full w-full"
           opts={{
             loop: true,
-            align: "start"
+            align: "start",
           }}
         >
           <CarouselContent className="h-full">
@@ -1084,7 +1070,7 @@ export default function Home() {
 
       {/* Featured Products Section */}
       {featuredProducts.length > 0 && (
-          <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <Headtext text="FEATURED PRODUCTS" />

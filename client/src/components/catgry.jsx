@@ -219,14 +219,14 @@ const CategoriesCarousel = () => {
             {needsCarousel && (
               <>
                 <CarouselPrevious
-                  className={`absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 bg-white/80 border border-gray-200 shadow hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 w-7 h-7 sm:w-8 sm:h-8 p-0 text-gray-600 ${
+                  className={`absolute -left-2  sm:-left-4  top-1/2 -translate-y-1/2 bg-white/80 border border-gray-200 shadow hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500 transition-all duration-200 w-7 h-7 sm:w-8 sm:h-8 p-0 text-gray-600 ${
                     !canScrollPrev
                       ? "opacity-0 pointer-events-none"
                       : "opacity-100"
                   }`}
                 />
                 <CarouselNext
-                  className={`absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 bg-white/80 border border-gray-200 shadow hover:bg-blue-50 hover:border-blue-200 transition-all duration-200 w-7 h-7 sm:w-8 sm:h-8 p-0 text-gray-600 ${
+                  className={`absolute -right-2 sm:right-5 top-1/2 -translate-y-1/2 bg-white/80 border border-gray-200 shadow hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500 transition-all duration-200 w-7 h-7 sm:w-8 sm:h-8 p-0 text-gray-600 ${
                     !canScrollNext
                       ? "opacity-0 pointer-events-none"
                       : "opacity-100"
