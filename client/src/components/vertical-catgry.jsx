@@ -8,8 +8,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
 } from "@/components/ui/carousel";
 
 import { fetchApi } from "@/lib/utils";
@@ -19,8 +17,6 @@ const VerticalCategoriesCarousel = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [api, setApi] = useState(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
 
   // Load categories from API
   useEffect(() => {
@@ -47,21 +43,6 @@ const VerticalCategoriesCarousel = () => {
     loadCategories();
   }, []);
 
-  // Carousel navigation
-  useEffect(() => {
-    if (!api) return;
-
-    const updateButtons = () => {
-      setCanScrollPrev(api.canScrollPrev());
-      setCanScrollNext(api.canScrollNext());
-    };
-
-    api.on("select", updateButtons);
-    updateButtons();
-
-    return () => api.off("select", updateButtons);
-  }, [api]);
-
   // Category Card Component
   const CategoryCard = ({ category, index }) => {
     const isOffers =
@@ -74,10 +55,10 @@ const VerticalCategoriesCarousel = () => {
         whileInView={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3, delay: index * 0.03 }}
         viewport={{ once: true }}
-        className="flex items-center group cursor-pointer"
+        className="flex items-start group cursor-pointer flex-col justify-center"
       >
         <motion.div
-          className="relative bg-white rounded-xl p-1 mb-2 w-[64px] h-[64px] sm:w-[70px] sm:h-[70px] flex items-center justify-center shadow group-hover:shadow-md border border-gray-100 overflow-hidden transition-all duration-200"
+          className="relative bg-white rounded-xl p-1 mb-2 w-[64px] h-[64px] sm:w-[70px] sm:h-[70px] flex items-center justify-center  shadow group-hover:shadow-md border border-gray-100 overflow-hidden transition-all duration-200"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
         >
@@ -99,14 +80,14 @@ const VerticalCategoriesCarousel = () => {
                 alt={category.name || "Category"}
                 width={200}
                 height={200}
-                className="object-contain w-12 h-12 sm:w-14 sm:h-14"
+                className="object-contain w-10 h-10 sm:w-14 sm:h-14"
                 loading="lazy"
               />
             </div>
           )}
         </motion.div>
         <div className="ml-3 flex-1">
-          <h3 className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-200 leading-tight">
+          <h3 className="text-[10px] sm:text-xs font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-200 leading-tight">
             {category.name}
           </h3>
         </div>
@@ -139,8 +120,7 @@ const VerticalCategoriesCarousel = () => {
 
   if (loading) {
     return (
-      <div className="w-full max-w-[280px] bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
+      <div className="w-min bg-white rounded-lg shadow-sm border border-gray-100 p-1">
         <SkeletonLoader />
       </div>
     );
@@ -148,8 +128,7 @@ const VerticalCategoriesCarousel = () => {
 
   if (error) {
     return (
-      <div className="w-full max-w-[280px] bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
+      <div className="w-min bg-white rounded-lg shadow-sm border border-gray-100 p-1">
         <div className="text-center py-8">
           <p className="text-red-500 mb-4 text-sm">Error: {error}</p>
           <button
@@ -165,8 +144,7 @@ const VerticalCategoriesCarousel = () => {
 
   if (!categories || categories.length === 0) {
     return (
-      <div className="w-full max-w-[280px] bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
+      <div className="w-min bg-white rounded-lg shadow-sm border border-gray-100 p-1">
         <div className="text-center py-8">
           <p className="text-gray-500 text-sm">No categories available</p>
         </div>
@@ -174,11 +152,8 @@ const VerticalCategoriesCarousel = () => {
     );
   }
 
-  const needsCarousel = categories.length > 8;
-
   return (
-    <div className="w-full max-w-[280px] bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
+    <div className="w-min bg-white rounded-lg shadow-sm border border-gray-100 p-1">
       <div className="relative">
         <Carousel
           setApi={setApi}
@@ -190,9 +165,9 @@ const VerticalCategoriesCarousel = () => {
             direction: "vertical",
           }}
           orientation="vertical"
-          className="w-full"
+          className="w-min"
         >
-          <CarouselContent className="-mt-1 flex flex-col gap-2 max-h-[400px]">
+          <CarouselContent className="-mt-1 flex flex-col gap-2">
             {categories.map((category, index) => (
               <CarouselItem
                 key={category.id}
@@ -204,25 +179,6 @@ const VerticalCategoriesCarousel = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-
-          {needsCarousel && (
-            <>
-              <CarouselPrevious
-                className={`absolute -top-2 left-1/2 -translate-x-1/2 bg-white/80 border border-gray-200 shadow hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500 transition-all duration-200 w-6 h-6 p-0 text-gray-600 rotate-90 ${
-                  !canScrollPrev
-                    ? "opacity-0 pointer-events-none"
-                    : "opacity-100"
-                }`}
-              />
-              <CarouselNext
-                className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white/80 border border-gray-200 shadow hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500 transition-all duration-200 w-6 h-6 p-0 text-gray-600 rotate-90 ${
-                  !canScrollNext
-                    ? "opacity-0 pointer-events-none"
-                    : "opacity-100"
-                }`}
-              />
-            </>
-          )}
         </Carousel>
       </div>
     </div>

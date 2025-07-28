@@ -18,13 +18,13 @@ import {
   Search,
   Heart,
   Eye,
+  ShoppingCart,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import ProductQuickView from "@/components/ProductQuickView";
 import { ClientOnly } from "@/components/client-only";
 import { toast } from "sonner";
-import CategoriesCarousel from "@/components/catgry";
 
 // Add ProductCardSkeleton component
 function ProductCardSkeleton() {
@@ -607,18 +607,15 @@ function ProductsContent() {
   // Display loading state
   if (loading && products.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <CategoriesCarousel />
-      <div id="products-main" className="container mx-auto px-4 py-8">
+    <div>
+      <div id="products-main">
         {/* Hero Banner - add triple click handler for debug mode */}
         <div
           className="relative w-full h-[280px] mb-10 rounded-lg overflow-hidden"
@@ -632,17 +629,17 @@ function ProductsContent() {
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex flex-col justify-center md:pl-12">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 md:text-left text-center">
+            <h1 className="text-2xl md:text-5xl font-bold text-white mb-4 md:text-left text-center">
               PREMIUM SUPPLEMENTS
             </h1>
-            <p className="md:text-xl text-white max-w-xl md:text-left text-center">
+            <p className="text-sm md:text-xl text-white max-w-xl md:text-left text-center">
               Fuel your performance with premium quality supplements
             </p>
           </div>
         </div>
 
         {/* Mobile filter toggle */}
-        <div className="md:hidden flex items-center justify-between mb-6">
+        <div className="md:hidden flex items-center justify-between mb-6 flex-col md:flex-row">
           <h1 className="text-2xl font-bold">Products</h1>
           <Button
             variant="outline"
@@ -914,7 +911,7 @@ function ProductsContent() {
           {/* Products Grid */}
           <div className="md:w-3/4 lg:w-4/5">
             {/* Display product count and sort options */}
-            <div className="flex justify-between md:justify-end mb-6 items-center">
+            <div className="flex justify-between md:justify-end mb-6 items-center md:flex-row flex-col ">
               <div className="text-sm">
                 {loading && !products.length ? (
                   <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
@@ -937,7 +934,7 @@ function ProductsContent() {
                 </div>
               )}
 
-              <div className="inline-flex items-center border rounded-md overflow-hidden bg-white">
+              <div className="inline-flex items-center border rounded-md overflow-hidden bg-white flex-col md:flex-row">
                 <span className="px-3 py-2 text-sm">SORT BY</span>
                 <select
                   id="sort"
@@ -1072,7 +1069,7 @@ function ProductsContent() {
 
             {/* Products Grid with Loading State */}
             {loading && products.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {[...Array(pagination.limit || 12)].map((_, index) => (
                   <ProductCardSkeleton key={index} />
                 ))}
@@ -1160,7 +1157,7 @@ function ProductsContent() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {loading
                   ? // Show skeleton cards when loading with existing data
                     [...Array(pagination.limit || 12)].map((_, index) => (
@@ -1173,7 +1170,7 @@ function ProductsContent() {
                         className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
                       >
                         <Link href={`/products/${product.slug}`}>
-                          <div className="relative h-64 w-full overflow-hidden">
+                          <div className="relative h-48 md:h-64 w-full overflow-hidden">
                             <Image
                               src={(() => {
                                 // Find the variant with the lowest weight
@@ -1225,7 +1222,7 @@ function ProductsContent() {
                               })()}
                               alt={product.name}
                               fill
-                              className="object-contain px-4 transition-transform group-hover:scale-105"
+                              className="object-contain px-4 transition-transform md:group-hover:scale-105 scale-150 md:scale-0"
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             />
                             {product.hasSale && (
@@ -1269,13 +1266,13 @@ function ProductsContent() {
                           </div>
                         </Link>
 
-                        <div className="p-4 text-center">
+                        <div className="p-3 md:p-4 text-center">
                           <div className="flex items-center justify-center mb-2">
                             <div className="flex text-yellow-400">
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className="h-4 w-4"
+                                  className="h-3 w-3 md:h-4 md:w-4"
                                   fill={
                                     i < Math.round(product.avgRating || 0)
                                       ? "currentColor"
@@ -1284,7 +1281,7 @@ function ProductsContent() {
                                 />
                               ))}
                             </div>
-                            <span className="text-xs text-gray-500 ml-2">
+                            <span className="text-xs text-gray-500 ml-1 md:ml-2">
                               ({product.reviewCount || 0})
                             </span>
                           </div>
@@ -1293,7 +1290,7 @@ function ProductsContent() {
                             href={`/products/${product.slug}`}
                             className="hover:text-primary"
                           >
-                            <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
+                            <h3 className="font-medium uppercase mb-2 line-clamp-2 text-xs md:text-sm">
                               {product.name}
                             </h3>
                             {/* Show lowest weight variant's flavor and weight */}
@@ -1340,18 +1337,18 @@ function ProductsContent() {
                             })()}
                           </Link>
 
-                          <div className="flex items-center justify-center mb-2">
+                          <div className="flex items-center justify-center mb-2 flex-col">
                             {product.hasSale ? (
-                              <div className="flex items-center">
-                                <span className="font-bold text-lg text-primary">
+                              <div className="flex items-center flex-col">
+                                <span className="font-bold text-base md:text-lg text-primary">
                                   {formatCurrency(product.basePrice)}
                                 </span>
-                                <span className="text-gray-500 line-through text-sm ml-2">
+                                <span className="text-gray-500 line-through text-xs md:text-sm ml-1 md:ml-2">
                                   {formatCurrency(product.regularPrice)}
                                 </span>
                               </div>
                             ) : (
-                              <span className="font-bold text-lg text-primary">
+                              <span className="font-bold text-base md:text-lg text-primary">
                                 {formatCurrency(product.basePrice)}
                               </span>
                             )}
@@ -1367,12 +1364,14 @@ function ProductsContent() {
                             onClick={() => handleAddToCart(product)}
                             variant="outline"
                             size="sm"
-                            className="w-full"
+                            className="w-full p-2"
                             disabled={isAddingToCart[product.id]}
                           >
-                            {isAddingToCart[product.id]
-                              ? "Adding..."
-                              : "Add to Cart"}
+                            {isAddingToCart[product.id] ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                            ) : (
+                              <ShoppingCart className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -1465,19 +1464,15 @@ export default function ProductsPage() {
   return (
     <ClientOnly
       fallback={
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       }
     >
       <Suspense
         fallback={
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-center items-center h-64">
-              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
+          <div className="flex justify-center items-center h-64">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         }
       >
