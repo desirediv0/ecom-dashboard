@@ -400,7 +400,7 @@ export default function CategoryPage() {
                     })()}
                     alt={product.name}
                     fill
-                    className="object-contain px-4 transition-transform md:group-hover:scale-105 scale-150 md:scale-0"
+                    className="object-contain px-4 transition-transform md:group-hover:scale-105 scale-150 md:scale-100"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   {product.hasSale && (

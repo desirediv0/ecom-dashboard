@@ -629,7 +629,7 @@ function ProductsContent() {
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex flex-col justify-center md:pl-12">
-            <h1 className="text-2xl md:text-5xl font-bold text-white mb-4 md:text-left text-center">
+            <h1 className="text-xl md:text-5xl font-bold text-white mb-4 md:text-left text-center p-2">
               PREMIUM SUPPLEMENTS
             </h1>
             <p className="text-sm md:text-xl text-white max-w-xl md:text-left text-center">
@@ -1222,7 +1222,7 @@ function ProductsContent() {
                               })()}
                               alt={product.name}
                               fill
-                              className="object-contain px-4 transition-transform md:group-hover:scale-105 scale-150 md:scale-0"
+                              className="object-contain px-4 transition-transform md:group-hover:scale-105 scale-150 md:scale-100"
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             />
                             {product.hasSale && (
