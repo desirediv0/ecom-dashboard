@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { fetchApi, fetchProductsByType } from "@/lib/utils";
+import { fetchApi, fetchProductsByType, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, Heart, Eye } from "lucide-react";
+import { ArrowRight, Star, Heart, Eye, ShoppingCart } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -38,6 +38,7 @@ import {
   bg8sm,
   bg9,
   bg9sm,
+  scratch,
 } from "@/assets";
 import SupplementStoreUI from "@/components/SupplementStoreUI";
 import { useAuth } from "@/lib/auth-context";
@@ -448,26 +449,62 @@ const FeaturedProducts = ({
                 key={product.id || product.slug || index}
                 className="pl-4 basis-1/2 md:basis-1/4 lg:basis-1/6 py-5 md:py-6"
               >
-                <div className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full">
-                  <Link href={`/products/${product.slug || ""}`}>
-                    <div className="relative h-64 w-full  overflow-hidden">
-                      {product.image ? (
-                        <Image
-                          src={product.image}
-                          alt={product.name || "Product"}
-                          fill
-                          className="object-contain px-4 transition-transform scale-[120%] sm:scale-110 sm:group-hover:scale-[115%]"
-                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        />
-                      ) : (
-                        <Image
-                          src="/product-placeholder.jpg"
-                          alt={product.name || "Product"}
-                          fill
-                          className="object-contain px-4 transition-transform group-hover:scale-105"
-                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        />
-                      )}
+                <div
+                  key={product.id}
+                  className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
+                >
+                  <Link href={`/products/${product.slug}`}>
+                    <div className="relative h-48 md:h-64 w-full overflow-hidden">
+                      <Image
+                        src={(() => {
+                          // Find the variant with the lowest weight
+                          let selectedVariant = null;
+                          if (product.variants && product.variants.length > 0) {
+                            selectedVariant = product.variants.reduce(
+                              (min, v) => {
+                                if (
+                                  !v.weight ||
+                                  typeof v.weight.value !== "number"
+                                )
+                                  return min;
+                                if (
+                                  !min ||
+                                  (min.weight &&
+                                    v.weight.value < min.weight.value)
+                                )
+                                  return v;
+                                return min;
+                              },
+                              null
+                            );
+                            // fallback: if no variant has weight, use first variant
+                            if (!selectedVariant)
+                              selectedVariant = product.variants[0];
+                          }
+                          if (
+                            selectedVariant &&
+                            selectedVariant.images &&
+                            selectedVariant.images.length > 0
+                          ) {
+                            const primaryImg = selectedVariant.images.find(
+                              (img) => img.isPrimary
+                            );
+                            if (primaryImg && primaryImg.url)
+                              return primaryImg.url;
+                            if (selectedVariant.images[0].url)
+                              return selectedVariant.images[0].url;
+                          }
+                          if (product.image)
+                            return product.image.startsWith("http")
+                              ? product.image
+                              : `https://desirediv-storage.blr1.digitaloceanspaces.com/${product.image}`;
+                          return "/placeholder.jpg";
+                        })()}
+                        alt={product.name}
+                        fill
+                        className="object-contain px-4 transition-transform md:group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
                       {product.hasSale && (
                         <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-sm">
                           SALE
@@ -481,8 +518,7 @@ const FeaturedProducts = ({
                           className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2"
                           onClick={(e) => {
                             e.preventDefault();
-                            setQuickViewProduct(product);
-                            setQuickViewOpen(true);
+                            handleQuickView(product);
                           }}
                         >
                           <Eye className="h-5 w-5" />
@@ -506,13 +542,13 @@ const FeaturedProducts = ({
                     </div>
                   </Link>
 
-                  <div className="p-4 text-center">
+                  <div className="p-3 md:p-4 text-center">
                     <div className="flex items-center justify-center mb-2">
                       <div className="flex text-yellow-400">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className="h-4 w-4"
+                            className="h-3 w-3 md:h-4 md:w-4"
                             fill={
                               i < Math.round(product.avgRating || 0)
                                 ? "currentColor"
@@ -521,51 +557,94 @@ const FeaturedProducts = ({
                           />
                         ))}
                       </div>
-                      <span className="text-xs text-gray-500 ml-2">
+                      <span className="text-xs text-gray-500 ml-1 md:ml-2">
                         ({product.reviewCount || 0})
                       </span>
                     </div>
 
                     <Link
-                      href={`/products/${product.slug || ""}`}
+                      href={`/products/${product.slug}`}
                       className="hover:text-primary"
                     >
-                      <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
-                        {product.name || "Product"}
+                      <h3 className="font-medium uppercase mb-2 line-clamp-2 text-xs md:text-sm">
+                        {product.name}
                       </h3>
+                      {/* Show lowest weight variant's flavor and weight */}
+                      {(() => {
+                        let selectedVariant = null;
+                        if (product.variants && product.variants.length > 0) {
+                          selectedVariant = product.variants.reduce(
+                            (min, v) => {
+                              if (
+                                !v.weight ||
+                                typeof v.weight.value !== "number"
+                              )
+                                return min;
+                              if (
+                                !min ||
+                                (min.weight &&
+                                  v.weight.value < min.weight.value)
+                              )
+                                return v;
+                              return min;
+                            },
+                            null
+                          );
+                          if (!selectedVariant)
+                            selectedVariant = product.variants[0];
+                        }
+                        if (!selectedVariant) return null;
+                        const flavor = selectedVariant.flavor?.name;
+                        const weight = selectedVariant.weight?.value;
+                        const unit = selectedVariant.weight?.unit;
+                        if (flavor || (weight && unit)) {
+                          return (
+                            <div className="text-xs text-gray-500 mb-1">
+                              {flavor}
+                              {flavor && weight && unit ? " • " : ""}
+                              {weight && unit ? `${weight} ${unit}` : ""}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </Link>
 
-                    <div className="flex items-center justify-center mb-2">
+                    <div className="flex items-center justify-center mb-2 flex-col">
                       {product.hasSale ? (
-                        <div className="flex items-center">
-                          <span className="font-bold text-lg text-primary">
-                            ₹{product.basePrice || 0}
+                        <div className="flex items-center flex-col">
+                          <span className="font-bold text-base md:text-lg text-primary">
+                            {formatCurrency(product.basePrice)}
                           </span>
-                          <span className="text-gray-500 line-through text-sm ml-2">
-                            ₹{product.regularPrice || 0}
+                          <span className="text-gray-500 line-through text-xs md:text-sm ml-1 md:ml-2">
+                            {formatCurrency(product.regularPrice)}
                           </span>
                         </div>
                       ) : (
-                        <span className="font-bold text-lg text-primary">
-                          ₹{product.basePrice || 0}
+                        <span className="font-bold text-base md:text-lg text-primary">
+                          {formatCurrency(product.basePrice)}
                         </span>
                       )}
                     </div>
 
-                    {/* {(product.flavors || 0) > 1 && (
-                      <span className="text-xs text-gray-500 block">
-                        {product.flavors} variants
-                      </span>
-                    )} */}
+                    {/* {product.flavors > 1 && (
+                            <span className="text-xs text-gray-500 block">
+                              {product.flavors} variants
+                            </span>
+                          )} */}
 
                     <Button
                       onClick={() => handleAddToCart(product)}
                       variant="outline"
                       size="sm"
-                      className="w-full"
+                      className="w-full p-2"
                       disabled={isAddingToCart[product.id]}
                     >
-                      {isAddingToCart[product.id] ? "Adding..." : "Add to Cart"}
+                      {isAddingToCart[product.id] ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      ) : (
+                        <ShoppingCart className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -1175,6 +1254,14 @@ export default function Home() {
         </section>
       )}
       <BrandCarousel tag="HOT" title="HOT BRANDS" />
+
+      <Image
+        src={scratch}
+        alt="scratch"
+        width={1920}
+        height={1080}
+        className="object-cover object-center"
+      />
 
       <BenefitsSec />
       <TestimonialsSection />

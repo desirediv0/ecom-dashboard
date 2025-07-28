@@ -28,13 +28,14 @@ import bg8sm from "./8-m.png";
 import bg9 from "./9.png";
 import bg9sm from "./9-m.png";
 
-
 import card1 from "./card1.jpg";
 import card2 from "./card2.jpg";
 import card3 from "./card3.jpg";
 import card4 from "./card4.jpg";
 
 import cover from "./cover-bg.png";
+
+import scratch from "./scratch.png";
 
 export {
   bg1,
@@ -60,4 +61,5 @@ export {
   card3,
   card4,
   cover,
+  scratch,
 };
