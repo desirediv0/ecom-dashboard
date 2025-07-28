@@ -501,7 +501,7 @@ export default function CategoryPage() {
                   })()}
                 </Link>
 
-                <div className="flex items-center justify-center mb-2 flex-col">
+                <div className="flex items-center justify-center mb-2 flex-col md:flex-row">
                   {product.hasSale ? (
                     <div className="flex items-center flex-col">
                       <span className="font-bold text-base md:text-lg text-primary">
