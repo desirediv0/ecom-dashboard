@@ -167,7 +167,7 @@ const VerticalCategoriesCarousel = () => {
           orientation="vertical"
           className="w-min"
         >
-          <CarouselContent className="-mt-1 flex flex-col gap-2">
+          <CarouselContent className="-mt-1 flex flex-col gap-2 h-[70vh]">
             {categories.map((category, index) => (
               <CarouselItem
                 key={category.id}
