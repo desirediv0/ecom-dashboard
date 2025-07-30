@@ -423,23 +423,71 @@ export function Navbar() {
                     />
                   </button>
                   <div
-                    className={`absolute left-0 top-full mt-1 w-64 bg-white shadow-lg rounded-md py-2 border border-gray-100 z-50 transition-all duration-300 ease-in-out transform origin-top ${
+                    className={`absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md py-2 border border-gray-100 z-50 transition-all duration-300 ease-in-out transform origin-top ${
                       activeDropdown === "categories"
                         ? "opacity-100 scale-100 translate-y-0"
                         : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                    } ${
+                      categories.length > 20
+                        ? "w-[500px]"
+                        : categories.length > 13
+                        ? "w-96"
+                        : "w-64"
                     }`}
                   >
-                    {categories.map((category) => (
-                      <div key={category.id}>
-                        <Link
-                          href={`/category/${category.slug}`}
-                          className="block px-4 py-2.5 hover:bg-gray-50 hover:text-primary transition-all duration-200"
-                          onClick={() => setActiveDropdown(null)}
-                        >
-                          {category.name}
-                        </Link>
+                    {categories.length > 20 ? (
+                      <div className="grid grid-cols-3 gap-1 px-3">
+                        {categories.map((category, index) => (
+                          <div key={category.id}>
+                            <Link
+                              href={`/category/${category.slug}`}
+                              className={`block px-3 py-2 hover:bg-gray-50 hover:text-primary transition-all duration-200 rounded text-base ${
+                                index % 3 === 0
+                                  ? "hover:bg-blue-50"
+                                  : index % 3 === 1
+                                  ? "hover:bg-green-50"
+                                  : "hover:bg-orange-50"
+                              }`}
+                              onClick={() => setActiveDropdown(null)}
+                            >
+                              {category.name}
+                            </Link>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : categories.length > 13 ? (
+                      <div className="grid grid-cols-2 gap-1 px-2">
+                        {categories.map((category, index) => (
+                          <div key={category.id}>
+                            <Link
+                              href={`/category/${category.slug}`}
+                              className={`block px-3 py-2 hover:bg-gray-50 hover:text-primary transition-all duration-200 rounded text-base ${
+                                index % 2 === 0
+                                  ? "hover:bg-blue-50"
+                                  : "hover:bg-green-50"
+                              }`}
+                              onClick={() => setActiveDropdown(null)}
+                            >
+                              {category.name}
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        {categories.map((category) => (
+                          <div key={category.id}>
+                            <Link
+                              href={`/category/${category.slug}`}
+                              className="block px-4 py-2.5 hover:bg-gray-50 hover:text-primary transition-all duration-200"
+                              onClick={() => setActiveDropdown(null)}
+                            >
+                              {category.name}
+                            </Link>
+                          </div>
+                        ))}
+                      </>
+                    )}
                     <div className="pt-2 mt-2 border-t border-gray-100">
                       <Link
                         href="/categories"

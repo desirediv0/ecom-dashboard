@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { fetchApi } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import {
   Phone,
   Mail,
   MapPin,
-  Clock,
   Facebook,
   Instagram,
   Twitter,
@@ -18,8 +17,6 @@ import {
 import { toast } from "sonner";
 
 export default function ContactPage() {
-  const [contactInfo, setContactInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -28,22 +25,6 @@ export default function ContactPage() {
     subject: "",
     message: "",
   });
-
-  useEffect(() => {
-    async function fetchContactInfo() {
-      setLoading(true);
-      try {
-        const response = await fetchApi("/content/contact");
-        setContactInfo(response.data);
-      } catch (error) {
-        console.error("Failed to fetch contact info:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchContactInfo();
-  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -201,98 +182,69 @@ export default function ContactPage() {
 
             {/* Contact Information - 2 columns */}
             <div className="md:col-span-2">
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-10 w-32 mb-4" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-10 w-32 mt-6 mb-4" />
-                  <Skeleton className="h-10 w-full" />
+              <div className="bg-gray-50 p-6 rounded-lg mb-6">
+                <h3 className="text-xl font-bold mb-4">Contact Information</h3>
+                <div className="space-y-5">
+                  <div className="flex items-start">
+                    <MapPin className="h-5 w-5 text-primary mt-1 mr-3" />
+                    <div>
+                      <p className="font-medium">Address</p>
+                      <p className="text-gray-600">
+                        {"89/2 Sector 39, Gurugram, Haryana"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Phone className="h-5 w-5 text-primary mt-1 mr-3" />
+                    <div>
+                      <p className="font-medium">Phone</p>
+                      <p className="text-gray-600">{"+91 8053210008"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Mail className="h-5 w-5 text-primary mt-1 mr-3" />
+                    <div>
+                      <p className="font-medium">Email</p>
+                      <p className="text-gray-600">
+                        {"support@GenuineNutrition.com"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <>
-                  <div className="bg-gray-50 p-6 rounded-lg mb-6">
-                    <h3 className="text-xl font-bold mb-4">
-                      Contact Information
-                    </h3>
-                    <div className="space-y-5">
-                      <div className="flex items-start">
-                        <MapPin className="h-5 w-5 text-primary mt-1 mr-3" />
-                        <div>
-                          <p className="font-medium">Address</p>
-                          <p className="text-gray-600">
-                            {contactInfo?.address ||
-                              "89/2 Sector 39, Gurugram, Haryana"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <Phone className="h-5 w-5 text-primary mt-1 mr-3" />
-                        <div>
-                          <p className="font-medium">Phone</p>
-                          <p className="text-gray-600">
-                            {contactInfo?.phone || "+91 8053210008"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <Mail className="h-5 w-5 text-primary mt-1 mr-3" />
-                        <div>
-                          <p className="font-medium">Email</p>
-                          <p className="text-gray-600">
-                            {contactInfo?.email ||
-                              "support@GenuineNutrition.com"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              </div>
 
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h3 className="text-xl font-bold mb-4">Follow Us</h3>
-                    <div className="flex space-x-4">
-                      <a
-                        href={
-                          contactInfo?.socialLinks?.facebook ||
-                          "https://facebook.com/GenuineNutrition"
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white p-3 rounded-full text-primary hover:bg-primary hover:text-white transition-colors"
-                        aria-label="Facebook"
-                      >
-                        <Facebook className="h-5 w-5" />
-                      </a>
-                      <a
-                        href={
-                          contactInfo?.socialLinks?.instagram ||
-                          "https://instagram.com/GenuineNutrition"
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white p-3 rounded-full text-primary hover:bg-primary hover:text-white transition-colors"
-                        aria-label="Instagram"
-                      >
-                        <Instagram className="h-5 w-5" />
-                      </a>
-                      <a
-                        href={
-                          contactInfo?.socialLinks?.twitter ||
-                          "https://twitter.com/GenuineNutrition"
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white p-3 rounded-full text-primary hover:bg-primary hover:text-white transition-colors"
-                        aria-label="Twitter"
-                      >
-                        <Twitter className="h-5 w-5" />
-                      </a>
-                    </div>
-                  </div>
-                </>
-              )}
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4">Follow Us</h3>
+                <div className="flex space-x-4">
+                  <a
+                    href={"https://facebook.com/GenuineNutrition"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white p-3 rounded-full text-primary hover:bg-primary hover:text-white transition-colors"
+                    aria-label="Facebook"
+                  >
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                  <a
+                    href={"https://instagram.com/GenuineNutrition"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white p-3 rounded-full text-primary hover:bg-primary hover:text-white transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <Instagram className="h-5 w-5" />
+                  </a>
+                  <a
+                    href={"https://twitter.com/GenuineNutrition"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white p-3 rounded-full text-primary hover:bg-primary hover:text-white transition-colors"
+                    aria-label="Twitter"
+                  >
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -311,8 +263,7 @@ export default function ContactPage() {
               ></iframe>
             </div>
             <p className="text-center text-gray-600">
-              Visit our store at{" "}
-              {contactInfo?.address || "89/2 Sector 39, Gurugram, Haryana"}
+              Visit our store at {"89/2 Sector 39, Gurugram, Haryana"}
             </p>
           </div>
         </div>

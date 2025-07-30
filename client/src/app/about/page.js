@@ -1,45 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchApi } from "@/lib/utils";
 import Image from "next/image";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { Badge } from "@/components/ui/badge";
 
 export default function AboutPage() {
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchAboutContent() {
-      setLoading(true);
-      try {
-        const response = await fetchApi("/content/about");
-        setContent(response.data);
-      } catch (error) {
-        console.error("Failed to fetch about page content:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchAboutContent();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
-          <Skeleton className="h-10 w-2/3 mx-auto mb-6" />
-          <Skeleton className="h-5 w-full mb-2" />
-          <Skeleton className="h-5 w-full mb-2" />
-          <Skeleton className="h-5 w-3/4 mb-10 mx-auto" />
-          <Skeleton className="w-full h-[400px] mb-10 rounded-lg" />
-        </div>
-      </div>
-    );
-  }
-
   const stats = [
     { label: "Happy Customers", value: "50,000+", icon: "👥" },
     { label: "Products Sold", value: "2M+", icon: "📦" },
@@ -376,17 +341,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
-      {/* Custom CMS Content */}
-      {content && content.content && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto prose prose-lg prose-emerald">
-              <div dangerouslySetInnerHTML={{ __html: content.content }} />
-            </div>
-          </div>
-        </section>
-      )}
     </main>
   );
 }
