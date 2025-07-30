@@ -13,7 +13,7 @@ const CategoryCard = ({ category, index }) => {
 
   return (
     <div className="flex flex-col items-center group cursor-pointer">
-      <div className="relative bg-white rounded p-1 mb-1  max-w-[200px] max-h-[200px] flex items-center justify-center shadow group-hover:shadow-md border border-gray-100 overflow-hidden transition-all duration-200">
+      <div className="relative bg-white rounded p-1 mb-1  md:w-[200px] md:h-[200px] flex items-center justify-center shadow group-hover:shadow-md border border-gray-100 overflow-hidden transition-all duration-200">
         {isOffers ? (
           <div className="relative">
             <div className="w-9 h-9 sm:w-11 sm:h-11 md:w-16 md:h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow">
