@@ -196,8 +196,8 @@ const HeroCarousel = () => {
           </CarouselContent>
 
           {/* Navigation Controls - Better positioned and sized */}
-          <CarouselPrevious className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
-          <CarouselNext className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
+          <CarouselPrevious className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
+          <CarouselNext className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
 
           {/* Dot Indicators - Better responsive sizing */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
@@ -220,7 +220,7 @@ const HeroCarousel = () => {
             <Button
               variant="outline"
               size="sm"
-              className="h-6 w-6  bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm"
+              className="h-5 w-5  bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm"
               onClick={() => setAutoplay(!autoplay)}
               aria-label={autoplay ? "Pause slideshow" : "Play slideshow"}
             >
