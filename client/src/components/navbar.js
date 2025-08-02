@@ -336,8 +336,7 @@ export function Navbar() {
 
               {/* Center - Free shipping text */}
               <div className="text-center text-xs md:text-sm font-medium mx-auto md:mx-0">
-                Free shipping on orders over ₹999 | Use code FIT10 for 10% off
-                your first order
+                Shop for ₹999+ and receive a scratch card with exciting rewards!
               </div>
 
               {/* Right - Navigation links */}

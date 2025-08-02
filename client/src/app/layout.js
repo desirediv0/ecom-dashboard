@@ -25,7 +25,7 @@ const poppinsFont = localFont({
 export const metadata = {
   title: "Genuine Nutrition - Premium Supplements for Your Fitness Journey",
   description:
-    "Get high-quality supplements at the best prices. Free shipping on orders over ₹999.",
+    "Get high-quality supplements at the best prices. Shop for ₹999+ and receive a scratch card with exciting rewards!.",
 };
 
 export default function RootLayout({ children }) {
