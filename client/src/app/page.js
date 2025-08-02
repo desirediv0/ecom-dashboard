@@ -248,17 +248,8 @@ const AnnouncementBanner = () => {
         <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-center">
           <div className="flex items-center">
             <span className="text-xs md:text-base font-medium">
-              ⚡ FREE SHIPPING ON ORDERS ABOVE ₹999
-            </span>
-          </div>
-          <div className="hidden md:flex items-center">
-            <span className="text-sm md:text-base font-medium">
-              🎁 GET A FREE SHAKER WITH PROTEIN PURCHASES
-            </span>
-          </div>
-          <div className="hidden md:flex items-center ">
-            <span className="text-sm md:text-base font-medium">
-              🔥 USE CODE <strong>FIT10</strong> FOR 10% OFF
+              ⚡ Spend ₹999 or more and unlock a scratch card – win exciting
+              goodies!
             </span>
           </div>
         </div>
