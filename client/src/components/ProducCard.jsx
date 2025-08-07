@@ -196,7 +196,7 @@ const ProducCard = ({ product }) => {
             <>
               {/* SALE badge on left */}
               <div className="absolute top-3 left-3 z-10">
-                <div className="backdrop-blur-md bg-red-500/80 border border-red-400/50 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                <div className=" bg-red-500  border border-red-400/80 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                   SALE
                 </div>
               </div>
@@ -210,7 +210,7 @@ const ProducCard = ({ product }) => {
                 if (discountPercent > 0) {
                   return (
                     <div className="absolute top-3 right-3 z-10">
-                      <div className="backdrop-blur-md bg-green-500/80 border border-green-400/50 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                      <div className=" bg-green-500  border border-green-400/80 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                         {discountPercent}% OFF
                       </div>
                     </div>
