@@ -21,6 +21,13 @@ import {
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 
+// Helper function to format image URLs correctly
+const getImageUrl = (image) => {
+  if (!image) return "/product-placeholder.jpg";
+  if (image.startsWith("http")) return image;
+  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+};
+
 export default function ProductQuickView({ product, open, onOpenChange }) {
   const [selectedFlavor, setSelectedFlavor] = useState(null);
   const [selectedWeight, setSelectedWeight] = useState(null);
@@ -76,8 +83,8 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
           // Update image if available
           if (productData.images && productData.images.length > 0) {
             setImgSrc(
-              productData.images[0].url ||
-                productData.image ||
+              getImageUrl(productData.images[0].url) ||
+                getImageUrl(productData.image) ||
                 "/product-placeholder.jpg"
             );
           }
@@ -329,9 +336,7 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
         ? primaryImage.url
         : selectedVariant.images[0]?.url;
 
-      if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
-      if (imageUrl)
-        return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+      return getImageUrl(imageUrl);
     }
 
     // Priority 2: Product images
@@ -341,9 +346,7 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
         ? primaryImage.url
         : displayProduct.images[0]?.url;
 
-      if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
-      if (imageUrl)
-        return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+      return getImageUrl(imageUrl);
     }
 
     // Priority 3: Any variant images from any variant
@@ -359,18 +362,13 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
           ? primaryImage.url
           : variantWithImages.images[0]?.url;
 
-        if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
-        if (imageUrl)
-          return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+        return getImageUrl(imageUrl);
       }
     }
 
     // Priority 4: Check product.image property (from API response)
     if (displayProduct?.image) {
-      const imageUrl = displayProduct.image;
-      if (imageUrl && imageUrl.startsWith("http")) return imageUrl;
-      if (imageUrl)
-        return `https://desirediv-storage.blr1.cdn.digitaloceanspaces.com/${imageUrl}`;
+      return getImageUrl(displayProduct.image);
     }
 
     // Final fallback

@@ -19,6 +19,13 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 
+// Helper function to format image URLs correctly
+const getImageUrl = (image) => {
+  if (!image) return "/placeholder.jpg";
+  if (image.startsWith("http")) return image;
+  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+};
+
 // Cart item component to optimize re-renders
 const CartItem = React.memo(
   ({ item, onUpdateQuantity, onRemove, isLoading }) => {
@@ -27,13 +34,7 @@ const CartItem = React.memo(
         <div className="md:col-span-6 flex items-center">
           <div className="relative h-20 w-20 bg-gray-100 rounded overflow-hidden mr-4 flex-shrink-0">
             <Image
-              src={
-                item.product.image
-                  ? item.product.image.startsWith("http")
-                    ? item.product.image
-                    : `https://desirediv-storage.blr1.digitaloceanspaces.com/${item.product.image}`
-                  : "/placeholder.jpg"
-              }
+              src={getImageUrl(item.product.image)}
               alt={item.product.name}
               fill
               className="object-contain p-2"

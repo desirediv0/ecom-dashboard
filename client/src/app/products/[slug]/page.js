@@ -1,6 +1,13 @@
 import { fetchApi } from "@/lib/utils";
 import ProductContent from "./ProductContent";
 
+// Helper function to format image URLs correctly
+const getImageUrl = (image) => {
+  if (!image) return null;
+  if (image.startsWith("http")) return image;
+  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+};
+
 export async function generateMetadata({ params }) {
   const { slug } = params;
   let title = "Product Details | GenuineNutrition";
@@ -20,7 +27,7 @@ export async function generateMetadata({ params }) {
 
       // Get the first image from product images
       if (product.images && product.images.length > 0) {
-        image = product.images[0].url;
+        image = getImageUrl(product.images[0].url);
       }
     }
   } catch (error) {

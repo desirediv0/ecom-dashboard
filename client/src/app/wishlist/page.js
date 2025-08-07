@@ -12,6 +12,13 @@ import Image from "next/image";
 import { Eye, Heart, Star } from "lucide-react";
 import ProductQuickView from "@/components/ProductQuickView";
 
+// Helper function to format image URLs correctly
+const getImageUrl = (image) => {
+  if (!image) return "/placeholder.jpg";
+  if (image.startsWith("http")) return image;
+  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+};
+
 export default function WishlistPage() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
@@ -117,7 +124,7 @@ export default function WishlistPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {wishlistItems.map((product) => (
               <div
                 key={product.id}
@@ -126,17 +133,7 @@ export default function WishlistPage() {
                 <Link href={`/products/${product.slug}`}>
                   <div className="relative h-64 w-full  overflow-hidden">
                     <Image
-                      src={
-                        product.image
-                          ? product.image.startsWith("http")
-                            ? product.image
-                            : `https://desirediv-storage.blr1.digitaloceanspaces.com/${product.image}`
-                          : product.images?.[0]
-                          ? product.images[0].startsWith("http")
-                            ? product.images[0]
-                            : `https://desirediv-storage.blr1.digitaloceanspaces.com/${product.images[0]}`
-                          : "/placeholder.jpg"
-                      }
+                      src={getImageUrl(product.image || product.images?.[0])}
                       alt={product.name}
                       fill
                       className="object-contain px-4 transition-transform group-hover:scale-105"

@@ -1,24 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { fetchApi, formatCurrency } from "@/lib/utils";
+import { fetchApi } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Star,
-  ChevronDown,
-  ChevronUp,
-  AlertCircle,
-  Heart,
-  Eye,
-} from "lucide-react";
-import { useCart } from "@/lib/cart-context";
-import { useAuth } from "@/lib/auth-context";
-import ProductQuickView from "@/components/ProductQuickView";
+import { ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
+
 import { toast } from "sonner";
 import CategoriesCarousel from "@/components/catgry";
+import ProducCard from "@/components/ProducCard";
 
 function ProductCardSkeleton() {
   return (
@@ -49,11 +39,7 @@ export default function BrandPage({ params }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [quickViewOpen, setQuickViewOpen] = useState(false);
-  const [wishlistItems, setWishlistItems] = useState({});
-  const [isAddingToWishlist, setIsAddingToWishlist] = useState({});
-  const [isAddingToCart, setIsAddingToCart] = useState({});
+
   const [filters, setFilters] = useState({
     sort: sortParam,
     order: orderParam,
@@ -64,8 +50,6 @@ export default function BrandPage({ params }) {
     total: 0,
     pages: 0,
   });
-  const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
 
   const updateURL = (newFilters) => {
     const params = new URLSearchParams();
@@ -120,25 +104,6 @@ export default function BrandPage({ params }) {
   }, [error]);
 
   useEffect(() => {
-    const fetchWishlistStatus = async () => {
-      if (!isAuthenticated || typeof window === "undefined") return;
-      try {
-        const response = await fetchApi("/users/wishlist", {
-          credentials: "include",
-        });
-        const items = response.data.wishlistItems.reduce((acc, item) => {
-          acc[item.productId] = true;
-          return acc;
-        }, {});
-        setWishlistItems(items);
-      } catch (error) {
-        // ignore
-      }
-    };
-    fetchWishlistStatus();
-  }, [isAuthenticated]);
-
-  useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [pagination.page]);
 
@@ -189,81 +154,6 @@ export default function BrandPage({ params }) {
     scrollToTop();
   };
 
-  const handleAddToCart = async (product) => {
-    setIsAddingToCart((prev) => ({ ...prev, [product.id]: true }));
-    try {
-      if (!isAuthenticated) {
-        router.push(
-          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
-        );
-        return;
-      }
-      if (!product || !product.variants || product.variants.length === 0) {
-        const response = await fetchApi(
-          `/public/products/${product.id}/variants`
-        );
-        const variants = response.data.variants || [];
-        if (variants.length === 0) {
-          toast.error("This product is currently not available");
-          return;
-        }
-        const variantId = variants[0].id;
-        await addToCart(variantId, 1);
-        toast.success(`${product.name} added to cart`);
-      } else {
-        const variantId = product.variants[0].id;
-        await addToCart(variantId, 1);
-        toast.success(`${product.name} added to cart`);
-      }
-    } catch (err) {
-      toast.error("Failed to add product to cart");
-    } finally {
-      setIsAddingToCart((prev) => ({ ...prev, [product.id]: false }));
-    }
-  };
-
-  const handleQuickView = (product) => {
-    setQuickViewProduct(product);
-    setQuickViewOpen(true);
-  };
-
-  const handleAddToWishlist = async (product, e) => {
-    e.preventDefault();
-    if (!isAuthenticated) {
-      router.push(`/login?redirect=/products/${product.slug}`);
-      return;
-    }
-    setIsAddingToWishlist((prev) => ({ ...prev, [product.id]: true }));
-    try {
-      if (wishlistItems[product.id]) {
-        const wishlistResponse = await fetchApi("/users/wishlist", {
-          credentials: "include",
-        });
-        const wishlistItem = wishlistResponse.data.wishlistItems.find(
-          (item) => item.productId === product.id
-        );
-        if (wishlistItem) {
-          await fetchApi(`/users/wishlist/${wishlistItem.id}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
-          setWishlistItems((prev) => ({ ...prev, [product.id]: false }));
-        }
-      } else {
-        await fetchApi("/users/wishlist", {
-          method: "POST",
-          credentials: "include",
-          body: JSON.stringify({ productId: product.id }),
-        });
-        setWishlistItems((prev) => ({ ...prev, [product.id]: true }));
-      }
-    } catch (error) {
-      // ignore
-    } finally {
-      setIsAddingToWishlist((prev) => ({ ...prev, [product.id]: false }));
-    }
-  };
-
   if (loading && products.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -280,7 +170,7 @@ export default function BrandPage({ params }) {
       <div id="products-main" className="mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Products Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 w-full">
+          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6 w-full">
             {/* Display product count and sort options */}
             <div className="flex justify-between md:justify-end mb-6 items-center w-full col-span-full">
               <div className="text-sm">
@@ -368,161 +258,8 @@ export default function BrandPage({ params }) {
                   }, null);
                   if (!selectedVariant) selectedVariant = product.variants[0];
                 }
-                let productImage = (() => {
-                  if (
-                    selectedVariant &&
-                    selectedVariant.images &&
-                    selectedVariant.images.length > 0
-                  ) {
-                    const primaryImg = selectedVariant.images.find(
-                      (img) => img.isPrimary
-                    );
-                    if (primaryImg && primaryImg.url)
-                      return primaryImg.url.startsWith("http") ||
-                        primaryImg.url.startsWith("/")
-                        ? primaryImg.url
-                        : `https://desirediv-storage.blr1.digitaloceanspaces.com/${primaryImg.url}`;
-                    if (selectedVariant.images[0].url)
-                      return selectedVariant.images[0].url.startsWith("http") ||
-                        selectedVariant.images[0].url.startsWith("/")
-                        ? selectedVariant.images[0].url
-                        : `https://desirediv-storage.blr1.digitaloceanspaces.com/${selectedVariant.images[0].url}`;
-                  }
-                  if (product.image)
-                    return product.image.startsWith("http") ||
-                      product.image.startsWith("/")
-                      ? product.image
-                      : `https://desirediv-storage.blr1.digitaloceanspaces.com/${product.image}`;
-                  return "/placeholder.jpg";
-                })();
-                const basePrice =
-                  selectedVariant?.basePrice ?? product.basePrice;
-                const regularPrice =
-                  selectedVariant?.regularPrice ?? product.regularPrice;
-                const hasSale = selectedVariant?.hasSale ?? product.hasSale;
-                return (
-                  <div
-                    key={product.id}
-                    className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full"
-                  >
-                    <Link href={`/products/${product.slug}`}>
-                      <div className="relative h-64 w-full overflow-hidden">
-                        <Image
-                          src={productImage}
-                          alt={product.name}
-                          fill
-                          className="object-contain px-4 transition-transform group-hover:scale-105"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                        {hasSale && (
-                          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-sm">
-                            SALE
-                          </span>
-                        )}
-                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 backdrop-blur-[2px] flex justify-center py-1 md:py-3 md:bg-opacity-0 md:group-hover:bg-opacity-70 md:translate-y-full md:group-hover:translate-y-0 transition-transform">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleQuickView(product);
-                            }}
-                          >
-                            <Eye className="h-5 w-5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2 ${
-                              wishlistItems[product.id] ? "text-red-500" : ""
-                            }`}
-                            onClick={(e) => handleAddToWishlist(product, e)}
-                            disabled={isAddingToWishlist[product.id]}
-                          >
-                            <Heart
-                              className={`h-5 w-5 ${
-                                wishlistItems[product.id] ? "fill-current" : ""
-                              }`}
-                            />
-                          </Button>
-                        </div>
-                      </div>
-                    </Link>
-                    <div className="p-4 text-center">
-                      <div className="flex items-center justify-center mb-2">
-                        <div className="flex text-yellow-400">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className="h-4 w-4"
-                              fill={
-                                i < Math.round(product.avgRating || 0)
-                                  ? "currentColor"
-                                  : "none"
-                              }
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-gray-500 ml-2">
-                          ({product.reviewCount || 0})
-                        </span>
-                      </div>
-                      <Link
-                        href={`/products/${product.slug}`}
-                        className="hover:text-primary"
-                      >
-                        <h3 className="font-medium uppercase mb-2 line-clamp-2 text-sm">
-                          {product.name}
-                        </h3>
-                        {/* Show lowest weight variant's flavor and weight */}
-                        {(() => {
-                          if (!selectedVariant) return null;
-                          const flavor = selectedVariant.flavor?.name;
-                          const weight = selectedVariant.weight?.value;
-                          const unit = selectedVariant.weight?.unit;
-                          if (flavor || (weight && unit)) {
-                            return (
-                              <div className="text-xs text-gray-500 mb-1">
-                                {flavor}
-                                {flavor && weight && unit ? " • " : ""}
-                                {weight && unit ? `${weight} ${unit}` : ""}
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </Link>
-                      <div className="flex items-center justify-center mb-2">
-                        {hasSale ? (
-                          <div className="flex items-center">
-                            <span className="font-bold text-lg text-primary">
-                              {formatCurrency(basePrice)}
-                            </span>
-                            <span className="text-gray-500 line-through text-sm ml-2">
-                              {formatCurrency(regularPrice)}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="font-bold text-lg text-primary">
-                            {formatCurrency(basePrice)}
-                          </span>
-                        )}
-                      </div>
-                      <Button
-                        onClick={() => handleAddToCart(product)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        disabled={isAddingToCart[product.id]}
-                      >
-                        {isAddingToCart[product.id]
-                          ? "Adding..."
-                          : "Add to Cart"}
-                      </Button>
-                    </div>
-                  </div>
-                );
+
+                return <ProducCard key={product.id} product={product} />;
               })
             )}
 
@@ -587,13 +324,6 @@ export default function BrandPage({ params }) {
                 </div>
               </div>
             )}
-
-            {/* Quick View Dialog */}
-            <ProductQuickView
-              product={quickViewProduct}
-              open={quickViewOpen}
-              onOpenChange={setQuickViewOpen}
-            />
           </div>
         </div>
       </div>

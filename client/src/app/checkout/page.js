@@ -24,6 +24,13 @@ import Link from "next/link";
 import AddressForm from "@/components/AddressForm";
 import Image from "next/image";
 
+// Helper function to format image URLs correctly
+const getImageUrl = (image) => {
+  if (!image) return "/placeholder.jpg";
+  if (image.startsWith("http")) return image;
+  return `https://desirediv-storage.blr1.digitaloceanspaces.com/${image}`;
+};
+
 export default function CheckoutPage() {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
@@ -615,7 +622,7 @@ export default function CheckoutPage() {
                       <div className="h-10 w-10 bg-gray-100 rounded flex-shrink-0 relative">
                         {item.product.image && (
                           <Image
-                            src={item.product.image}
+                            src={getImageUrl(item.product.image)}
                             alt={item.product.name}
                             fill
                             className="object-contain p-1"

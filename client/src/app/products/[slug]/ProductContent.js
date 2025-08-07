@@ -1096,12 +1096,13 @@ export default function ProductContent({ slug }) {
                     const primaryImg = selectedVariant.images.find(
                       (img) => img.isPrimary
                     );
-                    if (primaryImg && primaryImg.url) return primaryImg.url;
+                    if (primaryImg && primaryImg.url)
+                      return getImageUrl(primaryImg.url);
                     if (selectedVariant.images[0].url)
-                      return selectedVariant.images[0].url;
+                      return getImageUrl(selectedVariant.images[0].url);
                   }
                 }
-                if (product.image) return product.image;
+                if (product.image) return getImageUrl(product.image);
                 return "/product-placeholder.jpg";
               };
               return (
