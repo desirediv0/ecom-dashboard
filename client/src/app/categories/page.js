@@ -7,30 +7,6 @@ import { fetchApi } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { AlertCircle, ArrowRight, Package } from "lucide-react";
 import CategoriesCarousel from "@/components/catgry";
-import VerticalCategoriesCarousel from "@/components/vertical-catgry";
-
-// Simple Hero Section Component
-const CategoriesHero = () => {
-  return (
-    <section className="relative py-20 bg-gradient-to-r from-primary to-primary/80 overflow-hidden">
-      <div className="absolute inset-0 bg-black/10" />
-
-      {/* Simple background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-40 h-40 bg-white rounded-full blur-3xl" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 text-center text-white px-4 container mx-auto">
-        <h1 className="text-4xl md:text-6xl font-bold mb-4">Our Categories</h1>
-        <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
-          Discover premium fitness supplements for every goal
-        </p>
-      </div>
-    </section>
-  );
-};
 
 // Simplified Category Card Component
 const CategoryCard = ({ category, index }) => {
@@ -174,17 +150,35 @@ export default function CategoriesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 ">
+      {/* Hero Section */}
+      <section className="relative py-20 bg-gradient-to-r from-primary to-primary/80 overflow-hidden">
+        <div className="absolute inset-0 bg-black/10" />
+
+        {/* Simple background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-40 h-40 bg-white rounded-full blur-3xl" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 text-center text-white px-4 mx-auto max-w-7xl">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            Our Categories
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
+            Discover premium fitness supplements for every goal
+          </p>
+        </div>
+      </section>
+
       {/* Desktop Categories Carousel */}
-      <div className="hidden md:flex">
+      <div className="hidden md:flex mx-auto max-w-7xl">
         <CategoriesCarousel />
       </div>
 
-      {/* Hero Section */}
-      <CategoriesHero />
-
       {/* Breadcrumb */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="flex items-center text-sm">
           <Link
             href="/"
@@ -199,7 +193,7 @@ export default function CategoriesPage() {
 
       {/* Error State */}
       {error && (
-        <div className="container mx-auto px-4 mb-8">
+        <div className="mx-auto max-w-7xl px-4 mb-8">
           <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-start">
             <AlertCircle className="text-red-500 mr-3 mt-1 flex-shrink-0" />
             <div>
@@ -213,7 +207,7 @@ export default function CategoriesPage() {
       )}
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 pb-16">
+      <div className="mx-auto max-w-7xl px-4 pb-16">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, index) => (

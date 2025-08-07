@@ -617,7 +617,7 @@ function ProductsContent() {
   return (
     <div>
       <div id="products-main">
-        <div className="hidden md:flex">
+        <div className="hidden md:flex mx-auto max-w-7xl">
           <CategoriesCarousel />
         </div>
         {/* Hero Banner - add triple click handler for debug mode */}
