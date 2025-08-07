@@ -158,7 +158,11 @@ export default function WishlistPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2"
+                        className="text-white hover:text-white hover:bg-red-500/80 rounded-full p-2 mx-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          removeFromWishlist(product.id);
+                        }}
                       >
                         <Heart className="h-5 w-5" />
                       </Button>
@@ -196,10 +200,19 @@ export default function WishlistPage() {
                   </Link>
 
                   {product.flavors > 1 && (
-                    <span className="text-xs text-gray-500 block">
+                    <span className="text-xs text-gray-500 block mb-3">
                       {product.flavors} variants
                     </span>
                   )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                    onClick={() => removeFromWishlist(product.id)}
+                  >
+                    Remove from Wishlist
+                  </Button>
                 </div>
               </div>
             ))}
