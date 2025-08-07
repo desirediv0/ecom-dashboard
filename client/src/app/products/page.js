@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth-context";
 import ProductQuickView from "@/components/ProductQuickView";
 import { ClientOnly } from "@/components/client-only";
 import { toast } from "sonner";
+import CategoriesCarousel from "@/components/catgry";
 
 // Add ProductCardSkeleton component
 function ProductCardSkeleton() {
@@ -616,6 +617,9 @@ function ProductsContent() {
   return (
     <div>
       <div id="products-main">
+        <div className="hidden md:flex">
+          <CategoriesCarousel />
+        </div>
         {/* Hero Banner - add triple click handler for debug mode */}
         <div
           className="relative w-full h-[280px] mb-10 rounded-lg overflow-hidden"
@@ -1167,7 +1171,7 @@ function ProductsContent() {
                     products.map((product) => (
                       <div
                         key={product.id}
-                        className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
+                        className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full"
                       >
                         <Link href={`/products/${product.slug}`}>
                           <div className="relative h-48 md:h-64 w-full overflow-hidden">

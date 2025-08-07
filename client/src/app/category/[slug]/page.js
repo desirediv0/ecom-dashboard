@@ -347,7 +347,7 @@ export default function CategoryPage() {
           {products.map((product) => (
             <div
               key={product.id}
-              className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
+              className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full"
             >
               <Link href={`/products/${product.slug}`}>
                 <div className="relative h-48 md:h-64 w-full overflow-hidden">
@@ -400,7 +400,7 @@ export default function CategoryPage() {
                     })()}
                     alt={product.name}
                     fill
-                    className="object-contain px-4 transition-transform md:group-hover:scale-105 scale-150 md:scale-100"
+                    className="object-contain px-4 transition-transform md:group-hover:scale-105 scale-125 md:scale-100"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   {product.hasSale && (

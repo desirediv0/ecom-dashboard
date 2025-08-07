@@ -1,21 +1,20 @@
 "use client";
 import VerticalCategoriesCarousel from "@/components/vertical-catgry";
-import CategoriesCarousel from "@/components/catgry";
 import { usePathname } from "next/navigation";
 
-export default function ProductsLayout({ children }) {
+export default function CategoriesLayout({ children }) {
   const pathname = usePathname();
 
-  // Check if we're on a product detail page (has slug parameter)
-  const isProductDetailPage =
-    pathname.includes("/products/") && pathname.split("/").length > 2;
+  // Check if we're on a category detail page (has slug parameter)
+  const isCategoryDetailPage =
+    pathname.includes("/category/") && pathname.split("/").length > 2;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex gap-4 md:gap-8">
-          {/* Left Sidebar - Vertical Categories - Only on mobile and not on product detail pages */}
-          {!isProductDetailPage && (
+          {/* Left Sidebar - Vertical Categories - Only on mobile and not on category detail pages */}
+          {!isCategoryDetailPage && (
             <div className="flex-shrink-0 md:hidden block">
               <div className="sticky top-24">
                 <VerticalCategoriesCarousel />
@@ -25,7 +24,7 @@ export default function ProductsLayout({ children }) {
 
           {/* Right Side - Main Content */}
           <div
-            className={`${isProductDetailPage ? "w-full" : "flex-1"} min-w-0`}
+            className={`${isCategoryDetailPage ? "w-full" : "flex-1"} min-w-0`}
           >
             {children}
           </div>

@@ -448,7 +448,7 @@ const FeaturedProducts = ({
               >
                 <div
                   key={product.id}
-                  className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group"
+                  className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full"
                 >
                   <Link href={`/products/${product.slug}`}>
                     <div className="relative h-48 md:h-64 w-full overflow-hidden">
