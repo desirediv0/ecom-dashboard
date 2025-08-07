@@ -335,7 +335,7 @@ export function Navbar() {
               </div>
 
               {/* Center - Free shipping text */}
-              <div className="text-center text-xs md:text-sm font-medium mx-auto md:mx-0">
+              <div className="text-center text-xs md:text-sm font-medium mx-auto md:mx-0 capitalize">
                 Shop for ₹999+ and receive a scratch card with exciting rewards!
               </div>
 
