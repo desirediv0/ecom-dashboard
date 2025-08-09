@@ -20,6 +20,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { useAddVariantToCart } from "@/lib/cart-utils";
 
 // Helper function to format image URLs correctly
 const getImageUrl = (image) => {
@@ -38,6 +39,7 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
   const [addingToCart, setAddingToCart] = useState(false);
   const [success, setSuccess] = useState(false);
   const { addToCart } = useCart();
+  const { addVariantToCart } = useAddVariantToCart();
   const [productDetails, setProductDetails] = useState(null);
   const [imgSrc, setImgSrc] = useState("");
   const [availableCombinations, setAvailableCombinations] = useState([]);
@@ -308,13 +310,20 @@ export default function ProductQuickView({ product, open, onOpenChange }) {
     }
 
     try {
-      await addToCart(variantToAdd.id, quantity);
-      setSuccess(true);
-
-      // Auto close after success notification
-      setTimeout(() => {
-        onOpenChange(false);
-      }, 2000);
+      const result = await addVariantToCart(
+        variantToAdd,
+        quantity,
+        productDetails?.name || product?.name
+      );
+      if (result.success) {
+        setSuccess(true);
+        // Auto close after success notification
+        setTimeout(() => {
+          onOpenChange(false);
+        }, 2000);
+      } else {
+        setError("Failed to add to cart. Please try again.");
+      }
     } catch (err) {
       console.error("Error adding to cart:", err);
       setError("Failed to add to cart. Please try again.");

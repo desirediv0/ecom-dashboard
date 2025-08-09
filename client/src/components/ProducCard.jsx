@@ -6,11 +6,11 @@ import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
-import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ProductQuickView from "./ProductQuickView";
+import { useAddProductToCart } from "@/lib/cart-utils";
 
 // Helper function to format image URLs correctly
 const getImageUrl = (image) => {
@@ -32,9 +32,9 @@ const ProducCard = ({ product }) => {
   const [isAddingToWishlist, setIsAddingToWishlist] = useState({});
   const [isAddingToCart, setIsAddingToCart] = useState({});
 
-  const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const { addProductToCart } = useAddProductToCart();
 
   // Fetch wishlist status for this product
   useEffect(() => {
@@ -67,34 +67,10 @@ const ProducCard = ({ product }) => {
   const handleAddToCart = async (product) => {
     setIsAddingToCart((prev) => ({ ...prev, [product.id]: true }));
     try {
-      if (!isAuthenticated) {
-        router.push(
-          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
-        );
+      const result = await addProductToCart(product, 1);
+      if (!result.success) {
+        // Error is already handled in the utility function
         return;
-      }
-      // If product has no variants, show error
-      if (!product || !product.variants || product.variants.length === 0) {
-        // Try to get default variant from backend
-        const response = await fetchApi(
-          `/public/products/${product.id}/variants`
-        );
-        const variants = response.data.variants || [];
-
-        if (variants.length === 0) {
-          toast.error("This product is currently not available");
-          return;
-        }
-
-        // Use first variant as default
-        const variantId = variants[0].id;
-        await addToCart(variantId, 1);
-        toast.success(`${product.name} added to cart`);
-      } else {
-        // Get the first variant (default)
-        const variantId = product.variants[0].id;
-        await addToCart(variantId, 1);
-        toast.success(`${product.name} added to cart`);
       }
     } catch (err) {
       console.error("Error adding to cart:", err);
@@ -321,13 +297,6 @@ const ProducCard = ({ product }) => {
             </span>
           )}
         </div>
-
-        {/* {product.flavors > 1 && (
-                            <span className="text-xs text-gray-500 block">
-                              {product.flavors} variants
-                            </span>
-                          )} */}
-
         <Button
           onClick={() => handleAddToCart(product)}
           variant="outline"

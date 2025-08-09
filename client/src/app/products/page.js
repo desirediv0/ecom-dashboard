@@ -944,7 +944,7 @@ function ProductsContent() {
 
             {/* Products Grid with Loading State */}
             {loading && products.length === 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
                 {[...Array(pagination.limit || 12)].map((_, index) => (
                   <ProductCardSkeleton key={index} />
                 ))}
@@ -1032,7 +1032,7 @@ function ProductsContent() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
                 {loading
                   ? // Show skeleton cards when loading with existing data
                     [...Array(pagination.limit || 12)].map((_, index) => (

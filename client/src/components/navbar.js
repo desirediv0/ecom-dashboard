@@ -26,7 +26,7 @@ import { toast, Toaster } from "sonner";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
-  const { cart } = useCart();
+  const { cart, getCartItemCount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -648,12 +648,9 @@ export function Navbar() {
                     className="p-2 text-gray-600 hover:text-primary transition-colors relative"
                   >
                     <ShoppingCart className="h-5 w-5" />
-                    {cart && cart.items?.length > 0 && (
+                    {getCartItemCount() > 0 && (
                       <span className="absolute -top-1 -right-1 bg-primary text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                        {cart.items.reduce(
-                          (acc, item) => acc + item.quantity,
-                          0
-                        )}
+                        {getCartItemCount()}
                       </span>
                     )}
                   </Link>
@@ -884,11 +881,13 @@ export function Navbar() {
           >
             <div className="relative">
               <ShoppingCart className="h-6 w-6" />
-              {cart && cart.items?.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                  {cart.items.reduce((acc, item) => acc + item.quantity, 0)}
-                </span>
-              )}
+              <ClientOnly>
+                {getCartItemCount() > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-primary text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                    {getCartItemCount()}
+                  </span>
+                )}
+              </ClientOnly>
             </div>
             <span className="text-xs mt-1">Cart</span>
           </Link>

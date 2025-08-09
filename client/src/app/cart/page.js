@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
-import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,22 +33,24 @@ const CartItem = React.memo(
         <div className="md:col-span-6 flex items-center">
           <div className="relative h-20 w-20 bg-gray-100 rounded overflow-hidden mr-4 flex-shrink-0">
             <Image
-              src={getImageUrl(item.product.image)}
-              alt={item.product.name}
+              src={getImageUrl(item.image || item.product?.image)}
+              alt={item.productName || item.product?.name}
               fill
               className="object-contain p-2"
             />
           </div>
           <div>
             <Link
-              href={`/products/${item.product.slug}`}
+              href={`/products/${item.productSlug || item.product?.slug}`}
               className="font-medium hover:text-primary"
             >
-              {item.product.name}
+              {item.productName || item.product?.name}
             </Link>
             <div className="text-sm text-gray-600 mt-1">
-              {item.variant.flavor?.name} {item.variant.weight?.value}
-              {item.variant.weight?.unit}
+              {item.variantName ||
+                `${item.variant?.flavor?.name || ""} ${
+                  item.variant?.weight?.value || ""
+                }${item.variant?.weight?.unit || ""}`}
             </div>
           </div>
         </div>
@@ -124,8 +125,9 @@ export default function CartPage() {
     coupon,
     couponLoading,
     getCartTotals,
+    isAuthenticated,
+    mergeProgress,
   } = useCart();
-  const { isAuthenticated } = useAuth();
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const router = useRouter();
@@ -222,7 +224,7 @@ export default function CartPage() {
   }, [isAuthenticated, router, totals]);
 
   // Display loading state
-  if (loading && !cart.items.length) {
+  if (loading && (!cart.items || cart.items.length === 0)) {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
@@ -258,6 +260,54 @@ export default function CartPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
 
+      {/* Guest cart notice */}
+      {!isAuthenticated && cart.items.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-500/10 to-blue-500/10 border border-orange-200 p-6 rounded-lg flex items-start mb-6 shadow-sm">
+          <div className="flex-shrink-0 mr-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-blue-500 rounded-full flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Guest Shopping Cart
+            </h2>
+            <p className="text-gray-700 mb-4 leading-relaxed">
+              You&apos;re currently shopping as a guest. To complete your
+              purchase and save your cart items for future visits, please log in
+              to your account.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/login?redirect=cart">
+                <Button className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                  Log In to Continue
+                </Button>
+              </Link>
+              <Link href="/register?redirect=cart">
+                <Button
+                  variant="outline"
+                  className="border-2 border-gray-300 hover:border-primary text-gray-700 hover:text-primary font-semibold px-6 py-3 rounded-lg transition-all duration-200"
+                >
+                  Create Account
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Show general cart error as a banner if it exists */}
       {error && (
         <div className="bg-red-50 p-4 rounded-md flex items-start mb-6">
@@ -265,6 +315,19 @@ export default function CartPage() {
           <div>
             <h2 className="text-lg font-semibold text-red-700">Cart Error</h2>
             <p className="text-red-600">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Show merge progress */}
+      {mergeProgress && (
+        <div className="bg-blue-50 p-4 rounded-md flex items-start mb-6">
+          <Loader2 className="text-blue-500 mr-3 mt-0.5 flex-shrink-0 animate-spin" />
+          <div>
+            <h2 className="text-lg font-semibold text-blue-700">
+              Merging Cart
+            </h2>
+            <p className="text-blue-600">{mergeProgress}</p>
           </div>
         </div>
       )}

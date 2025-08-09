@@ -22,6 +22,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import ReviewSection from "./ReviewSection";
 import ProductCarousel from "./ProductCarousel";
+import { useAddVariantToCart } from "@/lib/cart-utils";
 
 export default function ProductContent({ slug }) {
   const [product, setProduct] = useState(null);
@@ -45,6 +46,7 @@ export default function ProductContent({ slug }) {
   const [initialLoading, setInitialLoading] = useState(true);
 
   const { addToCart } = useCart();
+  const { addVariantToCart } = useAddVariantToCart();
 
   // Fetch product details
   useEffect(() => {
@@ -297,13 +299,18 @@ export default function ProductContent({ slug }) {
         setCartSuccess(false);
 
         try {
-          await addToCart(product.variants[0].id, quantity);
-          setCartSuccess(true);
-
-          // Clear success message after 3 seconds
-          setTimeout(() => {
-            setCartSuccess(false);
-          }, 3000);
+          const result = await addVariantToCart(
+            product.variants[0],
+            quantity,
+            product.name
+          );
+          if (result.success) {
+            setCartSuccess(true);
+            // Clear success message after 3 seconds
+            setTimeout(() => {
+              setCartSuccess(false);
+            }, 3000);
+          }
         } catch (err) {
           console.error("Error adding to cart:", err);
         } finally {
@@ -317,13 +324,18 @@ export default function ProductContent({ slug }) {
     setCartSuccess(false);
 
     try {
-      await addToCart(selectedVariant.id, quantity);
-      setCartSuccess(true);
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setCartSuccess(false);
-      }, 3000);
+      const result = await addVariantToCart(
+        selectedVariant,
+        quantity,
+        product.name
+      );
+      if (result.success) {
+        setCartSuccess(true);
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setCartSuccess(false);
+        }, 3000);
+      }
     } catch (err) {
       console.error("Error adding to cart:", err);
     } finally {

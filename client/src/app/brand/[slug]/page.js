@@ -243,24 +243,9 @@ export default function BrandPage({ params }) {
                 </p>
               </div>
             ) : (
-              products.map((product) => {
-                let selectedVariant = null;
-                if (product.variants && product.variants.length > 0) {
-                  selectedVariant = product.variants.reduce((min, v) => {
-                    if (!v.weight || typeof v.weight.value !== "number")
-                      return min;
-                    if (
-                      !min ||
-                      (min.weight && v.weight.value < min.weight.value)
-                    )
-                      return v;
-                    return min;
-                  }, null);
-                  if (!selectedVariant) selectedVariant = product.variants[0];
-                }
-
-                return <ProducCard key={product.id} product={product} />;
-              })
+              products.map((product) => (
+                <ProducCard key={product.id} product={product} />
+              ))
             )}
 
             {/* Restore original pagination UI */}
