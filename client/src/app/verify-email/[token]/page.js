@@ -56,7 +56,7 @@ export default function VerifyEmailPage({ params }) {
         }
       }, 1000);
     } else if (status === "success" && redirectCountdown === 0) {
-      router.push("/login");
+      router.push("/auth");
     }
 
     return () => {
@@ -194,7 +194,7 @@ export default function VerifyEmailPage({ params }) {
                 Redirecting to login in {redirectCountdown} seconds...
               </p>
               <Link
-                href="/login"
+                href="/auth"
                 className="mt-6 inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
               >
                 Continue to Login{" "}
@@ -239,10 +239,7 @@ export default function VerifyEmailPage({ params }) {
                 </form>
               </div>
 
-              <Link
-                href="/register"
-                className="mt-4 text-primary hover:underline"
-              >
+              <Link href="/auth" className="mt-4 text-primary hover:underline">
                 Back to Registration
               </Link>
             </div>
@@ -257,7 +254,7 @@ export default function VerifyEmailPage({ params }) {
               <p className="mt-2 text-gray-600">
                 Please check your email for the verification link.
               </p>
-              <Link href="/login" className="mt-6 text-primary hover:underline">
+              <Link href="/auth" className="mt-6 text-primary hover:underline">
                 Back to Login
               </Link>
             </div>

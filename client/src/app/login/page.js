@@ -62,10 +62,10 @@ export default function LoginPage() {
           <div>
             {errorMessage}{" "}
             <Link
-              href="/resend-verification"
+              href="/auth?tab=verify-otp"
               className="text-white font-medium underline"
             >
-              Resend verification email
+              Verify with OTP
             </Link>
           </div>
         );
@@ -160,7 +160,7 @@ export default function LoginPage() {
             <div className="text-center">
               <span className="text-sm text-gray-600">
                 Don&apos;t have an account?{" "}
-                <Link href="/register" className="text-primary hover:underline">
+                <Link href="/auth" className="text-primary hover:underline">
                   Register now
                 </Link>
               </span>

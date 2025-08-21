@@ -15,10 +15,15 @@ import { processAndUploadImage } from "../middlewares/multer.middlerware.js";
 
 import sendEmail from "../utils/sendEmail.js";
 import {
-  getVerificationTemplate,
   getResetTemplate,
   getDeleteTemplate,
+  getEmailOtpTemplate,
 } from "../email/temp/EmailTemplate.js";
+import {
+  generateOTP,
+  isValidOTP,
+  isExpiredOTP,
+} from "../helper/generateOTP.js";
 
 // Register a new user
 export const registerUser = asyncHandler(async (req, res, next) => {
@@ -44,12 +49,10 @@ export const registerUser = asyncHandler(async (req, res, next) => {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Generate verification token
-  const emailVerificationToken = crypto.randomBytes(32).toString("hex");
-  const emailVerificationTokenExpiry = new Date();
-  emailVerificationTokenExpiry.setHours(
-    emailVerificationTokenExpiry.getHours() + 24
-  );
+  // Generate 6-digit OTP for email verification
+  const otpCode = generateOTP();
+  const otpExpiry = new Date();
+  otpExpiry.setMinutes(otpExpiry.getMinutes() + 10);
 
   // Create user
   const newUser = await prisma.user.create({
@@ -58,8 +61,9 @@ export const registerUser = asyncHandler(async (req, res, next) => {
       email,
       password: hashedPassword,
       phone: phone || "",
-      emailVerificationToken,
-      emailVerificationTokenExpiry,
+      otp: otpCode,
+      otpVerified: false,
+      otpVerifiedExpiry: otpExpiry,
     },
   });
 
@@ -67,17 +71,15 @@ export const registerUser = asyncHandler(async (req, res, next) => {
   const userWithoutPassword = { ...newUser };
   delete userWithoutPassword.password;
 
-  // Send verification email
-  const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
-
+  // Send OTP email
   try {
     await sendEmail({
       email,
-      subject: "Verify Your Email - GenuineNutrition",
-      html: getVerificationTemplate(verificationLink),
+      subject: "Your OTP for Email Verification - GenuineNutrition",
+      html: getEmailOtpTemplate(otpCode, 10),
     });
 
-    console.log("Verification email sent to:", email);
+    console.log("Verification OTP sent to:", email, otpCode);
   } catch (error) {
     console.error("Error sending verification email:", error);
     // Don't throw error, still allow registration
@@ -89,7 +91,7 @@ export const registerUser = asyncHandler(async (req, res, next) => {
       new ApiResponsive(
         201,
         userWithoutPassword,
-        "User registered successfully. Please verify your email."
+        "User registered successfully. Please verify with the OTP sent to your email."
       )
     );
 });
@@ -124,9 +126,12 @@ export const loginUser = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
-  // Check if email is verified
-  if (!user.emailVerified) {
-    throw new ApiError(403, "Please verify your email before logging in");
+  // Check if email (OTP) is verified
+  if (!user.otpVerified) {
+    throw new ApiError(
+      403,
+      "Please verify your email using the OTP sent to you"
+    );
   }
 
   // Generate tokens
@@ -231,69 +236,70 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
 
 // Verify email
 export const verifyEmail = asyncHandler(async (req, res, next) => {
-  const { token } = req.params;
+  // Legacy endpoint kept for backward compatibility with old email-links.
+  // The system now uses OTP verification via /users/verify-otp
+  return res
+    .status(410)
+    .json(
+      new ApiResponsive(
+        410,
+        {},
+        "Link-based verification is deprecated. Please verify using OTP."
+      )
+    );
+});
 
-  if (!token) {
-    return res.status(400).json({
-      success: false,
-      message: "Verification token is required",
-    });
+// Verify OTP
+export const verifyOtp = asyncHandler(async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required");
   }
 
-  try {
-    // First, check if the email is already verified with this token
-    // This handles the case where the verification endpoint is hit multiple times
-    const alreadyVerifiedUser = await prisma.user.findFirst({
-      where: {
-        emailVerificationToken: token,
-        emailVerified: true,
-      },
-    });
+  if (!isValidOTP(otp)) {
+    throw new ApiError(400, "Invalid OTP format");
+  }
 
-    if (alreadyVerifiedUser) {
-      return res
-        .status(200)
-        .json(new ApiResponsive(200, {}, "Email already verified"));
-    }
+  const user = await prisma.user.findUnique({ where: { email } });
 
-    // Find user with matching verification token that hasn't expired
-    const user = await prisma.user.findFirst({
-      where: {
-        emailVerificationToken: token,
-        emailVerificationTokenExpiry: {
-          gte: new Date(), // Token must not be expired
-        },
-        emailVerified: false, // Only for unverified users
-      },
-    });
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
 
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired verification token",
-      });
-    }
-
-    // Update user verification status and clear the token
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: true,
-        emailVerificationToken: null,
-        emailVerificationTokenExpiry: null,
-      },
-    });
-
+  if (user.otpVerified) {
     return res
       .status(200)
-      .json(new ApiResponsive(200, {}, "Email verified successfully"));
-  } catch (error) {
-    console.error("Email verification error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to verify email. Please try again later.",
-    });
+      .json(new ApiResponsive(200, {}, "Email already verified"));
   }
+
+  if (!user.otp || !user.otpVerifiedExpiry) {
+    throw new ApiError(400, "OTP not requested or expired");
+  }
+
+  // Check expiry
+  if (isExpiredOTP(user.otpVerifiedExpiry, 0)) {
+    // If expiry time has passed
+    throw new ApiError(400, "OTP has expired. Please request a new one");
+  }
+
+  if (user.otp !== otp) {
+    throw new ApiError(400, "Incorrect OTP");
+  }
+
+  // Mark verified and clear OTP
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      otpVerified: true,
+      otp: null,
+      otpVerifiedExpiry: null,
+    },
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponsive(200, {}, "Email verified successfully"));
 });
 
 // Forgot password - request reset
@@ -322,20 +328,12 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
       );
   }
 
-  // Generate reset token
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  const resetTokenExpiry = new Date();
-  resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1);
-
-  // Store the reset token in the emailVerificationToken field
-  // The special PREFIX "pwdreset:" will help us differentiate between email verification and password reset
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      emailVerificationToken: `pwdreset:${resetToken}`,
-      emailVerificationTokenExpiry: resetTokenExpiry,
-    },
-  });
+  // Generate JWT reset token (no DB storage required)
+  const resetToken = jwt.sign(
+    { id: user.id, purpose: "pwdreset" },
+    process.env.RESET_TOKEN_SECRET || process.env.ACCESS_JWT_SECRET,
+    { expiresIn: "1h" }
+  );
 
   // Send password reset email
   const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
@@ -377,31 +375,30 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
   validatePassword(password);
 
   try {
-    // Find user with matching reset token that hasn't expired
-    // We stored the token with a "pwdreset:" prefix
-    const user = await prisma.user.findFirst({
-      where: {
-        emailVerificationToken: `pwdreset:${token}`,
-        emailVerificationTokenExpiry: {
-          gte: new Date(), // Token must not be expired
-        },
-      },
-    });
+    // Verify JWT token
+    const decoded = jwt.verify(
+      token,
+      process.env.RESET_TOKEN_SECRET || process.env.ACCESS_JWT_SECRET
+    );
+
+    if (!decoded || decoded.purpose !== "pwdreset") {
+      throw new ApiError(400, "Invalid reset token");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
     if (!user) {
-      throw new ApiError(400, "Invalid or expired reset token");
+      throw new ApiError(404, "User not found");
     }
 
     // Hash new password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Update user password and clear the token
+    // Update user password
     await prisma.user.update({
       where: { id: user.id },
       data: {
         password: hashedPassword,
-        emailVerificationToken: null,
-        emailVerificationTokenExpiry: null,
       },
     });
 
@@ -1059,21 +1056,12 @@ export const cancelOrder = asyncHandler(async (req, res, next) => {
 
 // Request account deletion
 export const requestAccountDeletion = asyncHandler(async (req, res, next) => {
-  // Generate deletion token
-  const deletionToken = crypto.randomBytes(32).toString("hex");
-  const deletionTokenExpiry = new Date();
-  deletionTokenExpiry.setHours(deletionTokenExpiry.getHours() + 24);
-
-  // Save token to database - using emailVerificationToken field
-  await prisma.user.update({
-    where: { id: req.user.id },
-    data: {
-      emailVerificationToken: deletionToken,
-      emailVerificationTokenExpiry: deletionTokenExpiry,
-      // Mark that this is a deletion request, not an email verification
-      emailVerified: true, // We'll keep this true since the token is for deletion, not verification
-    },
-  });
+  // Generate deletion token (JWT, no DB storage required)
+  const deletionToken = jwt.sign(
+    { id: req.user.id, purpose: "delete" },
+    process.env.ACCOUNT_DELETE_SECRET || process.env.ACCESS_JWT_SECRET,
+    { expiresIn: "24h" }
+  );
 
   // Send account deletion confirmation email
   const user = await prisma.user.findUnique({
@@ -1115,19 +1103,25 @@ export const confirmAccountDeletion = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, "Deletion token is required");
   }
 
-  // Find user with the token using emailVerificationToken field
-  const user = await prisma.user.findFirst({
-    where: {
-      emailVerificationToken: token,
-      emailVerificationTokenExpiry: {
-        gte: new Date(), // Token must not be expired
-      },
-      emailVerified: true, // This ensures we're looking for deletion tokens, not verification tokens
-    },
-  });
+  // Verify deletion JWT token
+  let decoded;
+  try {
+    decoded = jwt.verify(
+      token,
+      process.env.ACCOUNT_DELETE_SECRET || process.env.ACCESS_JWT_SECRET
+    );
+  } catch (e) {
+    throw new ApiError(400, "Invalid or expired deletion token");
+  }
+
+  if (!decoded || decoded.purpose !== "delete") {
+    throw new ApiError(400, "Invalid or expired deletion token");
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
   if (!user) {
-    throw new ApiError(400, "Invalid or expired deletion token");
+    throw new ApiError(404, "User not found");
   }
 
   // Delete user's data
@@ -1331,7 +1325,7 @@ export const resendVerificationEmail = asyncHandler(async (req, res, next) => {
   }
 
   // If user is already verified, no need to send email
-  if (user.emailVerified) {
+  if (user.otpVerified) {
     return res
       .status(200)
       .json(
@@ -1343,33 +1337,30 @@ export const resendVerificationEmail = asyncHandler(async (req, res, next) => {
       );
   }
 
-  // Generate new verification token
-  const emailVerificationToken = crypto.randomBytes(32).toString("hex");
-  const emailVerificationTokenExpiry = new Date();
-  emailVerificationTokenExpiry.setHours(
-    emailVerificationTokenExpiry.getHours() + 24
-  );
+  // Generate new OTP
+  const otpCode = generateOTP();
+  const otpExpiry = new Date();
+  otpExpiry.setMinutes(otpExpiry.getMinutes() + 10);
 
-  // Update user with new token
+  // Update user with new OTP
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      emailVerificationToken,
-      emailVerificationTokenExpiry,
+      otp: otpCode,
+      otpVerified: false,
+      otpVerifiedExpiry: otpExpiry,
     },
   });
 
-  // Send verification email
-  const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
-
+  // Send OTP email
   try {
     await sendEmail({
       email,
-      subject: "Verify Your Email - GenuineNutrition",
-      html: getVerificationTemplate(verificationLink),
+      subject: "Your OTP for Email Verification - GenuineNutrition",
+      html: getEmailOtpTemplate(otpCode, 10),
     });
 
-    console.log("Verification email resent to:", email);
+    console.log("Verification OTP resent to:", email, otpCode);
   } catch (error) {
     console.error("Error sending verification email:", error);
     // Don't throw error, still return success
@@ -1381,7 +1372,7 @@ export const resendVerificationEmail = asyncHandler(async (req, res, next) => {
       new ApiResponsive(
         200,
         {},
-        "If your email is registered, you will receive a verification email"
+        "If your email is registered, you will receive an OTP"
       )
     );
 });

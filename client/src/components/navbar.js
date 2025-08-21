@@ -297,12 +297,12 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex flex-col space-y-3 mt-6">
-                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/auth" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="outline" className="w-full py-6 text-base">
                     Login
                   </Button>
                 </Link>
-                <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/auth" onClick={() => setIsMenuOpen(false)}>
                   <Button className="w-full py-6 text-base">Register</Button>
                 </Link>
               </div>
@@ -736,7 +736,7 @@ export function Navbar() {
                         <>
                           <div className="px-4 py-3">
                             <Link
-                              href="/login"
+                              href="/auth"
                               onClick={() => setActiveDropdown(null)}
                             >
                               <Button className="w-full mb-2 hover:scale-[1.02] transition-transform duration-200">
@@ -744,7 +744,7 @@ export function Navbar() {
                               </Button>
                             </Link>
                             <Link
-                              href="/register"
+                              href="/auth"
                               onClick={() => setActiveDropdown(null)}
                             >
                               <Button
@@ -842,9 +842,9 @@ export function Navbar() {
           </Link>
 
           <Link
-            href={isAuthenticated ? "/account" : "/login"}
+            href={isAuthenticated ? "/account" : "/auth"}
             className={`flex flex-col items-center justify-center py-2 px-1 ${
-              pathname.includes("/account") || pathname === "/login"
+              pathname.includes("/account") || pathname === "/auth"
                 ? "text-primary"
                 : "text-gray-600"
             }`}

@@ -29,7 +29,7 @@ export default function ChangePasswordPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/login");
+      router.push("/auth");
     }
   }, [isAuthenticated, loading, router]);
 

@@ -509,7 +509,7 @@ export default function ProductContent({ slug }) {
   // Handle add to wishlist
   const handleAddToWishlist = async () => {
     if (!isAuthenticated) {
-      router.push(`/login?redirect=/products/${slug}`);
+      router.push(`/auth?redirect=/products/${slug}`);
       return;
     }
 

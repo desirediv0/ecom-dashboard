@@ -77,30 +77,23 @@ export default function RegisterPage() {
         password: formData.password,
       });
 
-      // Show success message with longer duration
+      // Show success message
       toast.success(
-        "Registration successful! Please check your email to verify your account.",
+        "Registration successful! Enter the OTP sent to your email.",
         {
-          duration: 5000,
+          duration: 3000,
         }
       );
 
       // Store email temporarily for resend verification link
       localStorage.setItem("registeredEmail", formData.email);
 
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-      });
-
-      // Redirect to login after a delay
+      // Redirect to OTP verification page carrying the email
       setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
+        window.location.href = `/auth?tab=verify-otp&email=${encodeURIComponent(
+          formData.email
+        )}`;
+      }, 600);
     } catch (error) {
       toast.error(error.message || "Registration failed. Please try again.");
     } finally {
@@ -247,7 +240,7 @@ export default function RegisterPage() {
             <div className="text-center">
               <span className="text-sm text-gray-600">
                 Already have an account?{" "}
-                <Link href="/login" className="text-primary hover:underline">
+                <Link href="/auth" className="text-primary hover:underline">
                   Sign in
                 </Link>
               </span>

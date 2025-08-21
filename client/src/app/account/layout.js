@@ -15,7 +15,7 @@ export default function AccountLayout({ children }) {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/login");
+      router.push("/auth");
     }
   }, [isAuthenticated, loading, router]);
 

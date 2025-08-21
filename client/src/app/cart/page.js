@@ -217,7 +217,7 @@ export default function CartPage() {
     }
 
     if (!isAuthenticated) {
-      router.push("/login?redirect=checkout");
+      router.push("/auth?redirect=checkout");
     } else {
       router.push("/checkout");
     }
@@ -290,12 +290,12 @@ export default function CartPage() {
               to your account.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/login?redirect=cart">
+              <Link href="/auth?redirect=cart">
                 <Button className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
                   Log In to Continue
                 </Button>
               </Link>
-              <Link href="/register?redirect=cart">
+              <Link href="/auth?redirect=cart">
                 <Button
                   variant="outline"
                   className="border-2 border-gray-300 hover:border-primary text-gray-700 hover:text-primary font-semibold px-6 py-3 rounded-lg transition-all duration-200"

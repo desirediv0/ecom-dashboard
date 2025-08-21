@@ -123,6 +123,47 @@ export const getVerificationTemplate = (verificationLink) => `
 </html>
 `;
 
+export const getEmailOtpTemplate = (otp, expiresInMinutes = 10) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your One-Time Password (OTP) - GenuineNutrition</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f5f5f5; margin:0; padding:0; color:#1a1a1a; }
+        .container { max-width: 600px; margin: 24px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        .header { background: linear-gradient(135deg, #2563eb, #1e40af); color: #fff; text-align: center; padding: 32px; }
+        .content { padding: 32px; }
+        h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        p { margin: 0 0 16px; font-size: 16px; color: #333; }
+        .otp { font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #1e3a8a; background: #eef2ff; padding: 12px 16px; border-radius: 8px; text-align:center; display:inline-block; }
+        .note { font-size: 14px; color: #666; }
+        .footer { text-align:center; padding: 16px; font-size: 13px; color:#666; background:#f8f8f8; }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Email Verification OTP</h1>
+            </div>
+            <div class="content">
+                <p>Dear Valued Customer,</p>
+                <p>Use the following One-Time Password (OTP) to verify your email for GenuineNutrition:</p>
+                <p style="text-align:center; margin: 24px 0;">
+                    <span class="otp">${otp}</span>
+                </p>
+                <p class="note">This OTP will expire in ${expiresInMinutes} minutes. If you did not request this, please ignore this email.</p>
+            </div>
+            <div class="footer">
+                © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br/>
+                This is an automated message. Please do not reply.
+            </div>
+        </div>
+    </body>
+</html>
+`;
+
 export const getDeleteTemplate = (deletionLink) => `
 <!DOCTYPE html>
 <html lang="en">

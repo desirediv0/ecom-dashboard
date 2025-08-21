@@ -32,7 +32,7 @@ export default function WishlistPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/login?redirect=/wishlist");
+      router.push("/auth?redirect=/wishlist");
     }
   }, [isAuthenticated, loading, router]);
 

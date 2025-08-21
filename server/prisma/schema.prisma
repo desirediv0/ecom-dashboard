@@ -8,28 +8,28 @@ datasource db {
 }
 
 model User {
-  id                           String         @id @default(uuid())
-  email                        String         @unique
-  password                     String?
-  phone                        String?
-  role                         UserRole       @default(CUSTOMER)
-  isActive                     Boolean        @default(true)
-  emailVerified                Boolean        @default(false)
-  emailVerificationToken       String?
-  emailVerificationTokenExpiry DateTime?
-  createdAt                    DateTime       @default(now())
-  updatedAt                    DateTime       @updatedAt
-  razorpayCustomerId           String?
-  name                         String?
-  accounts                     Account[]
-  addresses                    Address[]
-  cartItems                    CartItem[]
-  orders                       Order[]
-  reviews                      Review[]
-  wishlistItems                WishlistItem[]
-  userCoupons                  UserCoupon[]
-  PageView                     PageView[]
-  ProductView                  ProductView[]
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  password           String?
+  phone              String?
+  role               UserRole       @default(CUSTOMER)
+  isActive           Boolean        @default(true)
+  otp                String?
+  otpVerified        Boolean        @default(false)
+  otpVerifiedExpiry  DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  razorpayCustomerId String?
+  name               String?
+  accounts           Account[]
+  addresses          Address[]
+  cartItems          CartItem[]
+  orders             Order[]
+  reviews            Review[]
+  wishlistItems      WishlistItem[]
+  userCoupons        UserCoupon[]
+  PageView           PageView[]
+  ProductView        ProductView[]
 }
 
 model Account {

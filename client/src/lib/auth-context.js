@@ -235,20 +235,19 @@ export function AuthProvider({ children }) {
     setError(null);
 
     try {
-      console.log("Resending verification email to:", email);
+      console.log("Resending verification OTP to:", email);
       const res = await fetchApi("/users/resend-verification", {
         method: "POST",
         body: JSON.stringify({ email }),
       });
 
-      console.log("Verification email resent successfully:", res);
+      console.log("Verification OTP resent successfully:", res);
       return res;
     } catch (err) {
       console.error("Error resending verification email:", err);
 
       // Extract the error message from the error object
-      let errorMessage =
-        "Failed to resend verification email. Please try again.";
+      let errorMessage = "Failed to resend OTP. Please try again.";
 
       if (err.message) {
         errorMessage = err.message;
@@ -269,6 +268,24 @@ export function AuthProvider({ children }) {
 
       setError(errorMessage);
       throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verify OTP
+  const verifyOtp = async (email, otp) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetchApi(`/users/verify-otp`, {
+        method: "POST",
+        body: JSON.stringify({ email, otp }),
+      });
+      return res;
+    } catch (err) {
+      setError(err.message || "Failed to verify OTP");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -352,6 +369,7 @@ export function AuthProvider({ children }) {
     logout,
     verifyEmail,
     resendVerification,
+    verifyOtp,
     forgotPassword,
     resetPassword,
     updateProfile,

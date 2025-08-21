@@ -27,6 +27,7 @@ import {
   updateReview,
   deleteReview,
   resendVerificationEmail,
+  verifyOtp,
 } from "../controllers/user.controller.js";
 import { verifyJWTToken } from "../middlewares/auth.middleware.js";
 import { uploadFiles } from "../middlewares/multer.middlerware.js";
@@ -38,7 +39,8 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/refresh-token", refreshAccessToken);
-router.get("/verify-email/:token", verifyEmail);
+router.get("/verify-email/:token", verifyEmail); // legacy link-based, kept for backward compatibility
+router.post("/verify-otp", verifyOtp);
 router.post("/resend-verification", resendVerificationEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);

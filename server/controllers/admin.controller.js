@@ -664,7 +664,7 @@ export const getUsers = asyncHandler(async (req, res) => {
         email: true,
         phone: true,
         isActive: true,
-        emailVerified: true,
+        otpVerified: true,
         role: true,
         createdAt: true,
         updatedAt: true,
@@ -704,7 +704,7 @@ export const getUserById = asyncHandler(async (req, res) => {
       email: true,
       phone: true,
       isActive: true,
-      emailVerified: true,
+      otpVerified: true,
       role: true,
       createdAt: true,
       updatedAt: true,
@@ -759,7 +759,7 @@ export const updateUserStatus = asyncHandler(async (req, res) => {
     );
 });
 
-// Verify user email
+// Verify user email (mark OTP verified)
 export const verifyUserEmail = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
@@ -771,7 +771,7 @@ export const verifyUserEmail = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  if (user.emailVerified) {
+  if (user.otpVerified) {
     return res
       .status(200)
       .json(new ApiResponsive(200, {}, "Email is already verified"));
@@ -779,12 +779,12 @@ export const verifyUserEmail = asyncHandler(async (req, res) => {
 
   const updatedUser = await prisma.user.update({
     where: { id: userId },
-    data: { emailVerified: true },
+    data: { otpVerified: true, otp: null, otpVerifiedExpiry: null },
     select: {
       id: true,
       name: true,
       email: true,
-      emailVerified: true,
+      otpVerified: true,
     },
   });
 
@@ -836,7 +836,7 @@ export const updateUserDetails = asyncHandler(async (req, res) => {
       email: true,
       phone: true,
       isActive: true,
-      emailVerified: true,
+      otpVerified: true,
       role: true,
       createdAt: true,
       updatedAt: true,

@@ -5,8 +5,8 @@ const privateRoutes = ["/account", "/checkout", "/wishlist", "/orders"];
 
 // Define auth routes that should redirect to dashboard if already logged in
 const authRoutes = [
-  "/login",
-  "/register",
+  "/auth",
+  "/auth",
   "/verify-email",
   "/resend-verification",
   "/forgot-password",
@@ -30,7 +30,7 @@ export function middleware(request) {
 
   // If accessing a private route without authentication, redirect to login
   if (isPrivateRoute && !isAuthenticated) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/auth", request.url));
   }
 
   // If accessing an auth route while already authenticated, redirect to account dashboard

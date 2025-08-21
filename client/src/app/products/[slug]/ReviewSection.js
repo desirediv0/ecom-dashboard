@@ -61,7 +61,7 @@ export default function ReviewSection({ product }) {
     e.preventDefault();
 
     if (!isAuthenticated) {
-      router.push(`/login?redirect=/products/${product.slug}&review=true`);
+      router.push(`/auth?redirect=/products/${product.slug}&review=true`);
       return;
     }
 
@@ -195,7 +195,7 @@ export default function ReviewSection({ product }) {
                 onClick={() => {
                   if (!isAuthenticated) {
                     router.push(
-                      `/login?redirect=/products/${product.slug}&review=true`
+                      `/auth?redirect=/products/${product.slug}&review=true`
                     );
                     return;
                   }
@@ -330,7 +330,7 @@ export default function ReviewSection({ product }) {
             onClick={() => {
               if (!isAuthenticated) {
                 router.push(
-                  `/login?redirect=/products/${product.slug}&review=true`
+                  `/auth?redirect=/products/${product.slug}&review=true`
                 );
                 return;
               }

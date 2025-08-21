@@ -83,7 +83,7 @@ const ProducCard = ({ product }) => {
   const handleAddToWishlist = async (product, e) => {
     e.preventDefault(); // Prevent navigation
     if (!isAuthenticated) {
-      router.push(`/login?redirect=/products/${product.slug}`);
+      router.push(`/auth?redirect=/products/${product.slug}`);
       return;
     }
 

@@ -57,16 +57,13 @@ export default function ResendVerificationPage() {
   return (
     <div className="container max-w-lg mx-auto p-8">
       <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-2xl font-bold mb-4 text-center">
-          Resend Verification Email
-        </h1>
+        <h1 className="text-2xl font-bold mb-4 text-center">Resend OTP</h1>
 
         <ClientOnly fallback={<div className="py-8">Loading...</div>}>
           {(status === "idle" || status === "error") && (
             <div>
               <p className="mb-4 text-gray-600">
-                Enter your email address below and we&apos;ll send you a new
-                verification link.
+                Enter your email address and we&apos;ll send a new 6-digit OTP.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -98,13 +95,13 @@ export default function ResendVerificationPage() {
                       Sending...
                     </>
                   ) : (
-                    "Send Verification Email"
+                    "Send OTP"
                   )}
                 </Button>
               </form>
 
               <div className="mt-6 text-center">
-                <Link href="/login" className="text-primary hover:underline">
+                <Link href="/auth" className="text-primary hover:underline">
                   Back to Login
                 </Link>
               </div>
@@ -132,7 +129,7 @@ export default function ResendVerificationPage() {
                 Please check your email and click on the verification link.
               </p>
               <Link
-                href="/login"
+                href="/auth"
                 className="mt-6 inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
               >
                 Back to Login{" "}
