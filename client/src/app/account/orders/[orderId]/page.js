@@ -104,8 +104,9 @@ export default function OrderDetailsPage({ params }) {
     return statusColors[status] || "bg-gray-100 text-gray-800";
   };
 
-  // Check if order can be cancelled
-  const canCancel = order && ["PENDING", "PROCESSING"].includes(order.status);
+  // Check if order can be cancelled (allow PAID before shipping)
+  const canCancel =
+    order && ["PENDING", "PROCESSING", "PAID"].includes(order.status);
 
   if (loading || !isAuthenticated) {
     return (

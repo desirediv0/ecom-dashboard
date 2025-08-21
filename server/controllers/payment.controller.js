@@ -741,6 +741,9 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
     orderNumber: order.orderNumber,
     date: order.createdAt,
     status: order.status,
+    cancelReason: order.cancelReason || null,
+    cancelledAt: order.cancelledAt || null,
+    cancelledBy: order.cancelledBy || null,
     subTotal: parseFloat(order.subTotal),
     tax: parseFloat(order.tax),
     shippingCost: parseFloat(order.shippingCost),
@@ -838,8 +841,8 @@ export const cancelOrder = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Order not found");
   }
 
-  // Only allow cancellation for certain statuses
-  const allowedStatuses = ["PENDING", "PROCESSING"];
+  // Only allow cancellation for certain statuses (allow PAID if not yet shipped)
+  const allowedStatuses = ["PENDING", "PROCESSING", "PAID"];
   if (!allowedStatuses.includes(order.status)) {
     throw new ApiError(400, "This order cannot be cancelled");
   }

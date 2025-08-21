@@ -235,19 +235,18 @@ export function AuthProvider({ children }) {
     setError(null);
 
     try {
-      console.log("Resending verification OTP to:", email);
       const res = await fetchApi("/users/resend-verification", {
         method: "POST",
         body: JSON.stringify({ email }),
       });
 
-      console.log("Verification OTP resent successfully:", res);
       return res;
     } catch (err) {
       console.error("Error resending verification email:", err);
 
       // Extract the error message from the error object
-      let errorMessage = "Failed to resend OTP. Please try again.";
+      let errorMessage =
+        "Failed to resend verification email. Please try again.";
 
       if (err.message) {
         errorMessage = err.message;
@@ -278,7 +277,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchApi(`/users/verify-otp`, {
+      const res = await fetchApi("/users/verify-otp", {
         method: "POST",
         body: JSON.stringify({ email, otp }),
       });
@@ -368,8 +367,8 @@ export function AuthProvider({ children }) {
     register,
     logout,
     verifyEmail,
-    resendVerification,
     verifyOtp,
+    resendVerification,
     forgotPassword,
     resetPassword,
     updateProfile,
