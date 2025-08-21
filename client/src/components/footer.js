@@ -133,6 +133,7 @@ export function Footer() {
                 {[
                   { label: "Contact Us", href: "/contact" },
                   { label: "FAQ", href: "/faqs" },
+                  { label: "Partner with us", href: "/partner-with-us" },
                   { label: "Shipping Policy", href: "/shipping-policy" },
                   { label: "Cancellation & Refund", href: "/refund-policy" },
                   { label: "Terms & Conditions", href: "/terms-conditions" },
