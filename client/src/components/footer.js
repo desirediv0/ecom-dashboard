@@ -3,10 +3,6 @@
 import Link from "next/link";
 import {
   Instagram,
-  Facebook,
-  Twitter,
-  Youtube,
-  Mail,
   Phone,
   MapPin,
   Truck,
@@ -87,10 +83,8 @@ export function Footer() {
               {/* Social media icons */}
               <div className="flex space-x-3">
                 {[
-                  { icon: <Instagram size={18} />, href: "#" },
-                  { icon: <Facebook size={18} />, href: "#" },
-                  { icon: <Twitter size={18} />, href: "#" },
-                  { icon: <Youtube size={18} />, href: "#" },
+                  { icon: <Instagram size={18} />, href: "https://www.instagram.com/genuinenutrition.official" },
+
                 ].map((social, idx) => (
                   <Link
                     key={idx}
@@ -172,14 +166,7 @@ export function Footer() {
                   />
                   <span>+91 8053210008</span>
                 </div>
-                {/* 
-                <div className="flex items-center">
-                  <Mail
-                    size={18}
-                    className="text-[#F47C20] mr-2 flex-shrink-0 text-wrap flex text-xs"
-                  />
-                  <span>info@GenuineNutrition.com</span>
-                </div> */}
+
               </div>
             </div>
           </div>
