@@ -34,9 +34,8 @@ export default function PartnerWithUsPage() {
     console.log("Partner with us submission:", formData);
 
     toast.success("Thanks! We will reach out shortly.", {
-      description: `${
-        formData.name || "Partner"
-      }, your interest has been recorded.`,
+      description: `${formData.name || "Partner"
+        }, your interest has been recorded.`,
     });
 
     // Reset the form after a short delay for UX
@@ -65,6 +64,14 @@ export default function PartnerWithUsPage() {
               Grow your business with us. Whether you are a distributor,
               retailer, gym owner, or influencer, we would love to collaborate.
               Share your details and our team will get in touch soon.
+            </p>
+            <p className="text-gray-600 leading-relaxed mt-2">
+              <span className="block font-semibold text-[#0f2b47] mb-1">We offer two partnership models:</span>
+              <ul className="list-disc list-inside text-gray-700 ml-2">
+                <li><span className="font-semibold">Commission Model</span> – Earn attractive commissions on every sale you generate.</li>
+                <li><span className="font-semibold">Franchise Model</span> – Become a Genuine Nutrition franchise partner and grow with us.</li>
+              </ul>
+              <span className="block text-gray-600 mt-2">Choose the model that fits your business best, or contact us to discuss which option is right for you!</span>
             </p>
             <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
               <div className="rounded-lg bg-white p-4 shadow-sm border border-gray-100">
