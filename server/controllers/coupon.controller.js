@@ -3,67 +3,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponsive } from "../utils/ApiResponsive.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-// Get all coupons (admin)
-export const getAllCoupons = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, isActive } = req.query;
-
-  const filters = {};
-  if (isActive !== undefined) {
-    filters.isActive = isActive === "true";
-  }
-
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-  const take = parseInt(limit);
-
-  // Get total count
-  const totalCoupons = await prisma.coupon.count({
-    where: filters,
-  });
-
-  // Get coupons with pagination
-  const coupons = await prisma.coupon.findMany({
-    where: filters,
-    orderBy: {
-      createdAt: "desc",
-    },
-    skip,
-    take,
-  });
-
-  return res.status(200).json(
-    new ApiResponsive(
-      200,
-      {
-        coupons,
-        pagination: {
-          total: totalCoupons,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(totalCoupons / parseInt(limit)),
-        },
-      },
-      "Coupons fetched successfully"
-    )
-  );
-});
-
-// Get coupon by ID (admin)
-export const getCouponById = asyncHandler(async (req, res) => {
-  const { couponId } = req.params;
-
-  const coupon = await prisma.coupon.findUnique({
-    where: { id: couponId },
-  });
-
-  if (!coupon) {
-    throw new ApiError(404, "Coupon not found");
-  }
-
-  return res
-    .status(200)
-    .json(new ApiResponsive(200, { coupon }, "Coupon fetched successfully"));
-});
-
 // Create coupon (admin)
 export const createCoupon = asyncHandler(async (req, res) => {
   const {
@@ -76,6 +15,8 @@ export const createCoupon = asyncHandler(async (req, res) => {
     startDate,
     endDate,
     isActive = true,
+    partnerId,
+    partnerCommission,
   } = req.body;
 
   // Validate required fields
@@ -120,7 +61,10 @@ export const createCoupon = asyncHandler(async (req, res) => {
       startDate: start,
       endDate: end,
       isActive,
+      partnerId: partnerId || null,
+      partnerCommission: partnerCommission || null,
     },
+    include: { partner: true },
   });
 
   return res
@@ -141,6 +85,8 @@ export const updateCoupon = asyncHandler(async (req, res) => {
     startDate,
     endDate,
     isActive,
+    partnerId,
+    partnerCommission,
   } = req.body;
 
   // Check if coupon exists
@@ -188,12 +134,15 @@ export const updateCoupon = asyncHandler(async (req, res) => {
     ...(startDate && { startDate: new Date(startDate) }),
     ...(endDate && { endDate: new Date(endDate) }),
     ...(isActive !== undefined && { isActive }),
+    ...(partnerId !== undefined && { partnerId }),
+    ...(partnerCommission !== undefined && { partnerCommission }),
   };
 
   // Update coupon
   const updatedCoupon = await prisma.coupon.update({
     where: { id: couponId },
     data: updateData,
+    include: { partner: true },
   });
 
   return res
@@ -205,6 +154,69 @@ export const updateCoupon = asyncHandler(async (req, res) => {
         "Coupon updated successfully"
       )
     );
+});
+
+// Get all coupons (admin)
+export const getAllCoupons = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, isActive } = req.query;
+
+  const filters = {};
+  if (isActive !== undefined) {
+    filters.isActive = isActive === "true";
+  }
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const take = parseInt(limit);
+
+  // Get total count
+  const totalCoupons = await prisma.coupon.count({
+    where: filters,
+  });
+
+  // Get coupons with pagination
+  const coupons = await prisma.coupon.findMany({
+    where: filters,
+    orderBy: {
+      createdAt: "desc",
+    },
+    skip,
+    take,
+    include: { partner: true },
+  });
+
+  return res.status(200).json(
+    new ApiResponsive(
+      200,
+      {
+        coupons,
+        pagination: {
+          total: totalCoupons,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(totalCoupons / parseInt(limit)),
+        },
+      },
+      "Coupons fetched successfully"
+    )
+  );
+});
+
+// Get coupon by ID (admin)
+export const getCouponById = asyncHandler(async (req, res) => {
+  const { couponId } = req.params;
+
+  const coupon = await prisma.coupon.findUnique({
+    where: { id: couponId },
+    include: { partner: true },
+  });
+
+  if (!coupon) {
+    throw new ApiError(404, "Coupon not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponsive(200, { coupon }, "Coupon fetched successfully"));
 });
 
 // Delete coupon (admin)

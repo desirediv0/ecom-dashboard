@@ -3,6 +3,10 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import Razorpay from "razorpay";
 import userRoutes from "./routes/user.routes.js";
+import partnerRoutes from "./routes/partner.routes.js";
+import adminPartnerRoutes from "./routes/admin.partner.routes.js";
+import adminPartnerListRoutes from "./routes/admin.partner.list.routes.js";
+
 import adminRoutes from "./routes/admin.routes.js";
 import adminProductRoutes from "./routes/admin.product.routes.js";
 import adminOrderRoutes from "./routes/admin.order.routes.js";
@@ -93,6 +97,9 @@ export { razorpay };
 
 // API Routes
 app.use("/api/users", userRoutes);
+app.use("/api/partner", partnerRoutes);
+app.use("/api/admin/partners", adminPartnerRoutes);
+app.use("/api/admin", adminPartnerListRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminProductRoutes);
 app.use("/api/admin", adminOrderRoutes);

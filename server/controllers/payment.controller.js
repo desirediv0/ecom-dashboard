@@ -416,6 +416,44 @@ export const paymentVerification = asyncHandler(async (req, res) => {
         },
       });
 
+      // 2.5. Create partner commissions if coupon was used
+      if (couponId && discount > 0) {
+        try {
+          // Calculate final order amount (subtotal - discount)
+          const finalOrderAmount = subTotal - discount;
+
+          // Get all partners associated with this coupon
+          const couponPartners = await tx.couponPartner.findMany({
+            where: { couponId: couponId },
+            include: { partner: true }
+          });
+
+          // Create partner earnings for each partner
+          for (const couponPartner of couponPartners) {
+            if (couponPartner.commission && couponPartner.commission > 0) {
+              // Calculate commission amount based on FINAL ORDER AMOUNT (not discount)
+              const commissionAmount = (finalOrderAmount * couponPartner.commission) / 100;
+
+              await tx.partnerEarning.create({
+                data: {
+                  partnerId: couponPartner.partnerId,
+                  orderId: order.id,
+                  couponId: couponId,
+                  amount: commissionAmount.toFixed(2),
+                  percentage: couponPartner.commission,
+                  createdAt: new Date(),
+                },
+              });
+
+              console.log(`✅ Created commission for partner ${couponPartner.partner.name}: ₹${commissionAmount.toFixed(2)} (${couponPartner.commission}% of final order ₹${finalOrderAmount.toFixed(2)})`);
+            }
+          }
+        } catch (commissionError) {
+          console.error("❌ Error creating partner commissions:", commissionError);
+          // Don't fail the entire transaction for commission errors
+        }
+      }
+
       // 3. Create order items and update inventory
       const orderItems = [];
       for (const item of cartItems) {
@@ -492,9 +530,8 @@ export const paymentVerification = asyncHandler(async (req, res) => {
         // Format items for email
         const emailItems = orderItems.map((item) => ({
           name: item.product.name,
-          variant: `${item.variant.flavor?.name || ""} ${
-            item.variant.weight?.value
-          }${item.variant.weight?.unit || ""}`,
+          variant: `${item.variant.flavor?.name || ""} ${item.variant.weight?.value
+            }${item.variant.weight?.unit || ""}`,
           quantity: item.quantity,
           price: parseFloat(item.price).toFixed(2),
         }));
@@ -628,10 +665,10 @@ export const getOrderHistory = asyncHandler(async (req, res) => {
       couponCode: order.couponCode || null,
       couponDetails: order.coupon
         ? {
-            code: order.coupon.code,
-            discountType: order.coupon.discountType,
-            discountValue: parseFloat(order.coupon.discountValue),
-          }
+          code: order.coupon.code,
+          discountType: order.coupon.discountType,
+          discountValue: parseFloat(order.coupon.discountValue),
+        }
         : null,
       paymentMethod: order.razorpayPayment?.paymentMethod || "ONLINE",
       paymentStatus: order.razorpayPayment?.status || order.status,
@@ -653,11 +690,11 @@ export const getOrderHistory = asyncHandler(async (req, res) => {
       })),
       tracking: order.tracking
         ? {
-            carrier: order.tracking.carrier,
-            trackingNumber: order.tracking.trackingNumber,
-            status: order.tracking.status,
-            estimatedDelivery: order.tracking.estimatedDelivery,
-          }
+          carrier: order.tracking.carrier,
+          trackingNumber: order.tracking.trackingNumber,
+          status: order.tracking.status,
+          estimatedDelivery: order.tracking.estimatedDelivery,
+        }
         : null,
     };
   });
@@ -759,11 +796,11 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
     // Add detailed coupon information
     couponDetails: order.coupon
       ? {
-          code: order.coupon.code,
-          description: order.coupon.description,
-          discountType: order.coupon.discountType,
-          discountValue: parseFloat(order.coupon.discountValue),
-        }
+        code: order.coupon.code,
+        description: order.coupon.description,
+        discountType: order.coupon.discountType,
+        discountValue: parseFloat(order.coupon.discountValue),
+      }
       : null,
     items: order.items.map((item) => ({
       id: item.id,
@@ -787,17 +824,17 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
       : order.billingAddress,
     tracking: order.tracking
       ? {
-          carrier: order.tracking.carrier,
-          trackingNumber: order.tracking.trackingNumber,
-          status: order.tracking.status,
-          estimatedDelivery: order.tracking.estimatedDelivery,
-          updates: order.tracking.updates.map((update) => ({
-            status: update.status,
-            timestamp: update.timestamp,
-            location: update.location,
-            description: update.description,
-          })),
-        }
+        carrier: order.tracking.carrier,
+        trackingNumber: order.tracking.trackingNumber,
+        status: order.tracking.status,
+        estimatedDelivery: order.tracking.estimatedDelivery,
+        updates: order.tracking.updates.map((update) => ({
+          status: update.status,
+          timestamp: update.timestamp,
+          location: update.location,
+          description: update.description,
+        })),
+      }
       : null,
   };
 

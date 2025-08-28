@@ -37,11 +37,11 @@ export const getOrders = asyncHandler(async (req, res, next) => {
     ...(status && { status }),
     ...(startDate &&
       endDate && {
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      }),
+      createdAt: {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      },
+    }),
   };
 
   // Get total count for pagination
@@ -119,14 +119,14 @@ export const getOrders = asyncHandler(async (req, res, next) => {
     total: parseFloat(order.total), // Use the exact total that was recorded at time of order
     couponDetails: order.coupon
       ? {
-          id: order.coupon.id,
-          code: order.coupon.code,
-          discountType: order.coupon.discountType,
-          discountValue: parseFloat(order.coupon.discountValue),
-        }
+        id: order.coupon.id,
+        code: order.coupon.code,
+        discountType: order.coupon.discountType,
+        discountValue: parseFloat(order.coupon.discountValue),
+      }
       : order.couponCode
-      ? { code: order.couponCode }
-      : null,
+        ? { code: order.couponCode }
+        : null,
   }));
 
   res.status(200).json(
@@ -257,15 +257,15 @@ export const getOrderById = asyncHandler(async (req, res, next) => {
     // Add detailed coupon information
     couponDetails: order.coupon
       ? {
-          id: order.coupon.id,
-          code: order.coupon.code,
-          description: order.coupon.description,
-          discountType: order.coupon.discountType,
-          discountValue: parseFloat(order.coupon.discountValue),
-        }
+        id: order.coupon.id,
+        code: order.coupon.code,
+        description: order.coupon.description,
+        discountType: order.coupon.discountType,
+        discountValue: parseFloat(order.coupon.discountValue),
+      }
       : order.couponCode
-      ? { code: order.couponCode }
-      : null,
+        ? { code: order.couponCode }
+        : null,
   };
 
   res
@@ -417,7 +417,7 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
     }
 
     // Update the order
-    return tx.order.update({
+    const updatedOrder = await tx.order.update({
       where: { id: orderId },
       data: orderData,
       include: {
@@ -425,6 +425,52 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
         razorpayPayment: true,
       },
     });
+
+    // Create partner commissions when order is delivered (safety check)
+    if (status === "DELIVERED" && order.couponId) {
+      try {
+        // Check if commissions already exist for this order
+        const existingCommissions = await tx.partnerEarning.findMany({
+          where: { orderId: orderId }
+        });
+
+        if (existingCommissions.length === 0) {
+          // Calculate final order amount (subtotal - discount)
+          const finalOrderAmount = parseFloat(order.subTotal) - parseFloat(order.discount);
+
+          // Get coupon partners
+          const couponPartners = await tx.couponPartner.findMany({
+            where: { couponId: order.couponId },
+            include: { partner: true }
+          });
+
+          // Create commissions for each partner
+          for (const couponPartner of couponPartners) {
+            if (couponPartner.commission && couponPartner.commission > 0 && finalOrderAmount > 0) {
+              // Calculate commission based on FINAL ORDER AMOUNT (not discount)
+              const commissionAmount = (finalOrderAmount * couponPartner.commission) / 100;
+
+              await tx.partnerEarning.create({
+                data: {
+                  partnerId: couponPartner.partnerId,
+                  orderId: orderId,
+                  couponId: order.couponId,
+                  amount: commissionAmount.toFixed(2),
+                  percentage: couponPartner.commission,
+                  createdAt: new Date(),
+                },
+              });
+
+              console.log(`Created delayed commission for partner ${couponPartner.partner.name}: ₹${commissionAmount.toFixed(2)} (${couponPartner.commission}% of final order ₹${finalOrderAmount.toFixed(2)})`);
+            }
+          }
+        }
+      } catch (commissionError) {
+        console.error("Error creating partner commissions on delivery:", commissionError);
+      }
+    }
+
+    return updatedOrder;
   });
 
   // Log the activity
@@ -659,6 +705,15 @@ export const createOrder = asyncHandler(async (req, res, next) => {
 
   // Create order with transaction to handle inventory
   const order = await prisma.$transaction(async (tx) => {
+    // Fetch coupon with partner info if coupon is used
+    let coupon = null;
+    if (finalCouponId) {
+      coupon = await tx.coupon.findUnique({
+        where: { id: finalCouponId },
+        include: { partner: true },
+      });
+    }
+
     // Create the order
     const newOrder = await tx.order.create({
       data: {
@@ -680,6 +735,22 @@ export const createOrder = asyncHandler(async (req, res, next) => {
         },
       },
     });
+
+    // If coupon has a partner, create PartnerEarning
+    if (coupon && coupon.partnerId && coupon.partnerCommission) {
+      // Calculate earning amount (commission % of subTotal - discount)
+      const commissionBase = subTotal - (discountAmount || 0);
+      const earningAmount = (commissionBase * coupon.partnerCommission) / 100;
+      await tx.partnerEarning.create({
+        data: {
+          partnerId: coupon.partnerId,
+          orderId: newOrder.id,
+          couponId: coupon.id,
+          amount: earningAmount,
+          percentage: coupon.partnerCommission,
+        },
+      });
+    }
 
     // Update inventory for each variant
     for (const item of items) {
@@ -1036,7 +1107,7 @@ export const getOrderStats = asyncHandler(async (req, res, next) => {
     revenueGrowth = Math.round(
       ((totalSales._sum.total - previousPeriodSales._sum.total) /
         previousPeriodSales._sum.total) *
-        100
+      100
     );
   }
 

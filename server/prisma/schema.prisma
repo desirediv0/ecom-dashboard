@@ -32,6 +32,55 @@ model User {
   ProductView        ProductView[]
 }
 
+// Partner registration request (pending approval)
+model PartnerRequest {
+  id        String               @id @default(uuid())
+  name      String
+  email     String               @unique
+  number    String
+  city      String
+  state     String
+  message   String
+  status    PartnerRequestStatus @default(PENDING) // PENDING, APPROVED, REJECTED
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  partnerId String?              @unique
+  partner   Partner?             @relation(fields: [partnerId], references: [id])
+}
+
+// Approved partner (can login)
+model Partner {
+  id             String           @id @default(uuid())
+  name           String
+  email          String           @unique
+  password       String
+  number         String
+  city           String
+  state          String
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  earnings       PartnerEarning[]
+  request        PartnerRequest?
+  couponPartners CouponPartner[]  @relation("CouponPartnerToPartner")
+}
+
+// Track partner earnings per order
+model PartnerEarning {
+  id         String   @id @default(uuid())
+  partnerId  String
+  orderId    String
+  couponId   String
+  amount     Decimal  @db.Decimal(10, 2)
+  percentage Float
+  createdAt  DateTime @default(now())
+  partner    Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@unique([partnerId, orderId, couponId])
+}
+
 model Account {
   id                 String    @id @default(uuid())
   userId             String
@@ -271,6 +320,7 @@ model Order {
   razorpayPayment              RazorpayPayment?
   tracking                     Tracking?
   coupon                       Coupon?          @relation(fields: [couponId], references: [id])
+  partnerEarnings              PartnerEarning[]
 }
 
 model OrderItem {
@@ -344,22 +394,42 @@ model TrackingUpdate {
 }
 
 model Coupon {
-  id               String       @id @default(uuid())
-  code             String       @unique
+  id               String           @id @default(uuid())
+  code             String           @unique
   description      String?
   discountType     DiscountType
-  discountValue    Decimal      @db.Decimal(10, 2)
-  minOrderAmount   Decimal?     @db.Decimal(10, 2)
+  discountValue    Decimal          @db.Decimal(10, 2)
+  minOrderAmount   Decimal?         @db.Decimal(10, 2)
   maxUses          Int?
-  usedCount        Int          @default(0)
+  usedCount        Int              @default(0)
   startDate        DateTime
   endDate          DateTime?
-  isActive         Boolean      @default(true)
-  isDiscountCapped Boolean      @default(false)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  isActive         Boolean          @default(true)
+  isDiscountCapped Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   orders           Order[]
   userCoupons      UserCoupon[]
+  partnerEarnings  PartnerEarning[]
+  couponPartners   CouponPartner[]
+}
+
+// Join table for many-to-many Coupon <-> Partner with commission per partner per coupon
+model CouponPartner {
+  id         String  @id @default(uuid())
+  couponId   String
+  partnerId  String
+  commission Float? // % commission for this partner for this coupon
+  coupon     Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  partner    Partner @relation("CouponPartnerToPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, partnerId])
+}
+
+enum PartnerRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model UserCoupon {

@@ -557,6 +557,7 @@ export const coupons = {
     startDate: string;
     endDate?: string;
     isActive?: boolean;
+    partners?: Array<{ partnerId: string; commission?: number }>;
   }) => {
     return api.post("/api/admin/coupons", data);
   },
@@ -572,12 +573,20 @@ export const coupons = {
       startDate?: string;
       endDate?: string;
       isActive?: boolean;
+      partners?: Array<{ partnerId: string; commission?: number }>;
     }
   ) => {
     return api.patch(`/api/admin/coupons/${couponId}`, data);
   },
   deleteCoupon: (couponId: string) => {
     return api.delete(`/api/admin/coupons/${couponId}`);
+  },
+};
+
+// Partners Management
+export const partners = {
+  getApprovedPartners: () => {
+    return api.get("/api/admin/partners/approved");
   },
 };
 

@@ -48,8 +48,7 @@ const CartItem = React.memo(
             </Link>
             <div className="text-sm text-gray-600 mt-1">
               {item.variantName ||
-                `${item.variant?.flavor?.name || ""} ${
-                  item.variant?.weight?.value || ""
+                `${item.variant?.flavor?.name || ""} ${item.variant?.weight?.value || ""
                 }${item.variant?.weight?.unit || ""}`}
             </div>
           </div>
@@ -398,10 +397,10 @@ export default function CartPage() {
                     {((parseFloat(coupon.discountValue) > 90 &&
                       coupon.discountType === "PERCENTAGE") ||
                       coupon.isDiscountCapped) && (
-                      <p className="text-xs text-amber-600 mt-1">
-                        *Maximum discount capped at 90%
-                      </p>
-                    )}
+                        <p className="text-xs text-amber-600 mt-1">
+                          *Maximum discount capped at 90%
+                        </p>
+                      )}
                   </div>
                   <button
                     onClick={handleRemoveCoupon}
@@ -421,11 +420,10 @@ export default function CartPage() {
                       onChange={(e) =>
                         setCouponCode(e.target.value.toUpperCase())
                       }
-                      className={`flex-1 ${
-                        couponError
+                      className={`flex-1 ${couponError
                           ? "border-red-300 focus-visible:ring-red-300"
                           : ""
-                      }`}
+                        }`}
                     />
                     <Button
                       type="submit"
@@ -480,8 +478,15 @@ export default function CartPage() {
             </div>
 
             {/* Checkout Button */}
-            <Button className="w-full mt-6" size="lg" onClick={handleCheckout}>
-              Proceed to Checkout
+            <Button
+              className="w-full mt-6 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-200"
+              size="lg"
+              onClick={handleCheckout}
+            >
+              <span className="flex items-center justify-center">
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Proceed to Checkout • {formatCurrency(totals.subtotal - totals.discount)}
+              </span>
             </Button>
 
             <p className="text-xs text-gray-500 mt-4 text-center">

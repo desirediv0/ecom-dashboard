@@ -48,7 +48,7 @@ export default function CheckoutPage() {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [successAnimation, setSuccessAnimation] = useState(false);
-  const [redirectCountdown, setRedirectCountdown] = useState(3);
+  const [redirectCountdown, setRedirectCountdown] = useState(2); // Reduced from 3 to 2 seconds
   const [confettiCannon, setConfettiCannon] = useState(false);
 
   const totals = getCartTotals();
@@ -60,12 +60,12 @@ export default function CheckoutPage() {
     }
   }, [isAuthenticated, router]);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty (but not if order is already created)
   useEffect(() => {
-    if (isAuthenticated && cart.items?.length === 0) {
+    if (isAuthenticated && cart.items?.length === 0 && !orderCreated) {
       router.push("/cart");
     }
-  }, [isAuthenticated, cart, router]);
+  }, [isAuthenticated, cart, router, orderCreated]);
 
   // Fetch addresses
   const fetchAddresses = async () => {
@@ -175,7 +175,6 @@ export default function CheckoutPage() {
   // Update the payment handler with enhanced audio feedback
   const handleSuccessfulPayment = (paymentResponse, orderData) => {
     setPaymentId(paymentResponse.razorpay_payment_id);
-    setOrderCreated(true);
     setOrderNumber(orderData.orderNumber || "");
 
     // Start success animation
@@ -190,12 +189,16 @@ export default function CheckoutPage() {
 
     // Show enhanced success toast
     toast.success("Order placed successfully!", {
-      duration: 4000, // Reduced duration
+      duration: 4000,
       icon: <PartyPopper className="h-5 w-5 text-green-500" />,
-      description: `Your order #${
-        orderData.orderNumber || ""
-      } has been confirmed.`,
+      description: `Your order #${orderData.orderNumber || ""
+        } has been confirmed. Redirecting to orders page...`,
     });
+
+    // Set order created after a brief delay to ensure cart is cleared first
+    setTimeout(() => {
+      setOrderCreated(true);
+    }, 100);
   };
 
   // Process checkout
@@ -220,6 +223,12 @@ export default function CheckoutPage() {
       }
 
       if (paymentMethod === "RAZORPAY") {
+        // Show loading toast for order creation
+        toast.loading("Creating your order...", {
+          id: "order-creation",
+          duration: 10000,
+        });
+
         // Step 1: Create Razorpay order
         const orderResponse = await fetchApi("/payment/checkout", {
           method: "POST",
@@ -234,17 +243,32 @@ export default function CheckoutPage() {
           }),
         });
 
+        // Dismiss order creation toast
+        toast.dismiss("order-creation");
+
         if (!orderResponse.success) {
           throw new Error(orderResponse.message || "Failed to create order");
         }
 
+        // Show success toast for order creation
+        toast.success("Order created! Opening payment gateway...", {
+          duration: 2000,
+        });
+
         const razorpayOrder = orderResponse.data;
         setOrderId(razorpayOrder.id);
 
-        // Step 2: Load Razorpay script
+        // Step 2: Load Razorpay script with loading indicator
+        toast.loading("Loading payment gateway...", {
+          id: "payment-gateway",
+          duration: 5000,
+        });
+
         const loaded = await loadScript(
           "https://checkout.razorpay.com/v1/checkout.js"
         );
+
+        toast.dismiss("payment-gateway");
 
         if (!loaded) {
           throw new Error("Razorpay SDK failed to load");
@@ -263,7 +287,15 @@ export default function CheckoutPage() {
             contact: user?.phone || "",
           },
           handler: async function (response) {
-            // Step 4: Verify payment
+            // Step 4: Verify payment - Show loading state during verification
+            setProcessing(true);
+
+            // Add a toast to show payment verification is in progress
+            toast.loading("Verifying your payment...", {
+              id: "payment-verification",
+              duration: 10000,
+            });
+
             try {
               const verificationResponse = await fetchApi("/payment/verify", {
                 method: "POST",
@@ -288,7 +320,15 @@ export default function CheckoutPage() {
                 }),
               });
 
+              // Dismiss the loading toast
+              toast.dismiss("payment-verification");
+
               if (verificationResponse.success) {
+                // Show success message
+                toast.success("Payment verified successfully! 🎉", {
+                  duration: 3000,
+                });
+
                 setOrderId(verificationResponse.data.orderId);
                 handleSuccessfulPayment(response, verificationResponse.data);
               } else {
@@ -298,6 +338,9 @@ export default function CheckoutPage() {
               }
             } catch (error) {
               console.error("Payment verification error:", error);
+
+              // Dismiss the loading toast
+              toast.dismiss("payment-verification");
 
               // If the error is about a previously cancelled order, guide the user
               if (
@@ -309,10 +352,28 @@ export default function CheckoutPage() {
                 );
                 toast.error("Please refresh the page to start a new checkout", {
                   duration: 6000,
+                  style: {
+                    backgroundColor: '#FEF3C7',
+                    color: '#D97706',
+                    border: '1px solid #FCD34D',
+                  }
                 });
               } else {
                 setError(error.message || "Payment verification failed");
+                toast.error(
+                  error.message || "Payment verification failed. Please try again.",
+                  {
+                    duration: 5000,
+                    style: {
+                      backgroundColor: '#FEE2E2',
+                      color: '#DC2626',
+                      border: '1px solid #FECACA',
+                    }
+                  }
+                );
               }
+
+              setProcessing(false);
             }
           },
           theme: {
@@ -333,6 +394,11 @@ export default function CheckoutPage() {
     } catch (error) {
       console.error("Checkout error:", error);
 
+      // Dismiss any pending loading toasts
+      toast.dismiss("order-creation");
+      toast.dismiss("payment-gateway");
+      toast.dismiss("payment-verification");
+
       if (
         error.message &&
         error.message.includes("order was previously cancelled")
@@ -343,10 +409,22 @@ export default function CheckoutPage() {
         );
         toast.error("Please refresh the page to start a new checkout", {
           duration: 6000,
+          style: {
+            backgroundColor: '#FEF3C7',
+            color: '#D97706',
+            border: '1px solid #FCD34D',
+          }
         });
       } else {
         setError(error.message || "Checkout failed");
-        toast.error(error.message || "Checkout failed");
+        toast.error(error.message || "Checkout failed", {
+          duration: 4000,
+          style: {
+            backgroundColor: '#FEE2E2',
+            color: '#DC2626',
+            border: '1px solid #FECACA',
+          }
+        });
       }
     } finally {
       setProcessing(false);
@@ -376,9 +454,8 @@ export default function CheckoutPage() {
             <div className="relative flex justify-center">
               <div className="h-36 w-36 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
                 <PartyPopper
-                  className={`h-20 w-20 text-primary ${
-                    confettiCannon ? "animate-pulse" : ""
-                  }`}
+                  className={`h-20 w-20 text-primary ${confettiCannon ? "animate-pulse" : ""
+                    }`}
                 />
               </div>
 
@@ -419,11 +496,20 @@ export default function CheckoutPage() {
                 placed and you&apos;ll receive an email confirmation shortly.
               </p>
 
-              <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-center justify-center space-x-2">
-                <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
-                <p className="text-blue-700">
-                  Redirecting to orders page in {redirectCountdown} seconds...
-                </p>
+              <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <div className="flex items-center justify-center space-x-2 mb-3">
+                  <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                  <p className="text-blue-700">
+                    Redirecting to orders page in {redirectCountdown} seconds...
+                  </p>
+                </div>
+                <div className="text-center">
+                  <Link href="/account/orders">
+                    <button className="text-blue-600 hover:text-blue-800 text-sm underline">
+                      Go to orders now →
+                    </button>
+                  </Link>
+                </div>
               </div>
 
               <div className="flex justify-center gap-4">
@@ -448,7 +534,38 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 relative">
+      {/* Loading Overlay for Payment Processing */}
+      {processing && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl">
+            <div className="mb-6">
+              <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Loader2 className="h-10 w-10 text-primary animate-spin" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                Processing Your Payment
+              </h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Please wait while we securely process your payment. Do not refresh or close this page.
+              </p>
+            </div>
+
+            {/* Progress indicators */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-center space-x-2">
+                <div className="h-2 w-2 bg-primary rounded-full animate-bounce"></div>
+                <div className="h-2 w-2 bg-primary rounded-full animate-bounce delay-100"></div>
+                <div className="h-2 w-2 bg-primary rounded-full animate-bounce delay-200"></div>
+              </div>
+              <p className="text-xs text-gray-500">
+                This may take a few moments...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold mb-6">Checkout</h1>
 
       {error && (
@@ -505,18 +622,16 @@ export default function CheckoutPage() {
               </div>
             ) : (
               <div
-                className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
-                  showAddressForm ? "mt-6" : ""
-                }`}
+                className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${showAddressForm ? "mt-6" : ""
+                  }`}
               >
                 {addresses.map((address) => (
                   <div
                     key={address.id}
-                    className={`border rounded-md p-4 cursor-pointer transition-all ${
-                      selectedAddressId === address.id
+                    className={`border rounded-md p-4 cursor-pointer transition-all ${selectedAddressId === address.id
                         ? "border-primary bg-primary/5"
                         : "hover:border-gray-400"
-                    }`}
+                      }`}
                     onClick={() => handleAddressSelect(address.id)}
                   >
                     <div className="flex justify-between items-start mb-2">
@@ -567,11 +682,10 @@ export default function CheckoutPage() {
 
             <div className="space-y-3">
               <div
-                className={`border rounded-md p-4 cursor-pointer transition-all ${
-                  paymentMethod === "RAZORPAY"
+                className={`border rounded-md p-4 cursor-pointer transition-all ${paymentMethod === "RAZORPAY"
                     ? "border-primary bg-primary/5"
                     : "hover:border-gray-400"
-                }`}
+                  }`}
                 onClick={() => handlePaymentMethodSelect("RAZORPAY")}
               >
                 <div className="flex items-center">
@@ -677,7 +791,10 @@ export default function CheckoutPage() {
             </div>
 
             <Button
-              className="w-full mt-6"
+              className={`w-full mt-6 transition-all duration-200 ${processing
+                  ? 'bg-gradient-to-r from-primary to-primary/80 shadow-lg'
+                  : 'hover:shadow-lg'
+                }`}
               size="lg"
               onClick={handleCheckout}
               disabled={
@@ -690,10 +807,13 @@ export default function CheckoutPage() {
               {processing ? (
                 <span className="flex items-center">
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Processing...
+                  <span className="animate-pulse">Processing Payment...</span>
                 </span>
               ) : (
-                <span>Place Order</span>
+                <span className="flex items-center justify-center">
+                  <IndianRupee className="mr-2 h-4 w-4" />
+                  Place Order • {formatCurrency(totals.subtotal - totals.discount)}
+                </span>
               )}
             </Button>
 

@@ -122,7 +122,7 @@ export default function DashboardLayout() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Sidebar - Desktop */}
-      <aside className="bg-sidebar hidden w-64 flex-col border-r border-sidebar-border md:flex flex-shrink-0">
+      <aside className="bg-sidebar hidden w-72 flex-col border-r border-sidebar-border md:flex flex-shrink-0">
         <div className="flex h-14 items-center border-b border-sidebar-border px-4">
           <Link
             to="/dashboard"
@@ -285,12 +285,12 @@ export default function DashboardLayout() {
                   Action.READ
                 )}
               />
-              {/* <NavItem
-                href="/admins"
+              <NavItem
+                href="/partner-registrations"
                 icon={<Users className="h-5 w-5" />}
-                title="Admins"
-                hasPermission={admin?.role === "SUPER_ADMIN"}
-              /> */}
+                title="Partner Registrations"
+                hasPermission={admin?.role === "SUPER_ADMIN" || hasPermissionFor(admin, Resource.USERS, Action.READ)}
+              />
             </div>
           </SafeRender>
         </nav>
@@ -332,7 +332,7 @@ export default function DashboardLayout() {
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-sidebar transition-transform duration-200 ease-in-out md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-72 transform bg-sidebar transition-transform duration-200 ease-in-out md:hidden flex flex-col h-full",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -340,22 +340,23 @@ export default function DashboardLayout() {
           <Link
             to="/dashboard"
             className="flex items-center gap-2 font-semibold text-sidebar-foreground"
+            onClick={toggleMobileMenu}
           >
             <Package className="h-6 w-6" />
-            <span>Admin Dashboard</span>
+            <span className="text-base">Admin Dashboard</span>
           </Link>
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden hover:bg-sidebar-accent/50"
             onClick={toggleMobileMenu}
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
-        <nav className="flex-1 overflow-y-auto p-2">
+        <nav className="flex-1 overflow-y-auto p-3 pb-20">
           <SafeRender>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <NavItem
                 href="/dashboard"
                 icon={<LayoutDashboard className="h-5 w-5" />}
@@ -364,6 +365,17 @@ export default function DashboardLayout() {
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.DASHBOARD,
+                  Action.READ
+                )}
+              />
+              <NavItem
+                href="/dashboard/analytics"
+                icon={<BarChart className="h-5 w-5" />}
+                title="Analytics"
+                onClick={toggleMobileMenu}
+                hasPermission={hasPermissionFor(
+                  admin,
+                  Resource.ANALYTICS,
                   Action.READ
                 )}
               />
@@ -500,13 +512,6 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
-                href="/admins"
-                icon={<Users className="h-5 w-5" />}
-                title="Admins"
-                onClick={toggleMobileMenu}
-                hasPermission={admin?.role === "SUPER_ADMIN"}
-              />
-              <NavItem
                 href="/users"
                 icon={<Users className="h-5 w-5" />}
                 title="Users"
@@ -518,21 +523,17 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
-                href="/dashboard/analytics"
-                icon={<BarChart className="h-5 w-5" />}
-                title="Analytics"
+                href="/partner-registrations"
+                icon={<Users className="h-5 w-5" />}
+                title="Partner Registrations"
                 onClick={toggleMobileMenu}
-                hasPermission={hasPermissionFor(
-                  admin,
-                  Resource.ANALYTICS,
-                  Action.READ
-                )}
+                hasPermission={admin?.role === "SUPER_ADMIN" || hasPermissionFor(admin, Resource.USERS, Action.READ)}
               />
             </div>
           </SafeRender>
         </nav>
-        <div className="border-t border-sidebar-border p-4">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="border-t border-sidebar-border p-4 bg-sidebar">
+          <div className="mb-3 flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground">
               {admin?.firstName?.charAt(0) || admin?.email?.charAt(0) || "U"}
             </div>
@@ -549,7 +550,7 @@ export default function DashboardLayout() {
           </div>
           <Button
             variant="outline"
-            className="w-full justify-start border-sidebar-border"
+            className="w-full justify-start border-sidebar-border hover:bg-sidebar-accent/50"
             onClick={() => {
               toggleMobileMenu();
               logout();
@@ -564,16 +565,17 @@ export default function DashboardLayout() {
       {/* Main content */}
       <div className="flex w-full flex-col flex-1 min-h-0">
         {/* Topbar */}
-        <header className="flex h-14 items-center justify-between border-b border-border px-4 lg:px-6">
+        <header className="flex h-14 items-center justify-between border-b border-border px-4 lg:px-6 bg-background">
           <div className="flex items-center md:hidden">
             <Button
               variant="ghost"
               size="icon"
-              className="mr-2"
+              className="mr-2 hover:bg-accent"
               onClick={toggleMobileMenu}
             >
               <Menu className="h-5 w-5" />
             </Button>
+            <span className="text-sm font-semibold">Admin Dashboard</span>
           </div>
 
           {/* Inventory Alerts - Desktop */}

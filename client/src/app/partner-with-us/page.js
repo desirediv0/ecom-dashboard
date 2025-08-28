@@ -24,32 +24,35 @@ export default function PartnerWithUsPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    // For now, just log to console and show a toast
-    // In future, send this to backend API
-    // eslint-disable-next-line no-console
-    console.log("Partner with us submission:", formData);
-
-    toast.success("Thanks! We will reach out shortly.", {
-      description: `${formData.name || "Partner"
-        }, your interest has been recorded.`,
-    });
-
-    // Reset the form after a short delay for UX
-    setTimeout(() => {
-      setFormData({
-        name: "",
-        email: "",
-        number: "",
-        city: "",
-        state: "",
-        message: "",
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/partner/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
-      setIsSubmitting(false);
-    }, 500);
+      if (res.ok) {
+        toast.success("Thanks! We will reach out shortly.", {
+          description: `${formData.name || "Partner"}, your interest has been recorded.`,
+        });
+        setFormData({
+          name: "",
+          email: "",
+          number: "",
+          city: "",
+          state: "",
+          message: "",
+        });
+      } else {
+        const data = await res.json();
+        toast.error(data.message || "Something went wrong. Please try again.");
+      }
+    } catch (err) {
+      toast.error("Network error. Please try again.");
+    }
+    setIsSubmitting(false);
   };
 
   return (

@@ -1,3 +1,7 @@
+
+
+
+import PartnerRegistrationsPage from "./pages/partner-registrations";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
@@ -457,6 +461,14 @@ const App = () => {
             }
           />
 
+          <Route
+            path="partner-registrations"
+            element={
+              <ProtectedRoute superAdminOnly={true}>
+                <PartnerRegistrationsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

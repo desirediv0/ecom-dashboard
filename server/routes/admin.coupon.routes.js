@@ -10,6 +10,19 @@ router.get("/coupons", isAdmin, async (req, res) => {
   try {
     const coupons = await prisma.coupon.findMany({
       orderBy: [{ code: "asc" }],
+      include: {
+        couponPartners: {
+          include: {
+            partner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     return res.status(200).json({
@@ -34,6 +47,19 @@ router.get("/coupons/:id", isAdmin, async (req, res) => {
 
     const coupon = await prisma.coupon.findUnique({
       where: { id },
+      include: {
+        couponPartners: {
+          include: {
+            partner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!coupon) {
@@ -71,6 +97,7 @@ router.post("/coupons", isAdmin, async (req, res) => {
       startDate,
       endDate,
       isActive,
+      partners, // Array of {partnerId, commission}
     } = req.body;
 
     if (!code || !discountType || !discountValue || !startDate) {
@@ -142,26 +169,112 @@ router.post("/coupons", isAdmin, async (req, res) => {
       });
     }
 
-    // Create coupon
-    const newCoupon = await prisma.coupon.create({
-      data: {
-        code,
-        description,
-        discountType,
-        discountValue: discountValueNum,
-        minOrderAmount: minOrderAmountNum,
-        maxUses: maxUsesNum,
-        startDate: startDateObj,
-        endDate: endDateObj,
-        isActive: isActive === undefined ? true : Boolean(isActive),
-        usedCount: 0,
-      },
+    // Validate partners if provided
+    let partnersData = [];
+    if (partners && Array.isArray(partners) && partners.length > 0) {
+      // Check for duplicate partner IDs
+      const partnerIds = partners.map(p => p.partnerId);
+      const uniquePartnerIds = [...new Set(partnerIds)];
+      if (partnerIds.length !== uniquePartnerIds.length) {
+        return res.status(400).json({
+          success: false,
+          message: "Each partner can only be assigned once per coupon. Duplicate partners found.",
+        });
+      }
+
+      for (const partner of partners) {
+        if (!partner.partnerId) {
+          return res.status(400).json({
+            success: false,
+            message: "Partner ID is required for all partners",
+          });
+        }
+
+        // Check if partner exists
+        const partnerExists = await prisma.partner.findUnique({
+          where: { id: partner.partnerId },
+        });
+
+        if (!partnerExists) {
+          return res.status(400).json({
+            success: false,
+            message: `Partner with ID ${partner.partnerId} not found`,
+          });
+        }
+
+        // Validate commission
+        let commission = null;
+        if (partner.commission !== undefined && partner.commission !== null) {
+          commission = parseFloat(partner.commission);
+          if (isNaN(commission) || commission < 0 || commission > 100) {
+            return res.status(400).json({
+              success: false,
+              message: `Commission for partner ${partnerExists.name} must be between 0 and 100`,
+            });
+          }
+        }
+
+        partnersData.push({
+          partnerId: partner.partnerId,
+          commission: commission,
+        });
+      }
+    }
+
+    // Create coupon with transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create coupon
+      const newCoupon = await tx.coupon.create({
+        data: {
+          code,
+          description,
+          discountType,
+          discountValue: discountValueNum,
+          minOrderAmount: minOrderAmountNum,
+          maxUses: maxUsesNum,
+          startDate: startDateObj,
+          endDate: endDateObj,
+          isActive: isActive === undefined ? true : Boolean(isActive),
+          usedCount: 0,
+        },
+      });
+
+      // Create partner relationships if any
+      if (partnersData.length > 0) {
+        await tx.couponPartner.createMany({
+          data: partnersData.map(partner => ({
+            couponId: newCoupon.id,
+            partnerId: partner.partnerId,
+            commission: partner.commission,
+          })),
+        });
+      }
+
+      // Fetch created coupon with partners
+      const couponWithPartners = await tx.coupon.findUnique({
+        where: { id: newCoupon.id },
+        include: {
+          couponPartners: {
+            include: {
+              partner: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return couponWithPartners;
     });
 
     return res.status(201).json({
       success: true,
       message: "Coupon created successfully",
-      data: { coupon: newCoupon },
+      data: { coupon: result },
     });
   } catch (error) {
     console.error("Error creating coupon:", error);
@@ -187,11 +300,15 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
       startDate,
       endDate,
       isActive,
+      partners, // Array of {partnerId, commission}
     } = req.body;
 
     // Check if coupon exists
     const existingCoupon = await prisma.coupon.findUnique({
       where: { id },
+      include: {
+        couponPartners: true,
+      },
     });
 
     if (!existingCoupon) {
@@ -224,17 +341,15 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
       updateData.code = code;
     }
 
-    // Update description if provided
+    // Update other fields
     if (description !== undefined) {
       updateData.description = description;
     }
 
-    // Update discount type if provided
     if (discountType !== undefined) {
       updateData.discountType = discountType;
     }
 
-    // Update discount value if provided
     if (discountValue !== undefined) {
       const discountValueNum = parseFloat(discountValue);
       if (isNaN(discountValueNum) || discountValueNum <= 0) {
@@ -246,7 +361,6 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
       updateData.discountValue = discountValueNum;
     }
 
-    // Update min order amount if provided
     if (minOrderAmount !== undefined) {
       if (minOrderAmount === null || minOrderAmount === "") {
         updateData.minOrderAmount = null;
@@ -262,7 +376,6 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
       }
     }
 
-    // Update max uses if provided
     if (maxUses !== undefined) {
       if (maxUses === null || maxUses === "") {
         updateData.maxUses = null;
@@ -278,12 +391,10 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
       }
     }
 
-    // Update start date if provided
     if (startDate !== undefined) {
       const startDateObj = new Date(startDate);
       updateData.startDate = startDateObj;
 
-      // Validate end date if start date is updated
       if (existingCoupon.endDate) {
         const existingEndDate = new Date(existingCoupon.endDate);
         if (startDateObj >= existingEndDate) {
@@ -295,7 +406,6 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
       }
     }
 
-    // Update end date if provided
     if (endDate !== undefined) {
       if (endDate === null || endDate === "") {
         updateData.endDate = null;
@@ -316,22 +426,118 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
       }
     }
 
-    // Update is active if provided
     if (isActive !== undefined) {
       updateData.isActive = Boolean(isActive);
     }
 
-    // Update coupon
-    const updatedCoupon = await prisma.coupon.update({
-      where: { id },
-      data: updateData,
+    // Validate partners if provided
+    let partnersData = [];
+    if (partners !== undefined) {
+      if (Array.isArray(partners) && partners.length > 0) {
+        // Check for duplicate partner IDs
+        const partnerIds = partners.map(p => p.partnerId);
+        const uniquePartnerIds = [...new Set(partnerIds)];
+        if (partnerIds.length !== uniquePartnerIds.length) {
+          return res.status(400).json({
+            success: false,
+            message: "Each partner can only be assigned once per coupon. Duplicate partners found.",
+          });
+        }
+
+        for (const partner of partners) {
+          if (!partner.partnerId) {
+            return res.status(400).json({
+              success: false,
+              message: "Partner ID is required for all partners",
+            });
+          }
+
+          // Check if partner exists
+          const partnerExists = await prisma.partner.findUnique({
+            where: { id: partner.partnerId },
+          });
+
+          if (!partnerExists) {
+            return res.status(400).json({
+              success: false,
+              message: `Partner with ID ${partner.partnerId} not found`,
+            });
+          }
+
+          // Validate commission
+          let commission = null;
+          if (partner.commission !== undefined && partner.commission !== null) {
+            commission = parseFloat(partner.commission);
+            if (isNaN(commission) || commission < 0 || commission > 100) {
+              return res.status(400).json({
+                success: false,
+                message: `Commission for partner ${partnerExists.name} must be between 0 and 100`,
+              });
+            }
+          }
+
+          partnersData.push({
+            partnerId: partner.partnerId,
+            commission: commission,
+          });
+        }
+      }
+    }
+
+    // Update coupon with transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update coupon
+      const updatedCoupon = await tx.coupon.update({
+        where: { id },
+        data: updateData,
+      });
+
+      // Update partners if provided
+      if (partners !== undefined) {
+        // Delete existing partner relationships
+        await tx.couponPartner.deleteMany({
+          where: { couponId: id },
+        });
+
+        // Create new partner relationships
+        if (partnersData.length > 0) {
+          await tx.couponPartner.createMany({
+            data: partnersData.map(partner => ({
+              couponId: id,
+              partnerId: partner.partnerId,
+              commission: partner.commission,
+            })),
+          });
+        }
+      }
+
+      // Fetch updated coupon with partners
+      const couponWithPartners = await tx.coupon.findUnique({
+        where: { id },
+        include: {
+          couponPartners: {
+            include: {
+              partner: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return couponWithPartners;
     });
 
     return res.status(200).json({
       success: true,
       message: "Coupon updated successfully",
-      data: { coupon: updatedCoupon },
+      data: { coupon: result },
     });
+
   } catch (error) {
     console.error("Error updating coupon:", error);
     return res.status(500).json({

@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
-import { coupons } from "@/api/adminService";
+import { coupons, partners } from "@/api/adminService";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ import {
   CheckCircle,
   XCircle,
   IndianRupee,
+  UserPlus,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,16 +48,25 @@ function CouponsList() {
     const fetchCoupons = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+
         const response = await coupons.getCoupons();
 
         if (response.data.success) {
-          setCouponsList(response.data.data?.coupons || []);
+          const fetchedCoupons = response.data.data?.coupons || [];
+
+          setCouponsList(fetchedCoupons);
         } else {
-          setError(response.data.message || "Failed to fetch coupons");
+          const errorMsg = response.data.message || "Failed to fetch coupons";
+          console.error("Coupons fetch error:", errorMsg);
+          setError(errorMsg);
+          toast.error(errorMsg);
         }
       } catch (error: any) {
         console.error("Error fetching coupons:", error);
-        setError("Failed to load coupons. Please try again.");
+        const errorMsg = error.response?.data?.message || "Failed to load coupons. Please try again.";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setIsLoading(false);
       }
@@ -84,6 +95,34 @@ function CouponsList() {
     } catch (error: any) {
       console.error("Error deleting coupon:", error);
       toast.error("An error occurred while deleting the coupon");
+    }
+  };
+
+  // Handle coupon active/inactive toggle
+  const handleToggleStatus = async (couponId: string, currentStatus: boolean, couponCode: string) => {
+    const newStatus = !currentStatus;
+    const action = newStatus ? "activate" : "deactivate";
+
+    try {
+      const response = await coupons.updateCoupon(couponId, {
+        isActive: newStatus
+      });
+
+      if (response.data.success) {
+        toast.success(`Coupon "${couponCode}" ${action}d successfully`);
+
+        // Update the coupon in the list
+        setCouponsList(couponsList.map(coupon =>
+          coupon.id === couponId
+            ? { ...coupon, isActive: newStatus }
+            : coupon
+        ));
+      } else {
+        toast.error(response.data.message || `Failed to ${action} coupon`);
+      }
+    } catch (error: any) {
+      console.error(`Error ${action}ing coupon:`, error);
+      toast.error(`An error occurred while ${action}ing the coupon`);
     }
   };
 
@@ -163,6 +202,9 @@ function CouponsList() {
                     Discount
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium">
+                    Partner
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">
                     Valid Period
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium">
@@ -207,6 +249,33 @@ function CouponsList() {
                       )}
                     </td>
                     <td className="px-4 py-3">
+                      {coupon.couponPartners && coupon.couponPartners.length > 0 ? (
+                        <div className="space-y-1">
+                          {coupon.couponPartners.slice(0, 2).map((cp: any, index: number) => (
+                            <div key={index} className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {cp.partner.name}
+                              </span>
+                              {cp.commission && (
+                                <span className="text-xs text-muted-foreground">
+                                  {cp.commission}% commission
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {coupon.couponPartners.length > 2 && (
+                            <span className="text-xs text-muted-foreground">
+                              +{coupon.couponPartners.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          General Coupon
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>
@@ -216,17 +285,35 @@ function CouponsList() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      {coupon.isActive ? (
-                        <div className="flex items-center gap-1 text-green-600">
-                          <CheckCircle className="h-4 w-4" />
-                          <span>Active</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <XCircle className="h-4 w-4" />
-                          <span>Inactive</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {/* Toggle Switch */}
+                        <button
+                          onClick={() => handleToggleStatus(coupon.id, coupon.isActive, coupon.code)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${coupon.isActive
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : 'bg-gray-300 hover:bg-gray-400'
+                            }`}
+                          title={coupon.isActive ? 'Click to deactivate' : 'Click to activate'}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition duration-200 ${coupon.isActive ? 'translate-x-5' : 'translate-x-1'
+                              }`}
+                          />
+                        </button>
+
+                        {/* Status Text */}
+                        {coupon.isActive ? (
+                          <div className="flex items-center gap-1 text-green-600">
+                            <CheckCircle className="h-4 w-4" />
+                            <span className="text-sm font-medium">Active</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-gray-500">
+                            <XCircle className="h-4 w-4" />
+                            <span className="text-sm font-medium">Inactive</span>
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
@@ -281,7 +368,36 @@ function CouponForm({
     endDate: "",
     isActive: true,
   });
+  const [selectedPartners, setSelectedPartners] = useState<
+    Array<{ partnerId: string; commission: string }>
+  >([]);
   const [error, setError] = useState<string | null>(null);
+  const [partnersList, setPartnersList] = useState<any[]>([]);
+
+  // Fetch partners list for dropdown
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+
+        const response = await partners.getApprovedPartners();
+
+
+        if (response.data.success) {
+          const fetchedPartners = response.data.data?.partners || [];
+
+          setPartnersList(fetchedPartners);
+        } else {
+          console.error("Partners fetch error:", response.data.message);
+          toast.error("Failed to load partners");
+        }
+      } catch (error) {
+        console.error("Error fetching partners:", error);
+        toast.error("Failed to load partners");
+      }
+    };
+
+    fetchPartners();
+  }, []);
 
   // Fetch coupon details if in edit mode
   useEffect(() => {
@@ -294,6 +410,18 @@ function CouponForm({
 
           if (response.data.success) {
             const couponData = response.data.data?.coupon;
+            // Format dates properly for edit form
+            const formatDateForInput = (dateString: string) => {
+              try {
+                if (!dateString) return "";
+                const date = new Date(dateString);
+                return date.toISOString().split("T")[0];
+              } catch (error) {
+                console.warn("Date format error:", error);
+                return "";
+              }
+            };
+
             setFormData({
               code: couponData?.code.toUpperCase() || "",
               description: couponData?.description || "",
@@ -301,14 +429,22 @@ function CouponForm({
               discountValue: couponData?.discountValue?.toString() || "",
               minOrderAmount: couponData?.minOrderAmount?.toString() || "",
               maxUses: couponData?.maxUses?.toString() || "",
-              startDate: couponData?.startDate
-                ? new Date(couponData.startDate).toISOString().split("T")[0]
-                : new Date().toISOString().split("T")[0],
-              endDate: couponData?.endDate
-                ? new Date(couponData.endDate).toISOString().split("T")[0]
-                : "",
+              startDate: formatDateForInput(couponData?.startDate) || new Date().toISOString().split("T")[0],
+              endDate: formatDateForInput(couponData?.endDate),
               isActive: couponData?.isActive ?? true,
             });
+
+            // Set selected partners
+            if (couponData?.couponPartners && couponData.couponPartners.length > 0) {
+              setSelectedPartners(
+                couponData.couponPartners.map((cp: any) => ({
+                  partnerId: cp.partner.id,
+                  commission: cp.commission?.toString() || "",
+                }))
+              );
+            } else {
+              setSelectedPartners([]);
+            }
           } else {
             setError(response.data.message || "Failed to fetch coupon details");
           }
@@ -323,6 +459,40 @@ function CouponForm({
       fetchCouponDetails();
     }
   }, [mode, couponId]);
+
+  // Handle partner add/remove
+  const addPartner = () => {
+    setSelectedPartners([...selectedPartners, { partnerId: "", commission: "" }]);
+  };
+
+  const removePartner = (index: number) => {
+    setSelectedPartners(selectedPartners.filter((_, i) => i !== index));
+  };
+
+  const updatePartner = (index: number, field: "partnerId" | "commission", value: string) => {
+    const updated = [...selectedPartners];
+    updated[index][field] = value;
+
+    // If updating partnerId, check for duplicates
+    if (field === "partnerId" && value) {
+      const duplicateExists = updated.some((partner, i) =>
+        i !== index && partner.partnerId === value
+      );
+
+      if (duplicateExists) {
+        const partnerName = partnersList.find(p => p.id === value)?.name || value;
+        setError(`Partner "${partnerName}" is already assigned to this coupon. Each partner can only be assigned once per coupon.`);
+        return; // Don't update if duplicate
+      }
+    }
+
+    setSelectedPartners(updated);
+
+    // Clear error if no duplicates
+    if (error && error.includes("already assigned")) {
+      setError(null);
+    }
+  };
 
   // Handle form input changes
   const handleInputChange = (
@@ -408,6 +578,36 @@ function CouponForm({
       return false;
     }
 
+    // Validate partners
+    if (selectedPartners.length > 0) {
+      // Check for empty partner IDs
+      const emptyPartners = selectedPartners.filter(p => !p.partnerId);
+      if (emptyPartners.length > 0) {
+        setError("Please select a partner or remove empty partner entries");
+        return false;
+      }
+
+      // Check for duplicate partners
+      const partnerIds = selectedPartners.map(p => p.partnerId);
+      const uniquePartnerIds = [...new Set(partnerIds)];
+      if (partnerIds.length !== uniquePartnerIds.length) {
+        setError("Each partner can only be assigned once per coupon. Please remove duplicate partners.");
+        return false;
+      }
+
+      // Validate commission values
+      for (const partner of selectedPartners) {
+        if (partner.commission && partner.commission.trim()) {
+          const commission = parseFloat(partner.commission);
+          if (isNaN(commission) || commission < 0 || commission > 100) {
+            const partnerName = partnersList.find(p => p.id === partner.partnerId)?.name || "Partner";
+            setError(`${partnerName}'s commission must be between 0 and 100`);
+            return false;
+          }
+        }
+      }
+    }
+
     return true;
   };
 
@@ -434,6 +634,12 @@ function CouponForm({
           ? parseFloat(formData.minOrderAmount)
           : undefined,
         maxUses: formData.maxUses ? parseInt(formData.maxUses) : undefined,
+        partners: selectedPartners.length > 0
+          ? selectedPartners.map(p => ({
+            partnerId: p.partnerId,
+            commission: p.commission ? parseFloat(p.commission) : undefined,
+          }))
+          : undefined,
       };
 
       let response;
@@ -702,6 +908,113 @@ function CouponForm({
               <label htmlFor="isActive" className="text-sm font-medium">
                 Active
               </label>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">
+                  Partner Assignments (Optional)
+                </label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addPartner}
+                  className="flex items-center gap-2"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add Partner
+                </Button>
+              </div>
+
+              {selectedPartners.length === 0 ? (
+                <div className="text-center p-4 border-2 border-dashed border-gray-200 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    No partners assigned. This coupon will be a general coupon available to all.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {selectedPartners.map((partner, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <select
+                          value={partner.partnerId}
+                          onChange={(e) => updatePartner(index, "partnerId", e.target.value)}
+                          className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ${error && error.includes("already assigned") &&
+                            selectedPartners.some((p, i) => i !== index && p.partnerId === partner.partnerId)
+                            ? "border-destructive ring-1 ring-destructive"
+                            : ""
+                            }`}
+                        >
+                          <option value="">Select Partner...</option>
+                          {partnersList.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} ({p.email})
+                            </option>
+                          ))}
+                        </select>
+                        {/* Show validation error for specific partner */}
+                        {error && error.includes("already assigned") &&
+                          selectedPartners.some((p, i) => i !== index && p.partnerId === partner.partnerId) && (
+                            <p className="text-xs text-destructive mt-1">
+                              This partner is already assigned to this coupon
+                            </p>
+                          )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex">
+                          <div className="flex items-center rounded-l-md border border-r-0 border-input bg-muted px-3">
+                            <PercentIcon className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            placeholder="5.0"
+                            value={partner.commission}
+                            onChange={(e) => updatePartner(index, "commission", e.target.value)}
+                            className="w-20 rounded-l-none"
+                          />
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removePartner(index)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Assign this coupon to specific partners for commission tracking. Partners will earn the specified commission percentage from orders using this coupon.
+              </p>
+
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5" />
+                  </div>
+                  <div className="ml-2">
+                    <h4 className="text-sm font-medium text-blue-800">Commission Calculation Note</h4>
+                    <div className="text-xs text-blue-700 mt-1 space-y-1">
+                      <p><strong>Example:</strong> Order value ₹100, Coupon discount ₹10, Partner commission 5%</p>
+                      <p>• Commission is calculated on: <strong>₹90</strong> (Order value after discount)</p>
+                      <p>• Partner earns: <strong>₹4.50</strong> (5% of ₹90)</p>
+                      <p className="text-blue-600 font-medium">Commission is always calculated on the final order amount after applying the coupon discount.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
