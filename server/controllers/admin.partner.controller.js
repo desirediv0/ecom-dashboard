@@ -81,9 +81,14 @@ export const getPartnerDetails = asyncHandler(async (req, res) => {
     });
     if (!partner) return res.status(404).json(new ApiResponsive(404, null, 'Partner not found'));
 
-    // Earnings summary
+    // Earnings summary (only from DELIVERED orders)
     const earnings = await prisma.partnerEarning.findMany({
-        where: { partnerId },
+        where: {
+            partnerId,
+            order: {
+                status: 'DELIVERED' // Only include earnings from delivered orders
+            }
+        },
         select: { amount: true, createdAt: true },
     });
     let totalEarnings = 0;

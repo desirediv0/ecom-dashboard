@@ -1279,3 +1279,69 @@ function getDefaultTrackingDescription(status) {
 
   return descriptions[status] || "Status updated";
 }
+
+// Cleanup partner earnings for non-delivered orders (Admin only)
+export const cleanupInvalidPartnerEarnings = asyncHandler(async (req, res) => {
+  try {
+    // Find all partner earnings where the associated order is not DELIVERED
+    const invalidEarnings = await prisma.partnerEarning.findMany({
+      where: {
+        order: {
+          status: {
+            not: 'DELIVERED'
+          }
+        }
+      },
+      include: {
+        order: {
+          select: {
+            id: true,
+            orderNumber: true,
+            status: true
+          }
+        },
+        partner: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    if (invalidEarnings.length === 0) {
+      return res.status(200).json(new ApiResponsive(200, {
+        message: 'No invalid partner earnings found',
+        cleanedCount: 0
+      }, 'Cleanup completed'));
+    }
+
+    // Delete invalid earnings
+    const deletedEarnings = await prisma.partnerEarning.deleteMany({
+      where: {
+        order: {
+          status: {
+            not: 'DELIVERED'
+          }
+        }
+      }
+    });
+
+    console.log(`Cleaned up ${deletedEarnings.count} invalid partner earnings`);
+
+    res.status(200).json(new ApiResponsive(200, {
+      cleanedCount: deletedEarnings.count,
+      invalidEarnings: invalidEarnings.map(earning => ({
+        earningId: earning.id,
+        orderNumber: earning.order.orderNumber,
+        orderStatus: earning.order.status,
+        partnerName: earning.partner.name,
+        amount: earning.amount
+      }))
+    }, 'Invalid partner earnings cleaned up successfully'));
+
+  } catch (error) {
+    console.error('Error during cleanup:', error);
+    res.status(500).json(new ApiResponsive(500, null, 'Error during cleanup'));
+  }
+});

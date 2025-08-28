@@ -416,43 +416,8 @@ export const paymentVerification = asyncHandler(async (req, res) => {
         },
       });
 
-      // 2.5. Create partner commissions if coupon was used
-      if (couponId && discount > 0) {
-        try {
-          // Calculate final order amount (subtotal - discount)
-          const finalOrderAmount = subTotal - discount;
-
-          // Get all partners associated with this coupon
-          const couponPartners = await tx.couponPartner.findMany({
-            where: { couponId: couponId },
-            include: { partner: true }
-          });
-
-          // Create partner earnings for each partner
-          for (const couponPartner of couponPartners) {
-            if (couponPartner.commission && couponPartner.commission > 0) {
-              // Calculate commission amount based on FINAL ORDER AMOUNT (not discount)
-              const commissionAmount = (finalOrderAmount * couponPartner.commission) / 100;
-
-              await tx.partnerEarning.create({
-                data: {
-                  partnerId: couponPartner.partnerId,
-                  orderId: order.id,
-                  couponId: couponId,
-                  amount: commissionAmount.toFixed(2),
-                  percentage: couponPartner.commission,
-                  createdAt: new Date(),
-                },
-              });
-
-              console.log(`✅ Created commission for partner ${couponPartner.partner.name}: ₹${commissionAmount.toFixed(2)} (${couponPartner.commission}% of final order ₹${finalOrderAmount.toFixed(2)})`);
-            }
-          }
-        } catch (commissionError) {
-          console.error("❌ Error creating partner commissions:", commissionError);
-          // Don't fail the entire transaction for commission errors
-        }
-      }
+      // Note: Partner commissions will be created automatically when order status is updated to DELIVERED
+      // This ensures partners only get paid after successful delivery, not just on payment
 
       // 3. Create order items and update inventory
       const orderItems = [];

@@ -7,6 +7,7 @@ import {
   createOrder,
   processPayment,
   getOrderStats,
+  cleanupInvalidPartnerEarnings,
 } from "../controllers/admin.order.controller.js";
 import {
   verifyAdminJWT,
@@ -64,6 +65,14 @@ router.get(
   verifyAdminJWT,
   hasPermission("dashboard", "read"),
   getOrderStats
+);
+
+// Cleanup invalid partner earnings (Admin only)
+router.post(
+  "/cleanup-partner-earnings",
+  verifyAdminJWT,
+  hasPermission("orders", "update"),
+  cleanupInvalidPartnerEarnings
 );
 
 export default router;

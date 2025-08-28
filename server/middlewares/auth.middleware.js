@@ -129,3 +129,44 @@ export const hasPermission = (resource, action) => {
     next();
   });
 };
+
+// Partner authentication middleware
+export const verifyPartnerToken = asyncHandler(async (req, res, next) => {
+  try {
+    const token =
+      req.cookies?.partnerToken ||
+      req.headers?.authorization?.replace("Bearer ", "") ||
+      req.query?.partnerToken;
+
+    if (!token) {
+      throw new ApiError(401, "Partner authentication required");
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const partner = await prisma.partner.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isActive: true,
+        commissionRate: true,
+        createdAt: true
+      }
+    });
+
+    if (!partner) {
+      throw new ApiError(401, "Invalid partner token");
+    }
+
+    if (!partner.isActive) {
+      throw new ApiError(401, "Partner account is inactive");
+    }
+
+    req.partner = partner;
+    next();
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid partner token");
+  }
+});
