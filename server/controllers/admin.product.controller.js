@@ -89,19 +89,19 @@ export const getProductsByType = asyncHandler(async (req, res, next) => {
         ...variant,
         flavor: variant.flavor
           ? {
-              ...variant.flavor,
-              image: variant.flavor.image
-                ? getFileUrl(variant.flavor.image)
-                : null,
-            }
+            ...variant.flavor,
+            image: variant.flavor.image
+              ? getFileUrl(variant.flavor.image)
+              : null,
+          }
           : null,
         images: variant.images
           ? variant.images
-              .sort((a, b) => a.order - b.order)
-              .map((image) => ({
-                ...image,
-                url: getFileUrl(image.url),
-              }))
+            .sort((a, b) => a.order - b.order)
+            .map((image) => ({
+              ...image,
+              url: getFileUrl(image.url),
+            }))
           : [],
       })),
     };
@@ -222,19 +222,19 @@ export const getProducts = asyncHandler(async (req, res, next) => {
         ...variant,
         flavor: variant.flavor
           ? {
-              ...variant.flavor,
-              image: variant.flavor.image
-                ? getFileUrl(variant.flavor.image)
-                : null,
-            }
+            ...variant.flavor,
+            image: variant.flavor.image
+              ? getFileUrl(variant.flavor.image)
+              : null,
+          }
           : null,
         images: variant.images
           ? variant.images
-              .sort((a, b) => a.order - b.order)
-              .map((image) => ({
-                ...image,
-                url: getFileUrl(image.url),
-              }))
+            .sort((a, b) => a.order - b.order)
+            .map((image) => ({
+              ...image,
+              url: getFileUrl(image.url),
+            }))
           : [],
       })),
     };
@@ -323,17 +323,17 @@ export const getProductById = asyncHandler(async (req, res, next) => {
       ...variant,
       flavor: variant.flavor
         ? {
-            ...variant.flavor,
-            image: variant.flavor.image
-              ? getFileUrl(variant.flavor.image)
-              : null,
-          }
+          ...variant.flavor,
+          image: variant.flavor.image
+            ? getFileUrl(variant.flavor.image)
+            : null,
+        }
         : null,
       images: variant.images
         ? variant.images.map((image) => ({
-            ...image,
-            url: getFileUrl(image.url),
-          }))
+          ...image,
+          url: getFileUrl(image.url),
+        }))
         : [],
     })),
     // Include SEO fields
@@ -713,8 +713,8 @@ export const createProduct = asyncHandler(async (req, res, next) => {
         const price = req.body.price ? parseFloat(req.body.price) : 0;
         const salePrice =
           req.body.salePrice &&
-          req.body.salePrice !== "null" &&
-          req.body.salePrice !== ""
+            req.body.salePrice !== "null" &&
+            req.body.salePrice !== ""
             ? parseFloat(req.body.salePrice)
             : null;
         const quantity = req.body.quantity ? parseInt(req.body.quantity) : 0;
@@ -857,9 +857,8 @@ export const createProduct = asyncHandler(async (req, res, next) => {
                   data: {
                     variantId: variant._dbId,
                     url: imageUrl,
-                    alt: `${variant.name || newProduct.name} - Variant Image ${
-                      i + 1
-                    }`,
+                    alt: `${variant.name || newProduct.name} - Variant Image ${i + 1
+                      }`,
                     isPrimary: i === 0, // First image is primary
                     order: i, // Set proper order
                   },
@@ -919,17 +918,17 @@ export const createProduct = asyncHandler(async (req, res, next) => {
           ...variant,
           flavor: variant.flavor
             ? {
-                ...variant.flavor,
-                image: variant.flavor.image
-                  ? getFileUrl(variant.flavor.image)
-                  : null,
-              }
+              ...variant.flavor,
+              image: variant.flavor.image
+                ? getFileUrl(variant.flavor.image)
+                : null,
+            }
             : null,
           images: variant.images
             ? variant.images.map((image) => ({
-                ...image,
-                url: getFileUrl(image.url),
-              }))
+              ...image,
+              url: getFileUrl(image.url),
+            }))
             : [],
         })),
         // Include message when variants couldn't be deleted due to orders
@@ -1114,7 +1113,6 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
   try {
     const result = await prisma.$transaction(async (prisma) => {
       const hasVariantsValue = hasVariants === "true" || hasVariants === true;
-
       // Update product basic info
       const updatedProduct = await prisma.product.update({
         where: { id: productId },
@@ -1243,13 +1241,13 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         const variantIdsToDelete =
           requestExistingVariantIds.length > 0
             ? // Delete only variants that exist in DB but not in the request's existingVariantIds
-              existingVariantIds.filter(
-                (id) => !requestExistingVariantIds.includes(id)
-              )
+            existingVariantIds.filter(
+              (id) => !requestExistingVariantIds.includes(id)
+            )
             : // Fallback to the traditional approach - delete variants not in the updated list
-              existingVariantIds.filter(
-                (id) => !updatedVariantIds.includes(id)
-              );
+            existingVariantIds.filter(
+              (id) => !updatedVariantIds.includes(id)
+            );
 
         // Delete removed variants safely
         if (variantIdsToDelete.length > 0) {
@@ -1693,10 +1691,12 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         hasVariants === "false" ||
         hasVariants === false ||
         hasVariants === null ||
+        hasVariants === "null" ||
         hasVariants === undefined
       ) {
         // If switching to non-variant mode, handle simple product price and quantity
         // If no variants exist, create a default one, otherwise update the first one
+        console.log(`📝 Processing non-variant product update. hasVariants: ${hasVariants}, existing variants: ${product.variants.length}`);
         if (product.variants.length === 0) {
           const defaultSku = `${baseSku}-DEF`;
 
@@ -1734,11 +1734,11 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           // Parse quantity with validation
           let parsedQuantity = 0;
           try {
-            if (req.body.quantity) {
-              parsedQuantity = parseInt(req.body.quantity);
+            if (quantity !== undefined) {
+              parsedQuantity = parseInt(quantity);
               if (isNaN(parsedQuantity)) {
                 console.warn(
-                  `Invalid quantity value: ${req.body.quantity}, defaulting to 0`
+                  `Invalid quantity value: ${quantity}, defaulting to 0`
                 );
                 parsedQuantity = 0;
               }
@@ -1850,6 +1850,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
 
           // Parse quantity with validation
           try {
+
             if (quantity !== undefined) {
               const parsedQuantity = parseInt(quantity);
               if (!isNaN(parsedQuantity)) {
@@ -1860,60 +1861,24 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
                 );
                 // Don't update quantity if invalid
               }
+            } else {
+              console.log(`📊 Quantity field is undefined, not updating`);
             }
           } catch (error) {
             console.error(`Error parsing quantity: ${error.message}`);
             // Don't update quantity on error
           }
 
-          // Output debug info to check what's happening
-          console.log("Updating variant with ID:", product.variants[0].id);
-          console.log(
-            "Update data to apply:",
-            JSON.stringify(updateData, null, 2)
-          );
+          // Update the variant using Prisma's update method
+          if (Object.keys(updateData).length > 0) {
 
-          // Direct database update using raw SQL to bypass any Prisma caching issues
-          if (price !== undefined) {
-            await prisma.$executeRaw`
-              UPDATE "ProductVariant" 
-              SET "price" = ${String(updateData.price)}, 
-                  "updatedAt" = NOW() 
-              WHERE "id" = ${product.variants[0].id};
-            `;
-            console.log("Updated price with direct SQL:", updateData.price);
-          }
 
-          // Handle sale price
-          if (salePrice !== undefined) {
-            await prisma.$executeRaw`
-              UPDATE "ProductVariant" 
-              SET "salePrice" = ${
-                updateData.salePrice === null
-                  ? null
-                  : String(updateData.salePrice)
-              }, 
-                  "updatedAt" = NOW() 
-              WHERE "id" = ${product.variants[0].id};
-            `;
-            console.log(
-              "Updated sale price with direct SQL:",
-              updateData.salePrice
-            );
-          }
+            const updatedVariant = await prisma.productVariant.update({
+              where: { id: product.variants[0].id },
+              data: updateData,
+            });
 
-          // Handle quantity
-          if (quantity !== undefined) {
-            await prisma.$executeRaw`
-              UPDATE "ProductVariant" 
-              SET "quantity" = ${updateData.quantity}, 
-                  "updatedAt" = NOW() 
-              WHERE "id" = ${product.variants[0].id};
-            `;
-            console.log(
-              "Updated quantity with direct SQL:",
-              updateData.quantity
-            );
+
           }
         }
       }
@@ -2066,11 +2031,11 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         ...variant,
         flavor: variant.flavor
           ? {
-              ...variant.flavor,
-              image: variant.flavor.image
-                ? getFileUrl(variant.flavor.image)
-                : null,
-            }
+            ...variant.flavor,
+            image: variant.flavor.image
+              ? getFileUrl(variant.flavor.image)
+              : null,
+          }
           : null,
       })),
       // Include message when variants couldn't be deleted due to orders
@@ -3650,9 +3615,9 @@ export const bulkVariantOperations = asyncHandler(async (req, res) => {
     ...variant,
     flavor: variant.flavor
       ? {
-          ...variant.flavor,
-          image: variant.flavor.image ? getFileUrl(variant.flavor.image) : null,
-        }
+        ...variant.flavor,
+        image: variant.flavor.image ? getFileUrl(variant.flavor.image) : null,
+      }
       : null,
   }));
 

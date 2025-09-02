@@ -186,9 +186,8 @@ export default function CartPage() {
       setCouponError("");
 
       try {
-        const response = await applyCoupon(couponCode);
+        await applyCoupon(couponCode);
         setCouponCode("");
-        toast.success("Coupon applied successfully");
       } catch (err) {
         setCouponError(err.message || "Invalid coupon code");
         toast.error(err.message || "Invalid coupon code");
@@ -421,8 +420,8 @@ export default function CartPage() {
                         setCouponCode(e.target.value.toUpperCase())
                       }
                       className={`flex-1 ${couponError
-                          ? "border-red-300 focus-visible:ring-red-300"
-                          : ""
+                        ? "border-red-300 focus-visible:ring-red-300"
+                        : ""
                         }`}
                     />
                     <Button
