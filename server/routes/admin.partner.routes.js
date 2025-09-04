@@ -6,7 +6,8 @@ import {
     getPartnerDetails,
     removePartnerCoupon,
     createManualCommission,
-    createCommissionsForExistingOrders
+    createCommissionsForExistingOrders,
+    deactivatePartner
 } from '../controllers/admin.partner.controller.js';
 import { verifyAdminJWT } from '../middlewares/admin.middleware.js';
 
@@ -25,6 +26,8 @@ router.post('/requests/:requestId/reject', verifyAdminJWT, rejectPartnerRequest)
 router.get('/:partnerId/details', verifyAdminJWT, getPartnerDetails);
 // Remove a coupon from a partner (admin only)
 router.delete('/:partnerId/coupons/:couponId', verifyAdminJWT, removePartnerCoupon);
+// Deactivate a partner (admin only)
+router.post('/:partnerId/deactivate', verifyAdminJWT, deactivatePartner);
 // Create manual commission for testing (admin only)
 router.post('/commission/create', verifyAdminJWT, createManualCommission);
 // Create commissions for existing orders (one-time fix)

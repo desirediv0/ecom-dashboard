@@ -286,9 +286,9 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
-                href="/partner-registrations"
+                href="/partner"
                 icon={<Users className="h-5 w-5" />}
-                title="Partner Registrations"
+                title="Partners"
                 hasPermission={admin?.role === "SUPER_ADMIN" || hasPermissionFor(admin, Resource.USERS, Action.READ)}
               />
             </div>
@@ -523,9 +523,9 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
-                href="/partner-registrations"
+                href="/partner"
                 icon={<Users className="h-5 w-5" />}
-                title="Partner Registrations"
+                title="Partners"
                 onClick={toggleMobileMenu}
                 hasPermission={admin?.role === "SUPER_ADMIN" || hasPermissionFor(admin, Resource.USERS, Action.READ)}
               />

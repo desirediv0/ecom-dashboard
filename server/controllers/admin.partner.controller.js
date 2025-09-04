@@ -231,3 +231,21 @@ export const removePartnerCoupon = asyncHandler(async (req, res) => {
     await prisma.coupon.update({ where: { id: couponId }, data: { partnerId: null } });
     res.status(200).json(new ApiResponsive(200, null, 'Coupon removed from partner'));
 });
+
+// Deactivate partner (admin only)
+export const deactivatePartner = asyncHandler(async (req, res) => {
+    const { partnerId } = req.params;
+
+    const partner = await prisma.partner.findUnique({ where: { id: partnerId } });
+    if (!partner) {
+        return res.status(404).json(new ApiResponsive(404, null, 'Partner not found'));
+    }
+
+    // Deactivate the partner
+    await prisma.partner.update({
+        where: { id: partnerId },
+        data: { isActive: false }
+    });
+
+    res.status(200).json(new ApiResponsive(200, null, 'Partner deactivated successfully'));
+});
