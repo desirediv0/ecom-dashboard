@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -34,8 +33,6 @@ export default function NonApprovedPartnersTab() {
     // Approve dialog state
     const [approveDialogOpen, setApproveDialogOpen] = useState(false);
     const [approveId, setApproveId] = useState<string | null>(null);
-    const [password, setPassword] = useState("");
-    const [passwordError, setPasswordError] = useState("");
     const [approveLoading, setApproveLoading] = useState(false);
     const [approveApiError, setApproveApiError] = useState("");
 
@@ -64,8 +61,6 @@ export default function NonApprovedPartnersTab() {
 
     const openApproveDialog = (id: string) => {
         setApproveId(id);
-        setPassword("");
-        setPasswordError("");
         setApproveApiError("");
         setApproveDialogOpen(true);
     };
@@ -73,25 +68,23 @@ export default function NonApprovedPartnersTab() {
     const closeApproveDialog = () => {
         setApproveDialogOpen(false);
         setApproveId(null);
-        setPassword("");
-        setPasswordError("");
         setApproveApiError("");
     };
 
     const handleApprove = async () => {
-        if (!password || password.length < 6) {
-            setPasswordError("Password must be at least 6 characters.");
-            return;
-        }
+        if (!window.confirm("Are you sure you want to approve this partner? They will be assigned the demo password.")) return;
+
         setApproveLoading(true);
-        setPasswordError("");
         setApproveApiError("");
         try {
-            await axios.post(`${API_URL}/api/admin/partners/requests/${approveId}/approve`, { password });
+            const response = await axios.post(`${API_URL}/api/admin/partners/requests/${approveId}/approve`);
             // Remove from list since it's now approved
             setPartners(prev => prev.filter(p => p.id !== approveId));
             closeApproveDialog();
-            alert("Partner approved successfully!");
+
+            // Show demo password to admin
+            const demoPassword = response.data.data.demoPassword || 'genuinenutrition';
+            alert(`Partner approved successfully!\nDemo Password: ${demoPassword}\nPlease share this password with the partner.`);
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 setApproveApiError(err.response?.data?.message || "Failed to approve partner.");
@@ -284,9 +277,10 @@ export default function NonApprovedPartnersTab() {
             <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Set Partner Password</DialogTitle>
+                        <DialogTitle>Approve Partner</DialogTitle>
                         <DialogDescription>
-                            Enter a password for this partner (minimum 6 characters).
+                            This partner will be approved with the demo password "genuinenutrition".
+                            Please share this password with the partner after approval.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -297,22 +291,19 @@ export default function NonApprovedPartnersTab() {
                         </Alert>
                     )}
 
-                    <Input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        disabled={approveLoading}
-                        autoFocus
-                        aria-invalid={!!passwordError}
-                    />
-                    {passwordError && (
-                        <div className="text-destructive text-sm mt-1">{passwordError}</div>
-                    )}
+                    <div className="bg-accent p-4 rounded-lg">
+                        <p className="font-semibold text-sm mb-2">Demo Password:</p>
+                        <p className="font-mono text-lg bg-background px-3 py-2 rounded border">
+                            genuinenutrition
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                            The partner can login with this password and will be prompted to change it.
+                        </p>
+                    </div>
 
                     <DialogFooter>
                         <Button onClick={handleApprove} disabled={approveLoading}>
-                            {approveLoading ? "Approving..." : "Approve & Set Password"}
+                            {approveLoading ? "Approving..." : "Approve Partner"}
                         </Button>
                         <DialogClose asChild>
                             <Button variant="outline" type="button" disabled={approveLoading}>

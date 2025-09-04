@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PartnerDashboard from './pages/PartnerDashboard';
 import PartnerLogin from './pages/PartnerLogin';
+import ResetPassword from './pages/ResetPassword';
 import PartnerCoupons from './pages/PartnerCoupons';
 import PartnerEarnings from './pages/PartnerEarnings';
 import PartnerLayout from './components/PartnerLayout';
@@ -17,6 +18,7 @@ const App = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
           <Routes>
             <Route path="/login" element={<PartnerLogin />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <PartnerLayout />

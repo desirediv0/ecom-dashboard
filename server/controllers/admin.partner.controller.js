@@ -22,14 +22,16 @@ export const listPartnerRequests = asyncHandler(async (req, res) => {
 // Approve partner request and set password
 export const approvePartnerRequest = asyncHandler(async (req, res) => {
     const { requestId } = req.params;
-    const { password } = req.body;
-    if (!password) return res.status(400).json(new ApiResponsive(400, null, 'Password required'));
+
     const request = await prisma.partnerRequest.findUnique({ where: { id: requestId } });
     if (!request || request.status !== 'PENDING') {
         return res.status(404).json(new ApiResponsive(404, null, 'Request not found or already processed'));
     }
-    // Create partner
-    const hashed = await bcrypt.hash(password, 10);
+
+    // Set demo password automatically (stronger)
+    const demoPassword = 'GenuineNutrition@2025';
+    const hashed = await bcrypt.hash(demoPassword, 10);
+
     const partner = await prisma.partner.create({
         data: {
             name: request.name,
@@ -39,16 +41,23 @@ export const approvePartnerRequest = asyncHandler(async (req, res) => {
             city: request.city,
             state: request.state,
             isActive: true,
+            isPasswordChanged: false,
             request: { connect: { id: request.id } },
         },
     });
+
     // Update request
     await prisma.partnerRequest.update({
         where: { id: request.id },
         data: { status: 'APPROVED', partnerId: partner.id },
     });
-    res.status(200).json(new ApiResponsive(200, { partner }, 'Partner approved'));
+
+    res.status(200).json(new ApiResponsive(200, {
+        partner,
+        demoPassword: demoPassword
+    }, 'Partner approved with demo password'));
 });
+
 
 // Reject partner request
 export const rejectPartnerRequest = asyncHandler(async (req, res) => {
@@ -174,7 +183,6 @@ export const createCommissionsForExistingOrders = asyncHandler(async (req, res) 
             }
         });
 
-        console.log(`Found ${ordersWithCoupons.length} orders with coupons but no commissions`);
 
         let commissionsCreated = 0;
 

@@ -7,7 +7,7 @@ import {
     getPartnerCoupons,
     getPartnerEarnings
 } from '../controllers/partner.controller.js';
-import { verifyPartnerToken } from '../middlewares/auth.middleware.js';
+import { verifyPartnerJWT } from '../middlewares/partner.auth.middleware.js';
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router.post('/register', registerPartner);
 router.post('/login', partnerLogin);
 
 // Protected routes (require partner authentication)
-router.use(verifyPartnerToken); // Apply middleware to all routes below
+router.use(verifyPartnerJWT); // Apply middleware to all routes below
 
 router.get('/profile', getPartnerProfile);
 router.get('/dashboard', getPartnerDashboard);

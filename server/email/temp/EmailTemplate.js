@@ -489,8 +489,8 @@ export const getFeeReceiptTemplate = (data) => `
                 <p><strong>Amount Paid:</strong> ₹${data.amount}</p>
                 <p><strong>Payment ID:</strong> ${data.paymentId}</p>
                 <p><strong>Date:</strong> ${new Date(
-                  data.date
-                ).toLocaleDateString()}</p>
+    data.date
+).toLocaleDateString()}</p>
             </div>
             <p>Please find your receipt attached to this email. We look forward to continuing your musical journey with us.</p>
         </div>
@@ -589,46 +589,42 @@ export const getFeeNotificationTemplate = (data) => `
                 <div class="fee-item">
                     <strong>Due Date:</strong>
                     <span class="important">${new Date(
-                      data.dueDate
-                    ).toLocaleDateString()}</span>
+    data.dueDate
+).toLocaleDateString()}</span>
                 </div>
-                ${
-                  data.description
-                    ? `
+                ${data.description
+        ? `
                 <div class="fee-item">
                     <strong>Description:</strong>
                     <span>${data.description}</span>
                 </div>
                 `
-                    : ""
-                }
-                ${
-                  data.lateFeeDate
-                    ? `
+        : ""
+    }
+                ${data.lateFeeDate
+        ? `
                 <div class="fee-item">
                     <strong>Late Fee After:</strong>
                     <span class="important">${new Date(
-                      data.lateFeeDate
-                    ).toLocaleDateString()}</span>
+            data.lateFeeDate
+        ).toLocaleDateString()}</span>
                 </div>
                 `
-                    : ""
-                }
-                ${
-                  data.lateFeeAmount
-                    ? `
+        : ""
+    }
+                ${data.lateFeeAmount
+        ? `
                 <div class="fee-item">
                     <strong>Late Fee Amount:</strong>
                     <span class="important">₹${data.lateFeeAmount}</span>
                 </div>
                 `
-                    : ""
-                }
+        : ""
+    }
             </div>
             <p>Please ensure timely payment to continue your uninterrupted musical education with us.</p>
-            <a href="${
-              process.env.FRONTEND_URL
-            }/dashboard/fees" class="btn">View Fee Details</a>
+            <a href="${process.env.FRONTEND_URL
+    }/dashboard/fees" class="btn">View Fee Details</a>
         </div>
         <div class="footer">
             <p>© ${new Date().getFullYear()} Bansuri Vidya Mandir | Indian Classical Music Institute</p>
@@ -732,12 +728,12 @@ export const getPaymentSuccessTemplate = (data) => `
                 <div class="detail-row">
                     <strong>Date:</strong>
                     <span>${new Date(data.date).toLocaleString("en-IN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}</span>
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+})}</span>
                 </div>
                 <div class="detail-row">
                     <strong>Fee Type:</strong>
@@ -833,12 +829,11 @@ export const getPaymentFailureTemplate = (data) => `
                 <h3>Transaction Details:</h3>
                 <p><strong>Amount:</strong> ₹${data.amount}</p>
                 <p><strong>Date:</strong> ${new Date(data.date).toLocaleString(
-                  "en-IN"
-                )}</p>
+    "en-IN"
+)}</p>
                 <p><strong>Fee Type:</strong> ${data.feeTitle}</p>
-                <p><strong>Error:</strong> ${
-                  data.error || "Transaction could not be completed"
-                }</p>
+                <p><strong>Error:</strong> ${data.error || "Transaction could not be completed"
+    }</p>
             </div>
 
             <p>Possible reasons for payment failure:</p>
@@ -851,9 +846,8 @@ export const getPaymentFailureTemplate = (data) => `
 
             <p>Please try again or contact your bank if the issue persists.</p>
             
-            <a href="${
-              process.env.FRONTEND_URL
-            }/dashboard/fees" class="retry-button">
+            <a href="${process.env.FRONTEND_URL
+    }/dashboard/fees" class="retry-button">
                 Retry Payment
             </a>
         </div>
@@ -867,13 +861,13 @@ export const getPaymentFailureTemplate = (data) => `
 `;
 
 export const getFeeUpdateTemplate = ({
-  name,
-  feeTitle,
-  oldAmount,
-  newAmount,
-  oldDate,
-  newDate,
-  reason,
+    name,
+    feeTitle,
+    oldAmount,
+    newAmount,
+    oldDate,
+    newDate,
+    reason,
 }) => `
 <!DOCTYPE html>
 <html>
@@ -1018,16 +1012,14 @@ export const getCertificateGeneratedTemplate = (data) => `
             
             <div class="certificate-info">
                 <p><strong>Your certificate of musical excellence has been generated!</strong></p>
-                <p>Certificate ID: <span class="certificate-id">${
-                  data.certificateId
-                }</span></p>
+                <p>Certificate ID: <span class="certificate-id">${data.certificateId
+    }</span></p>
                 <p>You can now access and download your certificate from your profile. This marks an important milestone in your musical journey with us.</p>
             </div>
 
             <center>
-                <a href="${
-                  process.env.FRONTEND_URL
-                }/user-profile" class="button">View Certificate</a>
+                <a href="${process.env.FRONTEND_URL
+    }/user-profile" class="button">View Certificate</a>
             </center>
 
             <p>This certificate validates your dedication to Indian classical music and your commitment to learning. Continue on the path of musical excellence!</p>
@@ -1275,8 +1267,8 @@ export const getOrderConfirmationTemplate = (data) => `
                 <div class="detail-row">
                     <span class="detail-label">Order Date:</span>
                     <span>${new Date(
-                      data.orderDate
-                    ).toLocaleDateString()}</span>
+    data.orderDate
+).toLocaleDateString()}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Payment Method:</span>
@@ -1294,16 +1286,16 @@ export const getOrderConfirmationTemplate = (data) => `
                 </thead>
                 <tbody>
                     ${data.items
-                      .map(
-                        (item) => `
+        .map(
+            (item) => `
                     <tr>
                         <td>${item.name} ${item.variant}</td>
                         <td>${item.quantity}</td>
                         <td>₹${item.price}</td>
                     </tr>
                     `
-                      )
-                      .join("")}
+        )
+        .join("")}
                     <tr class="total-row">
                         <td colspan="2">Subtotal</td>
                         <td>₹${data.subtotal}</td>
@@ -1328,26 +1320,137 @@ export const getOrderConfirmationTemplate = (data) => `
                 <p>
                     ${data.shippingAddress.name}<br>
                     ${data.shippingAddress.street}<br>
-                    ${data.shippingAddress.city}, ${
-  data.shippingAddress.state
-} ${data.shippingAddress.postalCode}<br>
+                    ${data.shippingAddress.city}, ${data.shippingAddress.state
+    } ${data.shippingAddress.postalCode}<br>
                     ${data.shippingAddress.country}
                 </p>
             </div>
             
             <p>You can track your order status in your account dashboard:</p>
             <div class="button-container">
-                <a href="${
-                  process.env.FRONTEND_URL
-                }/account/orders" class="button">Track Your Order</a>
+                <a href="${process.env.FRONTEND_URL
+    }/account/orders" class="button">Track Your Order</a>
             </div>
-            <p>If you can't click the button, copy and paste this link in your browser: <br>${
-              process.env.FRONTEND_URL
-            }/account/orders</p>
+            <p>If you can't click the button, copy and paste this link in your browser: <br>${process.env.FRONTEND_URL
+    }/account/orders</p>
         </div>
         <div class="footer">
             © ${new Date().getFullYear()} GenuineNutrition | Premium Health Supplements<br>
             Questions? Contact our customer support at support@genuinenutrition
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+export const getPartnerResetTemplate = (resetLink) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Your Partner Password - GenuineNutrition</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #DE7A3E, #ef4444);
+            color: #ffffff;
+            text-align: center;
+            padding: 40px;
+        }
+        .content {
+            padding: 40px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #1a1a1a;
+            font-size: 24px;
+            margin-top: 0;
+        }
+        p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #333333;
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 35px;
+            background: linear-gradient(135deg, #DE7A3E, #ef4444);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: #666666;
+            background-color: #f8f8f8;
+        }
+        .security-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔑 Reset Partner Password</h1>
+        </div>
+        <div class="content">
+            <h2>Password Reset Request</h2>
+            <p>Dear Partner,</p>
+            <p>We received a request to reset the password for your GenuineNutrition Partner account. Click the button below to create a new password:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetLink}" class="button">Reset Partner Password</a>
+            </div>
+            
+            <p>If you can't click the button, copy and paste this link in your browser: <br><strong>${resetLink}</strong></p>
+            
+            <div class="security-note">
+                <strong>Security Note:</strong> This link will expire in 1 hour for security reasons. If you didn't request this password reset, please contact our support team immediately.
+            </div>
+            
+            <p>If you didn't request this password reset, please ignore this email or contact our partner support team.</p>
+        </div>
+        <div class="footer">
+            © ${new Date().getFullYear()} GenuineNutrition | Partner Portal<br>
+            This is an automated message. Please do not reply to this email.
         </div>
     </div>
 </body>

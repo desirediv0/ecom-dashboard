@@ -37,9 +37,30 @@ class ApiService {
 
     // Auth APIs
     async login(credentials) {
-        return this.request('/api/partner/login', {
+        return this.request('/api/partner/auth/login', {
             method: 'POST',
             body: JSON.stringify(credentials)
+        });
+    }
+
+    async changePassword(passwordData) {
+        return this.request('/api/partner/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify(passwordData)
+        });
+    }
+
+    async forgotPassword(email) {
+        return this.request('/api/partner/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+    }
+
+    async resetPassword(resetData) {
+        return this.request('/api/partner/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify(resetData)
         });
     }
 
