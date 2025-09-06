@@ -313,3 +313,192 @@ export const getPartnerEarnings = asyncHandler(async (req, res) => {
         summary
     }, 'Earnings fetched successfully'));
 });
+
+// Get partner earnings with enhanced filtering and monthly summary (protected)
+export const getPartnerEarningsEnhanced = asyncHandler(async (req, res) => {
+    const partnerId = req.partner.id;
+    const { year, month, startDate, endDate } = req.query;
+
+    // Build date filter
+    let dateFilter = {};
+    if (year || month || startDate || endDate) {
+        dateFilter.createdAt = {};
+
+        if (year) {
+            const startYear = new Date(`${year}-01-01`);
+            const endYear = new Date(`${parseInt(year) + 1}-01-01`);
+            dateFilter.createdAt.gte = startYear;
+            dateFilter.createdAt.lt = endYear;
+        }
+
+        if (month && year) {
+            const startMonth = new Date(`${year}-${month.padStart(2, '0')}-01`);
+            const nextMonth = new Date(startMonth);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+            dateFilter.createdAt.gte = startMonth;
+            dateFilter.createdAt.lt = nextMonth;
+        }
+
+        if (startDate) {
+            dateFilter.createdAt.gte = new Date(startDate);
+        }
+
+        if (endDate) {
+            const endDateTime = new Date(endDate);
+            endDateTime.setHours(23, 59, 59, 999);
+            dateFilter.createdAt.lte = endDateTime;
+        }
+    }
+
+    // Get detailed earnings
+    const earnings = await prisma.partnerEarning.findMany({
+        where: {
+            partnerId,
+            ...dateFilter
+        },
+        include: {
+            order: {
+                select: {
+                    orderNumber: true,
+                    total: true,
+                    createdAt: true,
+                    user: {
+                        select: {
+                            name: true,
+                            email: true
+                        }
+                    }
+                }
+            },
+            coupon: {
+                select: {
+                    code: true
+                }
+            }
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    // Calculate total earnings for summary
+    const allEarnings = await prisma.partnerEarning.findMany({
+        where: { partnerId },
+        include: {
+            order: { select: { createdAt: true } }
+        }
+    });
+
+    // Fetch actual monthly earnings from database
+    const dbMonthlyEarnings = await prisma.partnerMonthlyEarning.findMany({
+        where: { partnerId },
+        orderBy: [
+            { year: 'desc' },
+            { month: 'desc' }
+        ]
+    });
+
+    // Group all earnings by month/year for monthly summary (fallback for months not in DB)
+    const monthlyEarningsMap = {};
+    allEarnings.forEach(earning => {
+        const date = new Date(earning.createdAt);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const key = `${year}-${month}`;
+
+        if (!monthlyEarningsMap[key]) {
+            monthlyEarningsMap[key] = {
+                year,
+                month,
+                totalAmount: 0,
+                totalOrders: 0,
+                paymentStatus: 'PENDING',
+                paidAt: null
+            };
+        }
+
+        monthlyEarningsMap[key].totalAmount += parseFloat(earning.amount);
+        monthlyEarningsMap[key].totalOrders += 1;
+    });
+
+    // Use database monthly earnings if available, otherwise use calculated ones
+    let monthlyEarnings;
+    if (dbMonthlyEarnings.length > 0) {
+        monthlyEarnings = dbMonthlyEarnings.map(monthly => ({
+            year: monthly.year,
+            month: monthly.month,
+            totalAmount: parseFloat(monthly.totalAmount),
+            totalOrders: monthly.totalOrders,
+            paymentStatus: monthly.paymentStatus,
+            paidAt: monthly.paidAt
+        }));
+    } else {
+        // Convert to array and sort by year/month desc
+        monthlyEarnings = Object.values(monthlyEarningsMap).sort((a, b) => {
+            if (a.year !== b.year) return b.year - a.year;
+            return b.month - a.month;
+        });
+    }
+
+    // Calculate summary with proper paid/pending amounts
+    const totalEarnings = allEarnings.reduce((sum, earning) => sum + parseFloat(earning.amount), 0);
+    const filteredTotal = earnings.reduce((sum, earning) => sum + parseFloat(earning.amount), 0);
+
+    // Calculate paid amount from monthly earnings
+    const paidAmount = monthlyEarnings
+        .filter(monthly => monthly.paymentStatus === 'PAID')
+        .reduce((sum, monthly) => sum + monthly.totalAmount, 0);
+
+    const pendingAmount = totalEarnings - paidAmount;
+
+    const summary = {
+        totalEarnings: parseFloat(totalEarnings.toFixed(2)),
+        pendingAmount: parseFloat(pendingAmount.toFixed(2)),
+        paidAmount: parseFloat(paidAmount.toFixed(2)),
+        totalOrders: allEarnings.length,
+        filteredTotal: parseFloat(filteredTotal.toFixed(2)),
+        filteredOrders: earnings.length,
+        averageCommission: earnings.length > 0
+            ? parseFloat((earnings.reduce((sum, e) => sum + e.percentage, 0) / earnings.length).toFixed(2))
+            : 0
+    };
+
+    res.status(200).json(new ApiResponsive(200, {
+        earnings: earnings.map(earning => {
+            const date = new Date(earning.createdAt);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+
+            // Find corresponding monthly earning to get payment status
+            const monthlyEarning = monthlyEarnings.find(
+                m => m.year === year && m.month === month
+            );
+
+            return {
+                id: earning.id,
+                orderId: earning.order?.orderNumber || earning.orderId,
+                productName: earning.productName || 'N/A',
+                commission: parseFloat(earning.amount),
+                percentage: earning.percentage,
+                status: monthlyEarning?.paymentStatus || 'PENDING',
+                createdAt: earning.createdAt,
+                couponCode: earning.coupon?.code || null,
+                orderTotal: earning.order?.total || 0,
+                customerName: earning.order?.user?.name || 'N/A'
+            };
+        }),
+        monthlyEarnings: monthlyEarnings.map(monthly => ({
+            month: `${monthly.year}-${monthly.month.toString().padStart(2, '0')}`,
+            totalEarnings: monthly.totalAmount,
+            commissionCount: monthly.totalOrders,
+            paymentStatus: monthly.paymentStatus,
+            paidAt: monthly.paidAt
+        })),
+        stats: {
+            totalEarnings: summary.totalEarnings,
+            thisMonthEarnings: summary.filteredTotal,
+            pendingPayments: summary.pendingAmount,
+            totalCommissions: summary.totalOrders
+        },
+        filters: { year, month, startDate, endDate }
+    }, 'Enhanced earnings data fetched successfully'));
+});

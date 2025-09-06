@@ -7,7 +7,10 @@ import {
     removePartnerCoupon,
     createManualCommission,
     createCommissionsForExistingOrders,
-    deactivatePartner
+    deactivatePartner,
+    getPartnerById,
+    markPaymentAsPaid,
+    getPartnerEarnings
 } from '../controllers/admin.partner.controller.js';
 import { verifyAdminJWT } from '../middlewares/admin.middleware.js';
 
@@ -22,8 +25,14 @@ router.post('/requests/:requestId/approve', verifyAdminJWT, approvePartnerReques
 // Reject a partner request
 router.post('/requests/:requestId/reject', verifyAdminJWT, rejectPartnerRequest);
 
+// Get partner by ID with detailed earnings (admin only)
+router.get('/:partnerId', verifyAdminJWT, getPartnerById);
 // Get full partner details (admin only)
 router.get('/:partnerId/details', verifyAdminJWT, getPartnerDetails);
+// Get partner earnings with filters (admin only)
+router.get('/:partnerId/earnings', verifyAdminJWT, getPartnerEarnings);
+// Mark payment as paid (admin only)
+router.patch('/earnings/:earningId/mark-paid', verifyAdminJWT, markPaymentAsPaid);
 // Remove a coupon from a partner (admin only)
 router.delete('/:partnerId/coupons/:couponId', verifyAdminJWT, removePartnerCoupon);
 // Deactivate a partner (admin only)

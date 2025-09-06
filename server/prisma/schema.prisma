@@ -50,21 +50,22 @@ model PartnerRequest {
 
 // Approved partner (can login)
 model Partner {
-  id                String           @id @default(uuid())
+  id                String                  @id @default(uuid())
   name              String
-  email             String           @unique
+  email             String                  @unique
   password          String
   number            String
   city              String
   state             String
-  isActive          Boolean          @default(true)
-  isPasswordChanged Boolean          @default(false) // Track if demo password has been changed
-  commissionRate    Float            @default(10.0) // Commission percentage (e.g., 10.0 for 10%)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  isActive          Boolean                 @default(true)
+  isPasswordChanged Boolean                 @default(false) // Track if demo password has been changed
+  commissionRate    Float                   @default(10.0) // Commission percentage (e.g., 10.0 for 10%)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
   earnings          PartnerEarning[]
+  monthlyEarnings   PartnerMonthlyEarning[]
   request           PartnerRequest?
-  couponPartners    CouponPartner[]  @relation("CouponPartnerToPartner")
+  couponPartners    CouponPartner[]         @relation("CouponPartnerToPartner")
 }
 
 // Track partner earnings per order
@@ -81,6 +82,25 @@ model PartnerEarning {
   coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
 
   @@unique([partnerId, orderId, couponId])
+}
+
+// Track monthly earnings summary for partners
+model PartnerMonthlyEarning {
+  id            String               @id @default(uuid())
+  partnerId     String
+  year          Int
+  month         Int // 1-12
+  totalAmount   Decimal              @default(0) @db.Decimal(12, 2)
+  totalOrders   Int                  @default(0)
+  paymentStatus PartnerPaymentStatus @default(PENDING)
+  paidAt        DateTime?
+  paidBy        String? // Admin ID who marked as paid
+  notes         String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  partner       Partner              @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([partnerId, year, month])
 }
 
 model Account {
@@ -670,4 +690,10 @@ enum ContactSubmissionStatus {
   IN_PROGRESS
   RESOLVED
   SPAM
+}
+
+enum PartnerPaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
 }

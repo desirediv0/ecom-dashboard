@@ -5,7 +5,8 @@ import {
     getPartnerProfile,
     getPartnerDashboard,
     getPartnerCoupons,
-    getPartnerEarnings
+    getPartnerEarnings,
+    getPartnerEarningsEnhanced
 } from '../controllers/partner.controller.js';
 import { verifyPartnerJWT } from '../middlewares/partner.auth.middleware.js';
 
@@ -21,6 +22,7 @@ router.use(verifyPartnerJWT); // Apply middleware to all routes below
 router.get('/profile', getPartnerProfile);
 router.get('/dashboard', getPartnerDashboard);
 router.get('/coupons', getPartnerCoupons);
-router.get('/earnings', getPartnerEarnings);
+router.get('/earnings', getPartnerEarningsEnhanced); // Updated to use enhanced version
+router.get('/earnings/legacy', getPartnerEarnings); // Keep old version as backup
 
 export default router;

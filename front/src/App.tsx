@@ -2,6 +2,7 @@
 
 
 import PartnerPage from "./pages/partner";
+import PartnerDetailsPage from "./pages/PartnerDetailsPage";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
@@ -466,6 +467,15 @@ const App = () => {
             element={
               <ProtectedRoute superAdminOnly={true}>
                 <PartnerPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="partners/:id"
+            element={
+              <ProtectedRoute superAdminOnly={true}>
+                <PartnerDetailsPage />
               </ProtectedRoute>
             }
           />

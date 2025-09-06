@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { orders } from "@/api/adminService";
 import { Button } from "@/components/ui/button";
@@ -14,18 +14,108 @@ import {
   Clock,
   User,
   Truck,
+  CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, debugData } from "@/lib/utils";
 
 export default function OrderDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+
+  interface OrderDetails {
+    id: string;
+    orderNumber: string;
+    status: string;
+    totalAmount: number;
+    subTotal: string | number;
+    shippingAmount: number;
+    taxAmount: number;
+    discount?: string | number;
+    createdAt: string;
+    updatedAt: string;
+    cancelledAt?: string;
+    cancelReason?: string;
+    cancelledBy?: string;
+    userId?: string;
+    couponCode?: string;
+    shippingAddress: {
+      name?: string;
+      street: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+      phone?: string;
+    };
+    user: {
+      name: string;
+      email: string;
+      phone?: string;
+    };
+    items: OrderItem[];
+    updates?: OrderUpdate[];
+    razorpayPayment?: {
+      paymentMethod: string;
+      status: string;
+      razorpayPaymentId?: string;
+    };
+    coupon?: {
+      discountType: string;
+      discountValue: number;
+      description?: string;
+    };
+    tracking?: {
+      carrier?: string;
+      trackingNumber?: string;
+      status?: string;
+      estimatedDelivery?: string;
+      updates?: OrderUpdate[];
+    };
+  }
+
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  interface OrderItem {
+    id: string;
+    productId: string;
+    quantity: number;
+    price: number;
+    subtotal: number;
+    imageUrl?: string;
+    product?: {
+      title: string;
+      name: string;
+      images: string[];
+      imageUrl?: string;
+    };
+    variant?: {
+      sku: string;
+      flavor?: {
+        name: string;
+      };
+      weight?: {
+        value: number;
+        unit: string;
+      };
+      images?: Array<{
+        url: string;
+      }>;
+    };
+  }
+
+  interface OrderUpdate {
+    id: string;
+    status: string;
+    timestamp: string;
+    note?: string;
+    location?: string;
+    description?: string;
+  }
+
   // Define fetchOrderDetails outside of useEffect so it can be reused
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -42,28 +132,33 @@ export default function OrderDetailsPage() {
       } else {
         setError(response?.data?.message || "Failed to fetch order details");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching order details:", error);
-      // More detailed error information
-      if (error.response) {
-        debugData("Error Response", error.response, true);
+
+      // Handle axios error properly
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { status: number; data?: { message?: string } } };
+        debugData("Error Response", axiosError.response, true);
         setError(
-          `API Error (${error.response.status}): ${error.response.data?.message || "Unknown error"}`
+          `API Error (${axiosError.response.status}): ${axiosError.response.data?.message || "Unknown error"}`
         );
-      } else if (error.request) {
-        debugData("Error Request", error.request, true);
+      } else if (error && typeof error === 'object' && 'request' in error) {
+        const requestError = error as { request: unknown };
+        debugData("Error Request", requestError.request, true);
         setError("Network error: No response received from server");
-      } else {
+      } else if (error instanceof Error) {
         setError(`Error: ${error.message}`);
+      } else {
+        setError("An unknown error occurred");
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchOrderDetails();
-  }, [id]);
+  }, [id, fetchOrderDetails]);
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -76,6 +171,87 @@ export default function OrderDetailsPage() {
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
+  };
+
+
+
+  // Status timeline component
+  const StatusTimeline = ({ currentStatus }: { currentStatus: string }) => {
+    const steps = [
+      { key: "PENDING", label: "Order Placed", icon: ShoppingCart },
+      { key: "PROCESSING", label: "Processing", icon: Package },
+      { key: "SHIPPED", label: "Shipped", icon: Truck },
+      { key: "DELIVERED", label: "Delivered", icon: CheckCircle },
+    ];
+
+    // Handle cancelled or refunded orders
+    if (currentStatus === "CANCELLED" || currentStatus === "REFUNDED") {
+      return (
+        <div className="flex items-center justify-center py-4 space-x-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="font-medium text-red-600">Order {currentStatus.toLowerCase()}</p>
+              <p className="text-sm text-gray-500">
+                {currentStatus === "CANCELLED" ? "This order has been cancelled" : "This order has been refunded"}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const currentStepIndex = steps.findIndex(step => step.key === currentStatus);
+
+    return (
+      <div className="w-full py-4">
+        <div className="flex items-center justify-between">
+          {steps.map((step, index) => {
+            const isCompleted = index <= currentStepIndex;
+            const isCurrent = index === currentStepIndex;
+            const IconComponent = step.icon;
+
+            return (
+              <div key={step.key} className="flex flex-col items-center flex-1">
+                <div className="flex items-center w-full">
+                  {index > 0 && (
+                    <div className={`flex-1 h-1 ${isCompleted ? 'bg-green-500' : 'bg-gray-200'
+                      }`} />
+                  )}
+
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-2 ${isCompleted
+                    ? 'bg-green-500 text-white'
+                    : isCurrent
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-400'
+                    }`}>
+                    <IconComponent className="w-5 h-5" />
+                  </div>
+
+                  {index < steps.length - 1 && (
+                    <div className={`flex-1 h-1 ${index < currentStepIndex ? 'bg-green-500' : 'bg-gray-200'
+                      }`} />
+                  )}
+                </div>
+
+                <div className="mt-2 text-center">
+                  <p className={`text-xs font-medium ${isCompleted
+                    ? 'text-green-600'
+                    : isCurrent
+                      ? 'text-blue-600'
+                      : 'text-gray-400'
+                    }`}>
+                    {step.label}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   // Get status badge class
@@ -111,18 +287,16 @@ export default function OrderDetailsPage() {
         toast.success(`Order status updated to ${newStatus}`);
 
         // Update the order status in the UI
-        setOrderDetails((prev: any) => ({
-          ...prev,
+        setOrderDetails((prev: OrderDetails | null) => ({
+          ...prev!,
           status: newStatus,
         }));
       } else {
         toast.error(response.data?.message || "Failed to update order status");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating order status:", error);
-      toast.error(
-        error.message || "An error occurred while updating the order status"
-      );
+      toast.error("An error occurred while updating the order status");
     }
   };
 
@@ -239,6 +413,52 @@ export default function OrderDetailsPage() {
   }
 
   // Fix access to order items (may need to adjust based on actual API response structure)
+  // Early return if orderDetails is null
+  if (!orderDetails) {
+    return (
+      <div className="flex h-full w-full items-center justify-center py-10">
+        <div className="flex flex-col items-center">
+          {isLoading ? (
+            <>
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="mt-4 text-lg text-muted-foreground">
+                Loading order details...
+              </p>
+            </>
+          ) : error ? (
+            <>
+              <AlertTriangle className="h-16 w-16 text-destructive" />
+              <h2 className="mt-4 text-xl font-semibold">Something went wrong</h2>
+              <p className="text-center text-muted-foreground">{error}</p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </Button>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="h-16 w-16 text-muted-foreground" />
+              <h2 className="mt-4 text-xl font-semibold">Order not found</h2>
+              <p className="text-center text-muted-foreground">
+                The order you're looking for doesn't exist or has been removed.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                asChild
+              >
+                <Link to="/orders">Back to Orders</Link>
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const orderItems = orderDetails.items || [];
 
   return (
@@ -288,14 +508,14 @@ export default function OrderDetailsPage() {
                 {/* Shipped button - show for PROCESSING, PAID */}
                 {(orderDetails.status === "PROCESSING" ||
                   orderDetails.status === "PAID") && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleStatusUpdate("SHIPPED")}
-                  >
-                    Mark Shipped
-                  </Button>
-                )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleStatusUpdate("SHIPPED")}
+                    >
+                      Mark Shipped
+                    </Button>
+                  )}
 
                 {/* Delivered button - show for SHIPPED */}
                 {orderDetails.status === "SHIPPED" && (
@@ -311,14 +531,14 @@ export default function OrderDetailsPage() {
                 {/* Paid button - show for PENDING, PROCESSING */}
                 {(orderDetails.status === "PENDING" ||
                   orderDetails.status === "PROCESSING") && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleStatusUpdate("PAID")}
-                  >
-                    Mark Paid
-                  </Button>
-                )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleStatusUpdate("PAID")}
+                    >
+                      Mark Paid
+                    </Button>
+                  )}
 
                 {/* Cancel button - show for all except CANCELLED */}
                 <Button
@@ -334,6 +554,21 @@ export default function OrderDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Order Status Timeline */}
+        <div className="lg:col-span-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Truck className="mr-2 h-5 w-5" />
+                Order Status & Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <StatusTimeline currentStatus={orderDetails.status} />
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Order Items */}
         <div className="lg:col-span-2">
           <Card>
@@ -356,7 +591,7 @@ export default function OrderDetailsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {orderItems.map((item: any) => (
+                    {orderItems.map((item: OrderItem) => (
                       <tr key={item.id} className="border-b">
                         <td className="py-3">
                           <div className="flex items-center gap-3">
@@ -364,11 +599,10 @@ export default function OrderDetailsPage() {
                               <img
                                 src={getImageUrl(
                                   item.imageUrl ||
-                                    item.product?.imageUrl ||
-                                    item.product?.images?.[0]?.url ||
-                                    item.product?.images?.[0] ||
-                                    item.variant?.images?.[0]?.url ||
-                                    item.variant?.images?.[0]
+                                  item.product?.imageUrl ||
+                                  (Array.isArray(item.product?.images) ? item.product.images[0] : null) ||
+                                  (item.variant?.images?.[0]?.url) ||
+                                  null
                                 )}
                                 alt={item.product?.name || "Product"}
                                 className="h-full w-full object-contain"
@@ -468,7 +702,7 @@ export default function OrderDetailsPage() {
                 <div className="space-y-2">
                   <p>
                     <span className="font-medium">Cancelled At:</span>{" "}
-                    {formatDate(orderDetails.cancelledAt)}
+                    {orderDetails.cancelledAt && formatDate(orderDetails.cancelledAt)}
                   </p>
                   <p>
                     <span className="font-medium">Reason:</span>{" "}
@@ -502,12 +736,11 @@ export default function OrderDetailsPage() {
                 <p>
                   <span className="font-medium">Status:</span>{" "}
                   <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      orderDetails.razorpayPayment?.status === "CAPTURED" ||
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${orderDetails.razorpayPayment?.status === "CAPTURED" ||
                       orderDetails.razorpayPayment?.status === "PAID"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                      }`}
                   >
                     {orderDetails.razorpayPayment?.status || "N/A"}
                   </span>
@@ -579,7 +812,7 @@ export default function OrderDetailsPage() {
                   <span>Shipping:</span>
                   <span>{formatCurrency(0)}</span>
                 </div>
-                {parseFloat(orderDetails.discount || 0) > 0 && (
+                {(typeof orderDetails.discount === 'string' ? parseFloat(orderDetails.discount) : (orderDetails.discount || 0)) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount:</span>
                     <span>-{formatCurrency(orderDetails.discount)}</span>
@@ -617,8 +850,8 @@ export default function OrderDetailsPage() {
                   <span>Total:</span>
                   <span>
                     {formatCurrency(
-                      parseFloat(orderDetails.subTotal) -
-                        parseFloat(orderDetails.discount || 0)
+                      (typeof orderDetails.subTotal === 'string' ? parseFloat(orderDetails.subTotal) : orderDetails.subTotal) -
+                      (typeof orderDetails.discount === 'string' ? parseFloat(orderDetails.discount) : (orderDetails.discount || 0))
                     )}
                   </span>
                 </div>
@@ -628,7 +861,7 @@ export default function OrderDetailsPage() {
 
           {/* Tracking Info */}
           {orderDetails.status === "SHIPPED" ||
-          orderDetails.status === "DELIVERED" ? (
+            orderDetails.status === "DELIVERED" ? (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -674,7 +907,7 @@ export default function OrderDetailsPage() {
                           <h4 className="mb-2 font-medium">Tracking Updates</h4>
                           <div className="space-y-3">
                             {orderDetails.tracking.updates.map(
-                              (update: any, index: number) => (
+                              (update: OrderUpdate, index: number) => (
                                 <div
                                   key={index}
                                   className="rounded-md border border-muted bg-muted/40 p-3"

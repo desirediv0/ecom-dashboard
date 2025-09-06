@@ -5,9 +5,17 @@ import { PrismaClient } from "@prisma/client";
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Test endpoint to verify routing
+router.get("/test", (req, res) => {
+    console.log('🟢 Test endpoint called');
+    res.json({ message: "Admin route working", timestamp: new Date() });
+});
+
 // Get all approved partners (for coupon assignment dropdown)
 router.get("/partners/approved", isAdmin, async (req, res) => {
     try {
+
+
         const partners = await prisma.partner.findMany({
             where: { isActive: true },
             select: {
@@ -35,6 +43,7 @@ router.get("/partners/approved", isAdmin, async (req, res) => {
             },
             orderBy: { createdAt: "desc" },
         });
+
 
         // Calculate earnings for each partner
         const partnersWithEarnings = await Promise.all(

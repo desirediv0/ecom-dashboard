@@ -27,6 +27,22 @@ export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenDropdownId(null);
+    };
+
+    if (openDropdownId) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [openDropdownId]);
 
   // Fetch orders
   useEffect(() => {
@@ -164,7 +180,23 @@ export default function OrdersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">Orders</h1>
+        <h1 className="text-2xl font-bold">Orders Management</h1>
+
+        {/* Summary Stats */}
+        <div className="flex gap-4 text-sm">
+          <div className="flex items-center gap-2 bg-muted/50 px-3 py-2 rounded-lg">
+            <ShoppingCart className="h-4 w-4 text-primary" />
+            <span className="font-medium">{ordersList.length}</span>
+            <span className="text-muted-foreground">Total Orders</span>
+          </div>
+          <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-lg">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <span className="font-medium text-green-700">
+              {ordersList.filter(o => o.status === 'DELIVERED').length}
+            </span>
+            <span className="text-green-600">Delivered</span>
+          </div>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -183,9 +215,9 @@ export default function OrdersPage() {
           <Button type="submit">Search</Button>
         </form>
 
-        <div className="flex gap-2">
+        <div className="flex gap-4">
           <select
-            className="rounded-md border bg-background px-3 py-2 text-sm"
+            className="h-10 rounded-md border bg-background px-3 py-2 text-sm min-w-[150px]"
             value={selectedStatus}
             onChange={(e) => {
               setSelectedStatus(e.target.value);
@@ -193,13 +225,40 @@ export default function OrdersPage() {
             }}
           >
             <option value="">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="PROCESSING">Processing</option>
-            <option value="SHIPPED">Shipped</option>
-            <option value="DELIVERED">Delivered</option>
-            <option value="CANCELLED">Cancelled</option>
-            <option value="REFUNDED">Refunded</option>
+            <option value="PENDING">📝 Pending</option>
+            <option value="PROCESSING">⚙️ Processing</option>
+            <option value="SHIPPED">🚚 Shipped</option>
+            <option value="DELIVERED">✅ Delivered</option>
+            <option value="CANCELLED">❌ Cancelled</option>
+            <option value="REFUNDED">💰 Refunded</option>
           </select>
+
+          {/* Quick Status Count Cards */}
+          <div className="hidden md:flex gap-2">
+            {["PENDING", "PROCESSING", "SHIPPED", "DELIVERED"].map((status) => {
+              const count = ordersList.filter(order => order.status === status).length;
+              const icons = {
+                PENDING: "📝",
+                PROCESSING: "⚙️",
+                SHIPPED: "🚚",
+                DELIVERED: "✅"
+              };
+              return (
+                <Button
+                  key={status}
+                  variant={selectedStatus === status ? "default" : "outline"}
+                  size="sm"
+                  className="h-10 min-w-[70px] text-xs"
+                  onClick={() => setSelectedStatus(selectedStatus === status ? "" : status)}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="text-lg">{icons[status as keyof typeof icons]}</span>
+                    <span className="font-bold">{count}</span>
+                  </div>
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -241,9 +300,36 @@ export default function OrdersPage() {
                   <tr>
                     <td
                       colSpan={6}
-                      className="px-4 py-8 text-center text-muted-foreground"
+                      className="px-4 py-12 text-center"
                     >
-                      No orders found
+                      <div className="flex flex-col items-center justify-center">
+                        <ShoppingCart className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                        <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                          No orders found
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedStatus
+                            ? `No ${selectedStatus.toLowerCase()} orders found.`
+                            : searchQuery
+                              ? "Try adjusting your search terms."
+                              : "Orders will appear here when customers place them."
+                          }
+                        </p>
+                        {(selectedStatus || searchQuery) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-4"
+                            onClick={() => {
+                              setSelectedStatus("");
+                              setSearchQuery("");
+                              setCurrentPage(1);
+                            }}
+                          >
+                            Clear filters
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -280,17 +366,28 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadgeClass(
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadgeClass(
                             order.status
                           )}`}
                         >
+                          {order.status === "PENDING" && "📝"}
+                          {order.status === "PROCESSING" && "⚙️"}
+                          {order.status === "SHIPPED" && "🚚"}
+                          {order.status === "DELIVERED" && "✅"}
+                          {order.status === "CANCELLED" && "❌"}
+                          {order.status === "REFUNDED" && "💰"}
                           {order.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm font-medium">
                         {formatCurrency(
-                          parseFloat(order.subTotal) -
-                            parseFloat(order.discount || 0)
+                          order.totalAmount ||
+                          (parseFloat(order.subTotal || 0) - parseFloat(order.discount || 0))
+                        )}
+                        {order.discount && parseFloat(order.discount) > 0 && (
+                          <div className="text-xs text-green-600">
+                            -{formatCurrency(parseFloat(order.discount))} discount
+                          </div>
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -311,75 +408,78 @@ export default function OrdersPage() {
                           {order.status !== "DELIVERED" &&
                             order.status !== "CANCELLED" &&
                             order.status !== "REFUNDED" && (
-                              <div className="relative group">
+                              <div className="relative">
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   title="Update Order Status"
-                                  className="bg-primary/5 hover:bg-primary/10" // Make the button more visible
+                                  className="bg-primary/5 hover:bg-primary/10"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenDropdownId(
+                                      openDropdownId === order.id ? null : order.id
+                                    );
+                                  }}
                                 >
                                   <CheckCircle className="h-4 w-4 text-primary" />
                                   <span className="sr-only">Update Status</span>
                                 </Button>
 
-                                <div className="absolute right-0 top-full z-10 mt-1 hidden w-40 overflow-hidden rounded-md border bg-popover p-1 shadow-md group-hover:block">
-                                  {order.status !== "PROCESSING" && (
-                                    <button
-                                      className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          order.id,
-                                          "PROCESSING"
-                                        )
-                                      }
-                                    >
-                                      Mark as Processing
-                                    </button>
-                                  )}
-
-                                  {order.status !== "SHIPPED" &&
-                                    order.status !== "PENDING" && (
+                                {openDropdownId === order.id && (
+                                  <div
+                                    className="absolute right-0 top-full z-10 mt-1 w-40 overflow-hidden rounded-md border bg-popover p-1 shadow-md"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {order.status !== "PROCESSING" && (
                                       <button
                                         className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                                        onClick={() =>
-                                          handleStatusUpdate(
-                                            order.id,
-                                            "SHIPPED"
-                                          )
-                                        }
+                                        onClick={() => {
+                                          handleStatusUpdate(order.id, "PROCESSING");
+                                          setOpenDropdownId(null);
+                                        }}
                                       >
-                                        Mark as Shipped
+                                        Mark as Processing
                                       </button>
                                     )}
 
-                                  {order.status !== "DELIVERED" && (
-                                    <button
-                                      className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          order.id,
-                                          "DELIVERED"
-                                        )
-                                      }
-                                    >
-                                      Mark as Delivered
-                                    </button>
-                                  )}
+                                    {order.status !== "SHIPPED" &&
+                                      order.status !== "PENDING" && (
+                                        <button
+                                          className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                                          onClick={() => {
+                                            handleStatusUpdate(order.id, "SHIPPED");
+                                            setOpenDropdownId(null);
+                                          }}
+                                        >
+                                          Mark as Shipped
+                                        </button>
+                                      )}
 
-                                  {order.status !== "CANCELLED" && (
-                                    <button
-                                      className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          order.id,
-                                          "CANCELLED"
-                                        )
-                                      }
-                                    >
-                                      Cancel Order
-                                    </button>
-                                  )}
-                                </div>
+                                    {order.status !== "DELIVERED" && (
+                                      <button
+                                        className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                                        onClick={() => {
+                                          handleStatusUpdate(order.id, "DELIVERED");
+                                          setOpenDropdownId(null);
+                                        }}
+                                      >
+                                        Mark as Delivered
+                                      </button>
+                                    )}
+
+                                    {order.status !== "CANCELLED" && (
+                                      <button
+                                        className="w-full rounded-sm px-2 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+                                        onClick={() => {
+                                          handleStatusUpdate(order.id, "CANCELLED");
+                                          setOpenDropdownId(null);
+                                        }}
+                                      >
+                                        Cancel Order
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             )}
                         </div>

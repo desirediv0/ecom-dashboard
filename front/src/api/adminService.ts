@@ -588,6 +588,15 @@ export const partners = {
   getApprovedPartners: () => {
     return api.get("/api/admin/partners/approved");
   },
+  getPartnerById: (partnerId: string) => {
+    return api.get(`/api/admin/partners/${partnerId}`);
+  },
+  markPaymentAsPaid: (earningId: string, data: { notes: string; year: number; month: number }) => {
+    return api.patch(`/api/admin/partners/earnings/${earningId}/mark-paid`, data);
+  },
+  getPartnerEarnings: (partnerId: string, params?: { year?: number; month?: number }) => {
+    return api.get(`/api/admin/partners/${partnerId}/earnings`, { params });
+  },
 };
 
 // Reviews Management

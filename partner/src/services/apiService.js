@@ -74,8 +74,9 @@ class ApiService {
     }
 
     // Earnings APIs
-    async getEarnings(period = 'all') {
-        return this.request(`/api/partner/earnings?period=${period}`);
+    async getEarnings(queryParams = '') {
+        const url = queryParams ? `/api/partner/earnings?${queryParams}` : '/api/partner/earnings';
+        return this.request(url);
     }
 
     async getEarningsStats(period = 'all') {

@@ -56,11 +56,14 @@ export const isAdmin = asyncHandler(async (req, res, next) => {
       req.headers?.authorization?.replace("Bearer ", "") ||
       req.query?.adminToken;
 
+
+
     if (!token) {
       throw new ApiError(401, "Admin authentication required");
     }
 
     const decoded = jwt.verify(token, process.env.ADMIN_JWT_SECRET);
+
 
     const admin = await prisma.admin.findUnique({
       where: { id: decoded.id },

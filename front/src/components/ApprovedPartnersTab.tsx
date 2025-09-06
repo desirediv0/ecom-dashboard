@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
-import { Trash2, UserMinus } from "lucide-react";
+import { Trash2, UserMinus, Eye } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -39,8 +40,7 @@ export default function ApprovedPartnersTab() {
     // Details dialog state
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
     const [selectedPartner, setSelectedPartner] = useState<ApprovedPartner | null>(null);
-    const [detailsLoading, setDetailsLoading] = useState(false);
-    const [detailsError, setDetailsError] = useState("");
+
 
     // Remove coupon state
     const [removingCouponId, setRemovingCouponId] = useState<string | null>(null);
@@ -60,29 +60,7 @@ export default function ApprovedPartnersTab() {
         fetchApprovedPartners();
     }, []);
 
-    const openDetailsDialog = async (partner: ApprovedPartner) => {
-        setSelectedPartner(partner);
-        setDetailsDialogOpen(true);
-        setDetailsLoading(true);
-        setDetailsError("");
 
-        try {
-            // Fetch detailed partner information including message
-            const res = await axios.get(`${API_URL}/api/admin/partners/${partner.id}/details`);
-            const partnerDetails = res.data.data;
-
-            // Update selected partner with full details including message
-            setSelectedPartner(prev => prev ? {
-                ...prev,
-                message: partnerDetails.partner.message || prev.message,
-                coupons: partnerDetails.coupons || prev.coupons
-            } : null);
-        } catch {
-            setDetailsError("Failed to fetch partner details.");
-        } finally {
-            setDetailsLoading(false);
-        }
-    };
 
     const handleRemoveCoupon = async (partnerId: string, couponId: string) => {
         if (!window.confirm("Remove this coupon from partner?")) return;
@@ -178,9 +156,12 @@ export default function ApprovedPartnersTab() {
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => openDetailsDialog(partner)}
+                                        asChild
                                     >
-                                        Details
+                                        <Link to={`/partners/${partner.id}`}>
+                                            <Eye className="h-4 w-4 mr-1" />
+                                            View Details
+                                        </Link>
                                     </Button>
                                     <Button
                                         size="sm"
@@ -210,13 +191,7 @@ export default function ApprovedPartnersTab() {
 
                     {selectedPartner && (
                         <div className="space-y-6">
-                            {detailsLoading ? (
-                                <div className="text-center py-4 text-muted-foreground">Loading details...</div>
-                            ) : detailsError ? (
-                                <Alert variant="destructive">
-                                    <AlertDescription>{detailsError}</AlertDescription>
-                                </Alert>
-                            ) : (
+                            {(
                                 <>
                                     {/* Basic Info */}
                                     <div className="grid grid-cols-2 gap-4">

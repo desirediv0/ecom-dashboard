@@ -100,8 +100,8 @@ export { razorpay };
 app.use("/api/users", userRoutes);
 app.use("/api/partner/auth", partnerAuthRoutes);
 app.use("/api/partner", partnerRoutes);
+app.use("/api/admin", adminPartnerListRoutes);  // Move this BEFORE admin/partners
 app.use("/api/admin/partners", adminPartnerRoutes);
-app.use("/api/admin", adminPartnerListRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminProductRoutes);
 app.use("/api/admin", adminOrderRoutes);

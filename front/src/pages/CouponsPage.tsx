@@ -378,13 +378,17 @@ function CouponForm({
   useEffect(() => {
     const fetchPartners = async () => {
       try {
-
         const response = await partners.getApprovedPartners();
-
-
         if (response.data.success) {
-          const fetchedPartners = response.data.data?.partners || [];
-
+          // Handle both array and object with 'partners' key
+          let fetchedPartners = [];
+          if (Array.isArray(response.data.data)) {
+            fetchedPartners = response.data.data;
+          } else if (response.data.data?.partners) {
+            fetchedPartners = response.data.data.partners;
+          } else {
+            fetchedPartners = [];
+          }
           setPartnersList(fetchedPartners);
         } else {
           console.error("Partners fetch error:", response.data.message);
@@ -395,7 +399,6 @@ function CouponForm({
         toast.error("Failed to load partners");
       }
     };
-
     fetchPartners();
   }, []);
 
@@ -434,10 +437,16 @@ function CouponForm({
               isActive: couponData?.isActive ?? true,
             });
 
-            // Set selected partners
-            if (couponData?.couponPartners && couponData.couponPartners.length > 0) {
+            // Set selected partners (handle both array and object with 'partners' key)
+            let couponPartnersArr = [];
+            if (Array.isArray(couponData?.couponPartners)) {
+              couponPartnersArr = couponData.couponPartners;
+            } else if (couponData?.couponPartners?.partners) {
+              couponPartnersArr = couponData.couponPartners.partners;
+            }
+            if (couponPartnersArr.length > 0) {
               setSelectedPartners(
-                couponData.couponPartners.map((cp: any) => ({
+                couponPartnersArr.map((cp: any) => ({
                   partnerId: cp.partner.id,
                   commission: cp.commission?.toString() || "",
                 }))
