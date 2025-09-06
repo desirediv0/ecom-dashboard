@@ -209,8 +209,8 @@ export default function AuthPage() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === tab
-                    ? "bg-primary text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
               >
                 {tab === "login" && "Login"}
@@ -399,7 +399,7 @@ export default function AuthPage() {
                     </li>
                     <li className="flex items-center">
                       <span className={`mr-2 ${/[!@#$%^&*(),.?":{}|<>]/.test(form.password) ? 'text-green-500' : 'text-gray-400'}`}>✓</span>
-                      One special character (!@#$%^&*(),.?":{ }|&lt;&gt;)
+                      One special character (!@#$%^&*(),.?&quot;:{ }|&lt;&gt;)
                     </li>
                   </ul>
                 </div>
@@ -423,8 +423,8 @@ export default function AuthPage() {
                 />
                 {form.confirmPassword && (
                   <p className={`mt-1 text-xs ${form.password === form.confirmPassword
-                      ? 'text-green-600'
-                      : 'text-red-600'
+                    ? 'text-green-600'
+                    : 'text-red-600'
                     }`}>
                     {form.password === form.confirmPassword
                       ? '✓ Passwords match'
