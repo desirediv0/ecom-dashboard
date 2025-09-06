@@ -108,16 +108,43 @@ export default function AuthPage() {
     }
   };
 
+  // Check if password meets all requirements
+  const isPasswordValid = () => {
+    return (
+      form.password.length >= 8 &&
+      /[A-Z]/.test(form.password) &&
+      /[a-z]/.test(form.password) &&
+      /\d/.test(form.password) &&
+      /[!@#$%^&*(),.?":{}|<>]/.test(form.password) &&
+      form.password === form.confirmPassword &&
+      form.name.trim().length >= 3 &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
+    );
+  };
+
   const validateRegister = () => {
     if (form.name.trim().length < 3)
       return toast.error("Name should be at least 3 characters"), false;
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email))
       return toast.error("Enter a valid email"), false;
+
+    // Enhanced password validation to match server requirements
     if (form.password.length < 8)
-      return toast.error("Password should be at least 8 characters"), false;
+      return toast.error("Password must be at least 8 characters long"), false;
+    if (!/[A-Z]/.test(form.password))
+      return toast.error("Password must contain at least one uppercase letter"), false;
+    if (!/[a-z]/.test(form.password))
+      return toast.error("Password must contain at least one lowercase letter"), false;
+    if (!/\d/.test(form.password))
+      return toast.error("Password must contain at least one number"), false;
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(form.password))
+      return toast.error("Password must contain at least one special character"), false;
+
     if (form.password !== form.confirmPassword)
       return toast.error("Passwords do not match"), false;
+
     return true;
   };
 
@@ -181,11 +208,10 @@ export default function AuthPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${
-                  activeTab === tab
+                className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === tab
                     ? "bg-primary text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 {tab === "login" && "Login"}
                 {tab === "register" && "Register"}
@@ -352,9 +378,31 @@ export default function AuthPage() {
                     )}
                   </button>
                 </div>
-                <p className="mt-1 text-sm text-gray-500">
-                  Password must be at least 8 characters
-                </p>
+                <div className="mt-2 space-y-1">
+                  <p className="text-sm text-gray-600 font-medium">Password requirements:</p>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li className="flex items-center">
+                      <span className={`mr-2 ${form.password.length >= 8 ? 'text-green-500' : 'text-gray-400'}`}>✓</span>
+                      At least 8 characters long
+                    </li>
+                    <li className="flex items-center">
+                      <span className={`mr-2 ${/[A-Z]/.test(form.password) ? 'text-green-500' : 'text-gray-400'}`}>✓</span>
+                      One uppercase letter (A-Z)
+                    </li>
+                    <li className="flex items-center">
+                      <span className={`mr-2 ${/[a-z]/.test(form.password) ? 'text-green-500' : 'text-gray-400'}`}>✓</span>
+                      One lowercase letter (a-z)
+                    </li>
+                    <li className="flex items-center">
+                      <span className={`mr-2 ${/\d/.test(form.password) ? 'text-green-500' : 'text-gray-400'}`}>✓</span>
+                      One number (0-9)
+                    </li>
+                    <li className="flex items-center">
+                      <span className={`mr-2 ${/[!@#$%^&*(),.?":{}|<>]/.test(form.password) ? 'text-green-500' : 'text-gray-400'}`}>✓</span>
+                      One special character (!@#$%^&*(),.?":{ }|&lt;&gt;)
+                    </li>
+                  </ul>
+                </div>
               </div>
               <div>
                 <label
@@ -373,11 +421,22 @@ export default function AuthPage() {
                   required
                   placeholder="Confirm your password"
                 />
+                {form.confirmPassword && (
+                  <p className={`mt-1 text-xs ${form.password === form.confirmPassword
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                    }`}>
+                    {form.password === form.confirmPassword
+                      ? '✓ Passwords match'
+                      : '✗ Passwords do not match'
+                    }
+                  </p>
+                )}
               </div>
               <Button
                 type="submit"
                 className="w-full"
-                disabled={registerSubmitting}
+                disabled={registerSubmitting || !isPasswordValid()}
               >
                 {registerSubmitting ? "Creating Account..." : "Create Account"}
               </Button>
