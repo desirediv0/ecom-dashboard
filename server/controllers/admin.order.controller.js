@@ -1247,7 +1247,7 @@ async function handleInventoryReturn(tx, orderId, adminId) {
 // Helper function to initiate Razorpay refund
 async function initiateRefund(paymentId, amount, notes) {
   try {
-    // Check if Razorpay is initialized
+    // Check if Razorpay is initialized 
     if (!razorpay) {
       console.error("Razorpay not initialized");
       return null;

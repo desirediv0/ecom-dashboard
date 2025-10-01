@@ -7,7 +7,6 @@ import partnerRoutes from "./routes/partner.routes.js";
 import partnerAuthRoutes from "./routes/partner.auth.routes.js";
 import adminPartnerRoutes from "./routes/admin.partner.routes.js";
 import adminPartnerListRoutes from "./routes/admin.partner.list.routes.js";
-
 import adminRoutes from "./routes/admin.routes.js";
 import adminProductRoutes from "./routes/admin.product.routes.js";
 import adminOrderRoutes from "./routes/admin.order.routes.js";
@@ -89,7 +88,7 @@ try {
     key_secret: process.env.RAZORPAY_KEY_SECRET,
   });
 
-  console.log("Razorpay Initialized Successfully:");
+  console.log("Razorpay Initialized Successfully");
 } catch (error) {
   console.error("Razorpay Initialization Error:", error);
 }
@@ -100,7 +99,7 @@ export { razorpay };
 app.use("/api/users", userRoutes);
 app.use("/api/partner/auth", partnerAuthRoutes);
 app.use("/api/partner", partnerRoutes);
-app.use("/api/admin", adminPartnerListRoutes);  // Move this BEFORE admin/partners
+app.use("/api/admin", adminPartnerListRoutes);
 app.use("/api/admin/partners", adminPartnerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminProductRoutes);
