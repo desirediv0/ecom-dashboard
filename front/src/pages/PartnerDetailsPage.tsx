@@ -217,7 +217,7 @@ export default function PartnerDetailsPage() {
                 <AlertTriangle className="h-16 w-16 text-red-500" />
                 <h2 className="mt-4 text-xl font-semibold">Partner not found</h2>
                 <p className="text-gray-600">The partner you're looking for doesn't exist.</p>
-                <Button className="mt-4" onClick={() => navigate("/partners")}>
+                <Button className="mt-4" onClick={() => navigate("/partner")}>
                     Back to Partners
                 </Button>
             </div>
@@ -229,7 +229,7 @@ export default function PartnerDetailsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" onClick={() => navigate("/partners")}>
+                    <Button variant="ghost" size="sm" onClick={() => navigate("/partner")}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Partners
                     </Button>
