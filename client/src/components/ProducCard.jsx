@@ -1,11 +1,10 @@
 "use client";
 import { formatCurrency, fetchApi } from "@/lib/utils";
-import { Eye, Heart, Star } from "lucide-react";
+import { Eye, Heart } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -128,7 +127,7 @@ const ProducCard = ({ product }) => {
   return (
     <div
       key={product.id}
-      className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group h-full"
+      className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group max-h-[400px]"
     >
       <Link href={`/products/${product.slug}`}>
         <div className="relative h-48 md:h-64 w-full overflow-hidden">
@@ -165,7 +164,7 @@ const ProducCard = ({ product }) => {
             })()}
             alt={product.name}
             fill
-            className="object-contain px-4 transition-transform md:group-hover:scale-105"
+            className="object-contain px-4 transition-transform md:group-hover:scale-100 scale-95"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           {product.hasSale && (
@@ -226,25 +225,7 @@ const ProducCard = ({ product }) => {
         </div>
       </Link>
 
-      <div className="p-2 text-center ">
-        <div className="hidden md:flex items-center justify-center mb-2">
-          <div className="flex text-yellow-400">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className="h-3 w-3 md:h-4 md:w-4"
-                fill={
-                  i < Math.round(product.avgRating || 0)
-                    ? "currentColor"
-                    : "none"
-                }
-              />
-            ))}
-          </div>
-          <span className="text-xs text-gray-500 ml-1 md:ml-2">
-            ({product.reviewCount || 0})
-          </span>
-        </div>
+      <div className="p-2 text-center  flex h-32 flex-col justify-between">
 
         <Link href={`/products/${product.slug}`} className="hover:text-primary">
           <h3 className="font-medium uppercase mb-[2px] line-clamp-2 text-xs md:text-sm">
