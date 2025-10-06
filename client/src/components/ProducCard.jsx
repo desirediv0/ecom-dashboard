@@ -264,7 +264,7 @@ const ProducCard = ({ product }) => {
           <div className="flex items-center justify-center mb-2 flex-row">
             {product.hasSale ? (
               <div className="flex items-start justify-start flex-col">
-                <span className="font-bold text-base md:text-lg text-primary">
+                <span className="font-bold text-sm md:text-lg text-primary">
                   {formatCurrency(product.basePrice)}
                 </span>
                 <span className="text-gray-500 line-through text-xs md:text-sm ml-1 md:ml-2">
@@ -272,7 +272,7 @@ const ProducCard = ({ product }) => {
                 </span>
               </div>
             ) : (
-              <span className="font-bold text-base md:text-lg text-primary">
+              <span className="font-bold text-sm md:text-lg text-primary">
                 {formatCurrency(product.basePrice)}
               </span>
             )}
@@ -281,7 +281,7 @@ const ProducCard = ({ product }) => {
             onClick={() => handleAddToCart(product)}
             variant="outline"
             size="sm"
-            className="w-min px-5 ml-auto border-orange-500 text-orange-500 hover:bg-orange-500/10 hover:border-orange-500/70 hover:text-orange-500"
+            className="w-min px-2 ml-auto border-orange-500 text-orange-500 hover:bg-orange-500/10 hover:border-orange-500/70 hover:text-orange-500"
             disabled={isAddingToCart[product.id]}
           >
             {isAddingToCart[product.id] ? (
