@@ -194,19 +194,13 @@ export default function ContactPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start">
-                    <Phone className="h-5 w-5 text-primary mt-1 mr-3" />
-                    <div>
-                      <p className="font-medium">Phone</p>
-                      <p className="text-gray-600">{"+91 8053210008"}</p>
-                    </div>
-                  </div>
+
                   <div className="flex items-start">
                     <Mail className="h-5 w-5 text-primary mt-1 mr-3" />
                     <div>
                       <p className="font-medium">Email</p>
                       <p className="text-gray-600">
-                        {"support@GenuineNutrition.com"}
+                        {"connect.genuinenutrition@gmail.com"}
                       </p>
                     </div>
                   </div>

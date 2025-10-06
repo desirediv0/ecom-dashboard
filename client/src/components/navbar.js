@@ -12,8 +12,8 @@ import {
   Search,
   Heart,
   ChevronDown,
-  Phone,
   LogIn,
+  Mail,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -83,7 +83,8 @@ export function Navbar() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
+      const encoded = encodeURIComponent(searchQuery).replace(/%20/g, "+");
+      router.push(`/products?search=${encoded}`);
       setIsSearchExpanded(false);
       setIsMenuOpen(false);
       setSearchQuery("");
@@ -293,8 +294,8 @@ export function Navbar() {
 
             <div className="mt-8 pt-6 border-t">
               <div className="flex items-center gap-3 mb-4">
-                <Phone className="h-5 w-5 text-primary" />
-                <span className="font-medium">+91 8053210008</span>
+                <Mail className="h-5 w-5 text-primary" />
+                <span className="font-medium">connect.genuinenutrition@gmail.com</span>
               </div>
             </div>
           </div>
@@ -313,8 +314,8 @@ export function Navbar() {
             <div className="flex justify-between items-center">
               {/* Left - Phone number */}
               <div className="hidden md:flex items-center text-xs">
-                <Phone className="h-3.5 w-3.5 mr-1.5" />
-                <span>+91 8053210008</span>
+                <Mail className="h-3.5 w-3.5 mr-1.5" />
+                <span>connect.genuinenutrition@gmail.com</span>
               </div>
 
               {/* Center - Free shipping text */}

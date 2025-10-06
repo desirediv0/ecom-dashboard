@@ -124,7 +124,7 @@ export default function WishlistPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {wishlistItems.map((product) => (
               <div
                 key={product.id}
@@ -136,7 +136,7 @@ export default function WishlistPage() {
                       src={getImageUrl(product.image || product.images?.[0])}
                       alt={product.name}
                       fill
-                      className="object-contain px-4 transition-transform group-hover:scale-105"
+                      className="object-contain px-4 transition-transform group-hover:scale-100 scale-95"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
 

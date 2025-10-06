@@ -21,8 +21,8 @@ export default function ShippingPolicy() {
             orders will be to the address provided by the buyer. Delivery of our
             services will be confirmed on your mail ID as specified during
             registration. For any issues in utilizing our services you may
-            contact our helpdesk on 8053210008 or
-            support.genuinenutrition@gmail.com
+            contact our helpdesk on
+            connect.genuinenutrition@gmail.com
           </p>
           <p className="text-sm">Last updated on Jul 14 2025</p>
         </CardContent>

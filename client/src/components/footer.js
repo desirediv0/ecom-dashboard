@@ -3,12 +3,12 @@
 import Link from "next/link";
 import {
   Instagram,
-  Phone,
   MapPin,
   Truck,
   Shield,
   CreditCard,
   CheckCircle,
+  Mail,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -61,7 +61,7 @@ export function Footer() {
       {/* Main Footer */}
       <div className="bg-[#0f2b47] py-12 md:py-32">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Column 1 - About */}
             <div className="md:col-span-1">
               <div className="mb-6">
@@ -71,7 +71,7 @@ export function Footer() {
                     alt="Logo"
                     width={150}
                     height={150}
-                    className=" lg:p-0"
+                    className="w-36 md:w-[150px] h-auto lg:p-0"
                   />
                 </Link>
               </div>
@@ -160,11 +160,11 @@ export function Footer() {
                 </div>
 
                 <div className="flex items-center">
-                  <Phone
+                  <Mail
                     size={18}
                     className="text-[#F47C20] mr-2 flex-shrink-0"
                   />
-                  <span>+91 8053210008</span>
+                  <span>connect.genuinenutrition@gmail.com</span>
                 </div>
 
               </div>
@@ -174,7 +174,7 @@ export function Footer() {
       </div>
 
       {/* Copyright */}
-      <div className="bg-[#15395F] py-4">
+      <div className="bg-[#15395F] py-4 pb-20 md:pb-4">
         <div className="container mx-auto px-4">
           <p className="text-white/70 text-center text-sm">
             © {new Date().getFullYear()} GenuineNutrition. All rights reserved.

@@ -42,7 +42,9 @@ function ProductCardSkeleton() {
 function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const searchQuery = searchParams.get("search") || "";
+  // Helper to decode "+" back to space from querystring
+  const decodePlus = (str) => (str ? str.replace(/\+/g, " ") : "");
+  const searchQuery = decodePlus(searchParams.get("search") || "");
   const categorySlug = searchParams.get("category") || "";
   const flavorId = searchParams.get("flavor") || "";
   const weightId = searchParams.get("weight") || "";
@@ -98,6 +100,13 @@ function ProductsContent() {
     order: orderParam,
   });
 
+  // Local controlled input state for the Search field
+  const [searchInput, setSearchInput] = useState(searchQuery);
+  useEffect(() => {
+    // Keep input in sync if filters.search changes (e.g., via URL or programmatically)
+    setSearchInput(filters.search || "");
+  }, [filters.search]);
+
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 15,
@@ -107,6 +116,46 @@ function ProductsContent() {
 
   // Add a state for tracking debug mode
   const [debugMode, setDebugMode] = useState(false);
+
+  // Keep filters in sync with URL when search params change (e.g., navbar search while on products page)
+  useEffect(() => {
+    const newFiltersFromURL = {
+      search: searchQuery,
+      category: categorySlug,
+      flavor: flavorId,
+      weight: weightId,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+      sort: sortParam,
+      order: orderParam,
+    };
+
+    const isSame =
+      filters.search === newFiltersFromURL.search &&
+      filters.category === newFiltersFromURL.category &&
+      filters.flavor === newFiltersFromURL.flavor &&
+      filters.weight === newFiltersFromURL.weight &&
+      String(filters.minPrice || "") === String(newFiltersFromURL.minPrice || "") &&
+      String(filters.maxPrice || "") === String(newFiltersFromURL.maxPrice || "") &&
+      filters.sort === newFiltersFromURL.sort &&
+      filters.order === newFiltersFromURL.order;
+
+    if (!isSame) {
+      setFilters(newFiltersFromURL);
+      setSelectedFlavors(flavorId ? [flavorId] : []);
+      setSelectedWeights(weightId ? [weightId] : []);
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    }
+  }, [
+    searchQuery,
+    categorySlug,
+    flavorId,
+    weightId,
+    minPrice,
+    maxPrice,
+    sortParam,
+    orderParam,
+  ]);
 
   // Add a function to apply all filters at once
   const applyAllFilters = () => {
@@ -120,26 +169,32 @@ function ProductsContent() {
     setActiveFilterSection(activeFilterSection === section ? null : section);
   };
 
-  // Function to update URL with current filters
+  // Function to update URL with current filters, encoding spaces as "+" instead of %20
   const updateURL = (newFilters) => {
-    const params = new URLSearchParams();
+    const pairs = [];
+    const add = (k, v) => {
+      if (v !== undefined && v !== null && v !== "") {
+        const key = encodeURIComponent(k);
+        const val = encodeURIComponent(String(v)).replace(/%20/g, "+");
+        pairs.push(`${key}=${val}`);
+      }
+    };
 
     // Only add parameters that have values
-    if (newFilters.search) params.set("search", newFilters.search);
-    if (newFilters.category) params.set("category", newFilters.category);
-    if (newFilters.flavor) params.set("flavor", newFilters.flavor);
-    if (newFilters.weight) params.set("weight", newFilters.weight);
-    if (newFilters.minPrice) params.set("minPrice", newFilters.minPrice);
-    if (newFilters.maxPrice) params.set("maxPrice", newFilters.maxPrice);
+    add("search", newFilters.search);
+    add("category", newFilters.category);
+    add("flavor", newFilters.flavor);
+    add("weight", newFilters.weight);
+    add("minPrice", newFilters.minPrice);
+    add("maxPrice", newFilters.maxPrice);
     if (newFilters.sort !== "createdAt" || newFilters.order !== "desc") {
-      params.set("sort", newFilters.sort);
-      params.set("order", newFilters.order);
+      add("sort", newFilters.sort);
+      add("order", newFilters.order);
     }
 
     // Update URL without refreshing the page
-    const newURL = params.toString()
-      ? `?${params.toString()}`
-      : window.location.pathname;
+    const qs = pairs.join("&");
+    const newURL = qs ? `?${qs}` : window.location.pathname;
     router.push(newURL, { scroll: false });
   };
 
@@ -170,7 +225,9 @@ function ProductsContent() {
         queryParams.append("order", filters.order);
 
         // Add other non-variant filters
-        if (filters.search) queryParams.append("search", filters.search);
+        if (filters.search) {
+          queryParams.append("search", filters.search);
+        }
         if (filters.category) queryParams.append("category", filters.category);
         if (filters.minPrice) queryParams.append("minPrice", filters.minPrice);
         if (filters.maxPrice) queryParams.append("maxPrice", filters.maxPrice);
@@ -529,11 +586,10 @@ function ProductsContent() {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Filters Sidebar */}
           <div
-            className={`md:w-1/4 lg:w-1/5 ${
-              mobileFiltersOpen
-                ? "block fixed inset-0 z-50 bg-white p-4 overflow-auto"
-                : "hidden"
-            } md:block md:static md:z-auto md:bg-transparent md:p-0`}
+            className={`md:w-1/4 lg:w-1/5 ${mobileFiltersOpen
+              ? "block fixed inset-0 z-50 bg-white p-4 overflow-auto"
+              : "hidden"
+              } md:block md:static md:z-auto md:bg-transparent md:p-0`}
           >
             <div className="bg-white rounded-lg shadow-sm border sticky top-28">
               <div className="flex items-center justify-between p-4 border-b">
@@ -568,16 +624,14 @@ function ProductsContent() {
                   )}
                 </div>
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    activeFilterSection === "search"
-                      ? "max-h-[500px] opacity-100"
-                      : "max-h-0 opacity-0"
-                  }`}
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${activeFilterSection === "search"
+                    ? "max-h-[500px] opacity-100"
+                    : "max-h-0 opacity-0"
+                    }`}
                 >
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      const searchInput = e.target.elements.search.value;
                       handleFilterChange("search", searchInput);
                     }}
                     className="relative"
@@ -585,7 +639,8 @@ function ProductsContent() {
                     <Input
                       name="search"
                       placeholder="Search products..."
-                      defaultValue={filters.search}
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
                       className="w-full pr-10 border-gray-300"
                     />
                     <button
@@ -612,21 +667,19 @@ function ProductsContent() {
                   )}
                 </div>
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    activeFilterSection === "categories"
-                      ? "max-h-[500px] opacity-100"
-                      : "max-h-0 opacity-0"
-                  }`}
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${activeFilterSection === "categories"
+                    ? "max-h-[500px] opacity-100"
+                    : "max-h-0 opacity-0"
+                    }`}
                 >
                   <div className="space-y-2">
                     {categories.map((category) => (
                       <div key={category.id} className="ml-2">
                         <div
-                          className={`cursor-pointer hover:text-primary flex items-center ${
-                            filters.category === category.slug
-                              ? "font-medium text-primary"
-                              : ""
-                          }`}
+                          className={`cursor-pointer hover:text-primary flex items-center ${filters.category === category.slug
+                            ? "font-medium text-primary"
+                            : ""
+                            }`}
                           onClick={() =>
                             handleFilterChange("category", category.slug)
                           }
@@ -639,11 +692,10 @@ function ProductsContent() {
                             {category.children.map((child) => (
                               <div
                                 key={child.id}
-                                className={`cursor-pointer hover:text-primary text-sm ${
-                                  filters.category === child.slug
-                                    ? "font-medium text-primary"
-                                    : ""
-                                }`}
+                                className={`cursor-pointer hover:text-primary text-sm ${filters.category === child.slug
+                                  ? "font-medium text-primary"
+                                  : ""
+                                  }`}
                                 onClick={() =>
                                   handleFilterChange("category", child.slug)
                                 }
@@ -673,21 +725,19 @@ function ProductsContent() {
                   )}
                 </div>
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    activeFilterSection === "flavors"
-                      ? "max-h-[500px] opacity-100"
-                      : "max-h-0 opacity-0"
-                  }`}
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${activeFilterSection === "flavors"
+                    ? "max-h-[500px] opacity-100"
+                    : "max-h-0 opacity-0"
+                    }`}
                 >
                   <div className="space-y-2">
                     {flavors.map((flavor) => (
                       <div
                         key={flavor.id}
-                        className={`cursor-pointer hover:text-primary ml-2 flex items-center ${
-                          selectedFlavors.includes(flavor.id)
-                            ? "font-medium text-primary"
-                            : ""
-                        }`}
+                        className={`cursor-pointer hover:text-primary ml-2 flex items-center ${selectedFlavors.includes(flavor.id)
+                          ? "font-medium text-primary"
+                          : ""
+                          }`}
                         onClick={() => handleFlavorChange(flavor.id)}
                       >
                         <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
@@ -726,21 +776,19 @@ function ProductsContent() {
                   )}
                 </div>
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    activeFilterSection === "weights"
-                      ? "max-h-[500px] opacity-100"
-                      : "max-h-0 opacity-0"
-                  }`}
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${activeFilterSection === "weights"
+                    ? "max-h-[500px] opacity-100"
+                    : "max-h-0 opacity-0"
+                    }`}
                 >
                   <div className="space-y-2">
                     {weights.map((weight) => (
                       <div
                         key={weight.id}
-                        className={`cursor-pointer hover:text-primary ml-2 flex items-center ${
-                          selectedWeights.includes(weight.id)
-                            ? "font-medium text-primary"
-                            : ""
-                        }`}
+                        className={`cursor-pointer hover:text-primary ml-2 flex items-center ${selectedWeights.includes(weight.id)
+                          ? "font-medium text-primary"
+                          : ""
+                          }`}
                         onClick={() => handleWeightChange(weight.id)}
                       >
                         <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
@@ -772,10 +820,10 @@ function ProductsContent() {
                       Apply All Filters
                       {(selectedFlavors.length > 0 ||
                         selectedWeights.length > 0) && (
-                        <span className="ml-1 bg-primary-dark rounded-full text-xs w-5 h-5 inline-flex items-center justify-center">
-                          {selectedFlavors.length + selectedWeights.length}
-                        </span>
-                      )}
+                          <span className="ml-1 bg-primary-dark rounded-full text-xs w-5 h-5 inline-flex items-center justify-center">
+                            {selectedFlavors.length + selectedWeights.length}
+                          </span>
+                        )}
                     </>
                   )}
                 </Button>
@@ -821,12 +869,12 @@ function ProductsContent() {
                     filters.sort === "createdAt" && filters.order === "desc"
                       ? "newest"
                       : filters.sort === "createdAt" && filters.order === "asc"
-                      ? "oldest"
-                      : filters.sort === "name" && filters.order === "asc"
-                      ? "name-asc"
-                      : filters.sort === "name" && filters.order === "desc"
-                      ? "name-desc"
-                      : "newest"
+                        ? "oldest"
+                        : filters.sort === "name" && filters.order === "asc"
+                          ? "name-asc"
+                          : filters.sort === "name" && filters.order === "desc"
+                            ? "name-desc"
+                            : "newest"
                   }
                 >
                   <option value="newest">Featured</option>
@@ -846,101 +894,101 @@ function ProductsContent() {
               selectedWeights.length > 0 ||
               filters.minPrice ||
               filters.maxPrice) && (
-              <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-gray-50 rounded-md border">
-                <span className="text-sm font-medium">Active Filters:</span>
+                <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-gray-50 rounded-md border">
+                  <span className="text-sm font-medium">Active Filters:</span>
 
-                {filters.search && (
-                  <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
-                    <span>Search: {filters.search}</span>
-                    <button
-                      onClick={() => handleFilterChange("search", "")}
-                      className="ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
+                  {filters.search && (
+                    <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
+                      <span>Search: {filters.search}</span>
+                      <button
+                        onClick={() => handleFilterChange("search", "")}
+                        className="ml-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
 
-                {filters.category && (
-                  <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
-                    <span>
-                      Category:{" "}
-                      {categories.find((c) => c.slug === filters.category)
-                        ?.name || filters.category}
-                    </span>
-                    <button
-                      onClick={() => handleFilterChange("category", "")}
-                      className="ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
+                  {filters.category && (
+                    <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
+                      <span>
+                        Category:{" "}
+                        {categories.find((c) => c.slug === filters.category)
+                          ?.name || filters.category}
+                      </span>
+                      <button
+                        onClick={() => handleFilterChange("category", "")}
+                        className="ml-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
 
-                {selectedFlavors.length > 0 && (
-                  <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
-                    <span>
-                      Flavor:{" "}
-                      {flavors.find((f) => f.id === selectedFlavors[0])?.name ||
-                        selectedFlavors[0]}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setSelectedFlavors([]);
-                        handleFilterChange("flavor", "");
-                      }}
-                      className="ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
+                  {selectedFlavors.length > 0 && (
+                    <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
+                      <span>
+                        Flavor:{" "}
+                        {flavors.find((f) => f.id === selectedFlavors[0])?.name ||
+                          selectedFlavors[0]}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setSelectedFlavors([]);
+                          handleFilterChange("flavor", "");
+                        }}
+                        className="ml-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
 
-                {selectedWeights.length > 0 && (
-                  <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
-                    <span>
-                      Weight:{" "}
-                      {weights.find((w) => w.id === selectedWeights[0])
-                        ?.display || selectedWeights[0]}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setSelectedWeights([]);
-                        handleFilterChange("weight", "");
-                      }}
-                      className="ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
+                  {selectedWeights.length > 0 && (
+                    <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
+                      <span>
+                        Weight:{" "}
+                        {weights.find((w) => w.id === selectedWeights[0])
+                          ?.display || selectedWeights[0]}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setSelectedWeights([]);
+                          handleFilterChange("weight", "");
+                        }}
+                        className="ml-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
 
-                {(filters.minPrice || filters.maxPrice) && (
-                  <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
-                    <span>
-                      Price: {filters.minPrice || "0"} -{" "}
-                      {filters.maxPrice || "∞"}
-                    </span>
-                    <button
-                      onClick={() => {
-                        handleFilterChange("minPrice", "");
-                        handleFilterChange("maxPrice", "");
-                      }}
-                      className="ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
+                  {(filters.minPrice || filters.maxPrice) && (
+                    <div className="bg-primary text-white text-xs px-2 py-1 rounded-md flex items-center">
+                      <span>
+                        Price: {filters.minPrice || "0"} -{" "}
+                        {filters.maxPrice || "∞"}
+                      </span>
+                      <button
+                        onClick={() => {
+                          handleFilterChange("minPrice", "");
+                          handleFilterChange("maxPrice", "");
+                        }}
+                        className="ml-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
 
-                <button
-                  onClick={clearFilters}
-                  className="text-xs text-primary underline ml-2"
-                >
-                  Clear All
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-primary underline ml-2"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
 
             {/* Products Grid with Loading State */}
             {loading && products.length === 0 ? (
@@ -1035,13 +1083,13 @@ function ProductsContent() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
                 {loading
                   ? // Show skeleton cards when loading with existing data
-                    [...Array(pagination.limit || 12)].map((_, index) => (
-                      <ProductCardSkeleton key={index} />
-                    ))
+                  [...Array(pagination.limit || 12)].map((_, index) => (
+                    <ProductCardSkeleton key={index} />
+                  ))
                   : // Show actual products when not loading
-                    products.map((product) => (
-                      <ProducCard key={product.id} product={product} />
-                    ))}
+                  products.map((product) => (
+                    <ProducCard key={product.id} product={product} />
+                  ))}
               </div>
             )}
 
@@ -1073,11 +1121,10 @@ function ProductsContent() {
                           key={page}
                           onClick={() => handlePageChange(page)}
                           disabled={loading}
-                          className={`px-3 py-2 text-sm ${
-                            pagination.page === page
-                              ? "bg-primary text-white"
-                              : "hover:bg-gray-100"
-                          }`}
+                          className={`px-3 py-2 text-sm ${pagination.page === page
+                            ? "bg-primary text-white"
+                            : "hover:bg-gray-100"
+                            }`}
                         >
                           {page}
                         </button>

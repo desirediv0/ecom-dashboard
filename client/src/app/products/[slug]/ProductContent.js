@@ -425,11 +425,10 @@ export default function ProductContent({ slug }) {
           {imagesToShow.map((image, index) => (
             <div
               key={index}
-              className={`relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-2 ${
-                currentMainImage?.url === image.url
-                  ? "border-primary"
-                  : "border-transparent"
-              }`}
+              className={`relative aspect-square w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-2 ${currentMainImage?.url === image.url
+                ? "border-primary"
+                : "border-transparent"
+                }`}
               onClick={() => setMainImage(image)}
             >
               <Image
@@ -621,9 +620,8 @@ export default function ProductContent({ slug }) {
           <>
             <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
             <Link
-              href={`/category/${
-                product.category?.slug || product.categories[0]?.category?.slug
-              }`}
+              href={`/category/${product.category?.slug || product.categories[0]?.category?.slug
+                }`}
               className="text-gray-500 hover:text-primary"
             >
               {product.category?.name || product.categories[0]?.category?.name}
@@ -690,7 +688,7 @@ export default function ProductContent({ slug }) {
           <div className="mb-6">{getPriceDisplay()}</div>
 
           {/* Short Description */}
-          <div className="p-4 border border-gray-200 rounded-md mb-6 bg-white">
+          {product.shortDescription && <div className="p-4 border border-gray-200 rounded-md mb-6 bg-white">
             <p className="text-gray-700">
               {product.shortDescription ||
                 product.description?.substring(0, 150)}
@@ -698,7 +696,7 @@ export default function ProductContent({ slug }) {
                 !product.shortDescription &&
                 "..."}
             </p>
-          </div>
+          </div>}
 
           {/* Flavor Selection for supplements */}
           {product.flavorOptions && product.flavorOptions.length > 0 && (
@@ -715,13 +713,12 @@ export default function ProductContent({ slug }) {
                   return (
                     <button
                       key={flavor.id}
-                      className={`px-4 py-2 rounded-md border text-sm transition-all ${
-                        selectedFlavor?.id === flavor.id
-                          ? "border-primary bg-primary text-white font-medium"
-                          : isAvailable
+                      className={`px-4 py-2 rounded-md border text-sm transition-all ${selectedFlavor?.id === flavor.id
+                        ? "border-primary bg-primary text-white font-medium"
+                        : isAvailable
                           ? "border-gray-300 hover:border-gray-400"
                           : "border-gray-200 text-gray-400 cursor-not-allowed"
-                      }`}
+                        }`}
                       onClick={() => handleFlavorChange(flavor)}
                       disabled={!isAvailable}
                     >
@@ -745,22 +742,21 @@ export default function ProductContent({ slug }) {
                   );
                   const isAvailable = selectedFlavor
                     ? availableCombinations.some(
-                        (combo) =>
-                          combo.flavorId === selectedFlavor.id &&
-                          combo.weightId === weight.id
-                      )
+                      (combo) =>
+                        combo.flavorId === selectedFlavor.id &&
+                        combo.weightId === weight.id
+                    )
                     : availableFlavorIds.length > 0;
 
                   return (
                     <button
                       key={weight.id}
-                      className={`px-4 py-2 rounded-md border text-sm transition-all ${
-                        selectedWeight?.id === weight.id
-                          ? "border-primary bg-primary text-white font-medium"
-                          : isAvailable
+                      className={`px-4 py-2 rounded-md border text-sm transition-all ${selectedWeight?.id === weight.id
+                        ? "border-primary bg-primary text-white font-medium"
+                        : isAvailable
                           ? "border-gray-300 hover:border-gray-400"
                           : "border-gray-200 text-gray-400 cursor-not-allowed"
-                      }`}
+                        }`}
                       onClick={() => handleWeightChange(weight)}
                       disabled={!isAvailable}
                     >
@@ -854,11 +850,10 @@ export default function ProductContent({ slug }) {
 
             <Button
               variant="outline"
-              className={`rounded-md py-6 ${
-                isInWishlist
-                  ? "text-red-600 border-red-600 hover:bg-red-50"
-                  : "border-gray-300 hover:border-primary hover:text-primary"
-              }`}
+              className={`rounded-md py-6 ${isInWishlist
+                ? "text-red-600 border-red-600 hover:bg-red-50"
+                : "border-gray-300 hover:border-primary hover:text-primary"
+                }`}
               size="icon"
               onClick={handleAddToWishlist}
               disabled={isAddingToWishlist}
@@ -892,24 +887,6 @@ export default function ProductContent({ slug }) {
               </div>
             )}
 
-            {/* {product.tags && product.tags.length > 0 && (
-              <div className="flex">
-                <span className="font-medium w-32 text-gray-700">Tags:</span>
-                <div className="text-gray-600">
-                  {product.tags?.map((tag, index) => (
-                    <span key={index}>
-                      <Link
-                        href={`/products?tag=${tag}`}
-                        className="text-primary hover:underline"
-                      >
-                        {tag}
-                      </Link>
-                      {index < product.tags.length - 1 && ", "}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )} */}
           </div>
         </div>
       </div>
@@ -919,31 +896,28 @@ export default function ProductContent({ slug }) {
         <div className="border-b border-gray-200">
           <div className="flex overflow-x-auto">
             <button
-              className={`px-6 py-3 font-medium text-sm uppercase transition-colors ${
-                activeTab === "description"
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`px-6 py-3 font-medium text-sm uppercase transition-colors ${activeTab === "description"
+                ? "border-b-2 border-primary text-primary"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
               onClick={() => setActiveTab("description")}
             >
               Description
             </button>
             <button
-              className={`px-6 py-3 font-medium text-sm uppercase transition-colors ${
-                activeTab === "reviews"
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`px-6 py-3 font-medium text-sm uppercase transition-colors ${activeTab === "reviews"
+                ? "border-b-2 border-primary text-primary"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
               onClick={() => setActiveTab("reviews")}
             >
               Reviews ({product.reviewCount || 0})
             </button>
             <button
-              className={`px-6 py-3 font-medium text-sm uppercase transition-colors ${
-                activeTab === "shipping"
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`px-6 py-3 font-medium text-sm uppercase transition-colors ${activeTab === "shipping"
+                ? "border-b-2 border-primary text-primary"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
               onClick={() => setActiveTab("shipping")}
             >
               Shipping & Returns
