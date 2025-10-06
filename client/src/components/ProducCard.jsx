@@ -165,7 +165,7 @@ const ProducCard = ({ product }) => {
             })()}
             alt={product.name}
             fill
-            className="object-contain px-4 transition-transform md:group-hover:scale-105 scale-150 md:scale-100"
+            className="object-contain px-4 transition-transform md:group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           {product.hasSale && (
@@ -212,24 +212,22 @@ const ProducCard = ({ product }) => {
             <Button
               variant="ghost"
               size="sm"
-              className={`text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2 ${
-                wishlistItems[product.id] ? "text-red-500" : ""
-              }`}
+              className={`text-white hover:text-white hover:bg-primary/80 rounded-full p-2 mx-2 ${wishlistItems[product.id] ? "text-red-500" : ""
+                }`}
               onClick={(e) => handleAddToWishlist(product, e)}
               disabled={isAddingToWishlist[product.id]}
             >
               <Heart
-                className={`h-5 w-5 ${
-                  wishlistItems[product.id] ? "fill-current" : ""
-                }`}
+                className={`h-5 w-5 ${wishlistItems[product.id] ? "fill-current" : ""
+                  }`}
               />
             </Button>
           </div>
         </div>
       </Link>
 
-      <div className="p-3 md:p-4 text-center">
-        <div className="flex items-center justify-center mb-2">
+      <div className="p-2 text-center ">
+        <div className="hidden md:flex items-center justify-center mb-2">
           <div className="flex text-yellow-400">
             {[...Array(5)].map((_, i) => (
               <Star
@@ -249,7 +247,7 @@ const ProducCard = ({ product }) => {
         </div>
 
         <Link href={`/products/${product.slug}`} className="hover:text-primary">
-          <h3 className="font-medium uppercase mb-2 line-clamp-2 text-xs md:text-sm">
+          <h3 className="font-medium uppercase mb-[2px] line-clamp-2 text-xs md:text-sm">
             {product.name}
           </h3>
           {/* Show lowest weight variant's flavor and weight */}
@@ -280,36 +278,38 @@ const ProducCard = ({ product }) => {
             return null;
           })()}
         </Link>
+        <div className="grid grid-cols-2 gap-2 items-center ">
 
-        <div className="flex items-center justify-center mb-2 flex-col md:flex-row">
-          {product.hasSale ? (
-            <div className="flex items-center flex-col md:flex-row">
+          <div className="flex items-center justify-center mb-2 flex-row">
+            {product.hasSale ? (
+              <div className="flex items-start justify-start flex-col">
+                <span className="font-bold text-base md:text-lg text-primary">
+                  {formatCurrency(product.basePrice)}
+                </span>
+                <span className="text-gray-500 line-through text-xs md:text-sm ml-1 md:ml-2">
+                  {formatCurrency(product.regularPrice)}
+                </span>
+              </div>
+            ) : (
               <span className="font-bold text-base md:text-lg text-primary">
                 {formatCurrency(product.basePrice)}
               </span>
-              <span className="text-gray-500 line-through text-xs md:text-sm ml-1 md:ml-2">
-                {formatCurrency(product.regularPrice)}
-              </span>
-            </div>
-          ) : (
-            <span className="font-bold text-base md:text-lg text-primary">
-              {formatCurrency(product.basePrice)}
-            </span>
-          )}
+            )}
+          </div>
+          <Button
+            onClick={() => handleAddToCart(product)}
+            variant="outline"
+            size="sm"
+            className="w-min px-5 ml-auto border-orange-500 text-orange-500 hover:bg-orange-500/10 hover:border-orange-500/70 hover:text-orange-500"
+            disabled={isAddingToCart[product.id]}
+          >
+            {isAddingToCart[product.id] ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            ) : (
+              <span className="text-xs">ADD</span>
+            )}
+          </Button>
         </div>
-        <Button
-          onClick={() => handleAddToCart(product)}
-          variant="outline"
-          size="sm"
-          className="w-full p-2"
-          disabled={isAddingToCart[product.id]}
-        >
-          {isAddingToCart[product.id] ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-          ) : (
-            <ShoppingCart className="h-4 w-4" />
-          )}
-        </Button>
       </div>
 
       {/* Quick View Dialog */}
