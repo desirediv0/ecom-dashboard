@@ -130,7 +130,7 @@ const ProducCard = ({ product }) => {
       className="bg-white overflow-hidden transition-all hover:shadow-lg shadow-md rounded-sm group max-h-[400px]"
     >
       <Link href={`/products/${product.slug}`}>
-        <div className="relative h-48 md:h-64 w-full overflow-hidden">
+        <div className="relative h-40 md:h-48  w-full overflow-hidden">
           <Image
             src={(() => {
               // Find the variant with the lowest weight
@@ -171,7 +171,7 @@ const ProducCard = ({ product }) => {
             <>
               {/* SALE badge on left */}
               <div className="absolute top-3 left-3 z-10">
-                <div className=" bg-red-500  border border-red-400/80 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                <div className=" bg-red-500  border border-red-400/80 text-white text-[10px] md:text-xs font-semibold md:font-bold px-2 md:px-3 py-1.5 rounded-full shadow-lg">
                   SALE
                 </div>
               </div>
@@ -185,7 +185,7 @@ const ProducCard = ({ product }) => {
                 if (discountPercent > 0) {
                   return (
                     <div className="absolute top-3 right-3 z-10">
-                      <div className=" bg-green-500  border border-green-400/80 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                      <div className=" bg-green-500  border border-green-400/80 text-white text-[10px] md:text-xs font-semibold md:font-bold px-2 md:px-3 py-1.5 rounded-full shadow-lg">
                         {discountPercent}% OFF
                       </div>
                     </div>
@@ -225,7 +225,7 @@ const ProducCard = ({ product }) => {
         </div>
       </Link>
 
-      <div className="p-2 text-center  flex h-32 flex-col justify-between">
+      <div className="p-2 text-center flex h-24 md:h-32 flex-col justify-between">
 
         <Link href={`/products/${product.slug}`} className="hover:text-primary">
           <h3 className="font-medium uppercase mb-[2px] line-clamp-2 text-xs md:text-sm">
@@ -249,7 +249,7 @@ const ProducCard = ({ product }) => {
             const unit = selectedVariant.weight?.unit;
             if (flavor || (weight && unit)) {
               return (
-                <div className="text-xs text-gray-500 mb-1">
+                <div className="text-xs text-gray-500 mb-1 hidden md:block">
                   {flavor}
                   {flavor && weight && unit ? " • " : ""}
                   {weight && unit ? `${weight} ${unit}` : ""}
