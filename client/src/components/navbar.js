@@ -31,6 +31,13 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  const placeholders = [
+    "Search products...",
+    "Search by category...",
+    "Search by brand..."
+  ];
   const [isHoveringDropdown, setIsHoveringDropdown] = useState(null);
   const searchInputRef = useRef(null);
   const navbarRef = useRef(null);
@@ -65,6 +72,15 @@ export function Navbar() {
       searchInputRef.current.focus();
     }
   }, [isSearchExpanded]);
+
+  // Rotate placeholder text
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [placeholders.length]);
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -534,7 +550,7 @@ export function Navbar() {
                               <Input
                                 ref={searchInputRef}
                                 type="search"
-                                placeholder="Search for products..."
+                                placeholder={placeholders[placeholderIndex]}
                                 className="w-full pl-12 pr-12 py-3 border-gray-200 focus:border-primary focus:ring-primary rounded-lg text-base"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -766,7 +782,7 @@ export function Navbar() {
             </div>
             <Input
               type="text"
-              placeholder="Search for products..."
+              placeholder={placeholders[placeholderIndex]}
               className="w-full pl-11 pr-14 py-5 text-base bg-gray-50/80 border-gray-200 focus:border-primary focus:ring-primary rounded-xl placeholder:text-gray-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

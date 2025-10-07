@@ -109,7 +109,7 @@ function ProductsContent() {
 
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 15,
+    limit: 20,
     total: 0,
     pages: 0,
   });
@@ -367,10 +367,35 @@ function ProductsContent() {
 
   // Add useEffect to handle scroll on page change
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
+    // Wait for the browser to render the new content/layout before scrolling.
+    // Using requestAnimationFrame twice (or a short timeout) ensures layout is stable
+    // and the smooth scroll reaches the intended position instead of stopping early.
+    let raf1 = 0;
+    let raf2 = 0;
+    let timeoutId = 0;
+
+    const doScroll = () => {
+      const mainContent = document.getElementById("products-main");
+      if (mainContent) {
+        mainContent.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+
+    // Try a double rAF first for smoothness
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        // small timeout fallback in case images or fonts shift layout
+        timeoutId = window.setTimeout(doScroll, 80);
+      });
     });
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      clearTimeout(timeoutId);
+    };
   }, [pagination.page]); // This will trigger whenever the page changes
 
   // Modify handleFilterChange to update URL
@@ -515,15 +540,10 @@ function ProductsContent() {
 
   // Add this function to handle scrolling
   const scrollToTop = () => {
-    const mainContent = document.getElementById("products-main");
-    if (mainContent) {
-      mainContent.scrollIntoView({ behavior: "smooth" });
-    } else {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   // Update handlePageChange to use the scroll function
@@ -532,6 +552,7 @@ function ProductsContent() {
     setPagination((prev) => ({ ...prev, page: newPage }));
     scrollToTop();
   };
+
 
   // Display loading state
   if (loading && products.length === 0) {
@@ -543,8 +564,8 @@ function ProductsContent() {
   }
 
   return (
-    <div>
-      <div id="products-main">
+    <div id="products-main">
+      <div>
         <div className="hidden md:flex mx-auto max-w-7xl">
           <CategoriesCarousel />
         </div>
@@ -857,12 +878,12 @@ function ProductsContent() {
                 </div>
               )}
 
-              <div className="inline-flex items-center border rounded-md overflow-hidden bg-white flex-col md:flex-row">
+              <div className="inline-flex items-center border rounded-md overflow-hidden bg-white flex-col md:flex-row w-full md:w-auto mt-4 md:mt-0 mx-2">
                 <span className="px-3 py-2 text-sm">SORT BY</span>
                 <select
                   id="sort"
                   name="sort"
-                  className="border-l px-3 py-2 focus:outline-none"
+                  className="border-l px-3 py-2 focus:outline-none w-full md:w-auto"
                   onChange={handleSortChange}
                   disabled={loading}
                   value={
@@ -1102,9 +1123,9 @@ function ProductsContent() {
                     size="sm"
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page === 1 || loading}
-                    className="rounded-none border-0 hover:bg-gray-100"
+                    className="rounded-none border-0 hover:bg-gray-100 hover:text-black"
                   >
-                    <ChevronUp className="h-4 w-4 rotate-90" />
+                    <ChevronDown className="h-4 w-4 rotate-90" />
                   </Button>
 
                   {[...Array(pagination.pages)].map((_, i) => {
@@ -1152,9 +1173,10 @@ function ProductsContent() {
                     size="sm"
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page === pagination.pages || loading}
-                    className="rounded-none border-0 hover:bg-gray-100"
+                    className="rounded-none border-0 hover:bg-gray-100 hover:text-black"
                   >
-                    <ChevronDown className="h-4 w-4 rotate-90" />
+                    <ChevronUp className="h-4 w-4 rotate-90" />
+
                   </Button>
                 </div>
               </div>

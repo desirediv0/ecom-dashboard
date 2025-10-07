@@ -1,6 +1,5 @@
 "use client";
 import VerticalCategoriesCarousel from "@/components/vertical-catgry";
-import CategoriesCarousel from "@/components/catgry";
 import { usePathname } from "next/navigation";
 
 export default function ProductsLayout({ children }) {
@@ -12,7 +11,7 @@ export default function ProductsLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="px-4 py-8">
+      <div className="px-2 md:px-4 py-4 md:py-8">
         <div className="flex gap-2 md:gap-8">
           {/* Left Sidebar - Vertical Categories - Only on mobile and not on product detail pages */}
           {!isProductDetailPage && (

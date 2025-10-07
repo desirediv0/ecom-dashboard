@@ -45,6 +45,12 @@ export const getAllProducts = asyncHandler(async (req, res) => {
             },
           },
         },
+        // Also allow searching by brand name
+        {
+          brand: {
+            name: { contains: normalizedSearch, mode: "insensitive" },
+          },
+        },
       ],
     }),
     // Filter by category
