@@ -336,7 +336,24 @@ export default function UserManagementPage() {
       });
 
       if (response.data.success) {
-        setUsers(response.data.data.users);
+        // Normalize user objects: backend may return `otpVerified` field
+        const normalizedUsers: User[] = (response.data.data.users || []).map(
+          (u: any) => ({
+            // keep existing fields, but ensure `emailVerified` is present
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            phone: u.phone,
+            isActive: u.isActive,
+            // prefer explicit emailVerified, fallback to otpVerified
+            emailVerified: u.emailVerified ?? u.otpVerified ?? false,
+            role: u.role,
+            createdAt: u.createdAt,
+            updatedAt: u.updatedAt,
+          })
+        );
+
+        setUsers(normalizedUsers);
         setTotalUsers(response.data.data.pagination.total);
         setTotalPages(response.data.data.pagination.pages);
       } else {
@@ -404,11 +421,11 @@ export default function UserManagementPage() {
           prevUsers.map((user) =>
             user.id === userId
               ? {
-                  ...user,
-                  name: data.name || user.name,
-                  email: data.email || user.email,
-                  phone: data.phone || user.phone,
-                }
+                ...user,
+                name: data.name || user.name,
+                email: data.email || user.email,
+                phone: data.phone || user.phone,
+              }
               : user
           )
         );

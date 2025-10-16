@@ -306,17 +306,6 @@ export default function CartPage() {
         </div>
       )}
 
-      {/* Show general cart error as a banner if it exists */}
-      {error && (
-        <div className="bg-red-50 p-4 rounded-md flex items-start mb-6">
-          <AlertCircle className="text-red-500 mr-3 mt-0.5 flex-shrink-0" />
-          <div>
-            <h2 className="text-lg font-semibold text-red-700">Cart Error</h2>
-            <p className="text-red-600">{error}</p>
-          </div>
-        </div>
-      )}
-
       {/* Show merge progress */}
       {mergeProgress && (
         <div className="bg-blue-50 p-4 rounded-md flex items-start mb-6">
@@ -393,6 +382,16 @@ export default function CartPage() {
                         ? `${coupon.discountValue}% off`
                         : `₹${coupon.discountValue} off`}
                     </p>
+                    {coupon.applicableSubtotal && (
+                      <p className="text-xs text-green-600 mt-1">
+                        Applies to {formatCurrency(coupon.applicableSubtotal)} worth of
+                        {" "}
+                        {coupon.matchedItems === 1 ? "eligible item" : "eligible items"}
+                        {cart.items?.length
+                          ? ` (${coupon.matchedItems || 0} of ${cart.items.length})`
+                          : ""}
+                      </p>
+                    )}
                     {((parseFloat(coupon.discountValue) > 90 &&
                       coupon.discountType === "PERCENTAGE") ||
                       coupon.isDiscountCapped) && (

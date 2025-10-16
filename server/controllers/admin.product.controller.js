@@ -502,6 +502,13 @@ export const createProduct = asyncHandler(async (req, res, next) => {
         data: {
           name: cleanName,
           description,
+          // Set brandId when provided (allow empty string or "null" to clear)
+          ...(req.body.brandId !== undefined && {
+            brandId:
+              req.body.brandId === "" || req.body.brandId === "null"
+                ? null
+                : req.body.brandId,
+          }),
           slug,
           hasVariants: hasVariants === "true" || hasVariants === true,
           isSupplement: isSupplement === "true" || isSupplement === true,
@@ -1167,7 +1174,12 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
           ...(ourProduct !== undefined && {
             ourProduct: ourProduct === "true" || ourProduct === true,
           }),
-          ...(req.body.brandId !== undefined && { brandId: req.body.brandId }),
+          ...(req.body.brandId !== undefined && {
+            brandId:
+              req.body.brandId === "" || req.body.brandId === "null"
+                ? null
+                : req.body.brandId,
+          }),
         },
       });
 

@@ -193,8 +193,8 @@ const HeroCarousel = () => {
           </CarouselContent>
 
           {/* Navigation Controls - Better positioned and sized */}
-          <CarouselPrevious className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
-          <CarouselNext className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
+          <CarouselPrevious className="absolute left-2 sm:left-4 top-1/2 hidden md:flex -translate-y-1/2 h-4 w-4 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
+          <CarouselNext className="absolute right-2 sm:right-4 top-1/2 hidden md:flex -translate-y-1/2 h-4 w-4 sm:h-10 sm:w-10 md:h-12 md:w-12 z-30 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm" />
 
           {/* Dot Indicators - Better responsive sizing */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
@@ -202,18 +202,17 @@ const HeroCarousel = () => {
               <button
                 key={index}
                 onClick={() => api?.scrollTo(index)}
-                className={`w-2 h-2  rounded-full transition-all duration-300 ${
-                  index === currentSlide
-                    ? "bg-white scale-125 shadow-lg"
-                    : "bg-white/50 hover:bg-white/70"
-                }`}
+                className={`w-2 h-2  rounded-full transition-all duration-300 ${index === currentSlide
+                  ? "bg-white scale-125 shadow-lg"
+                  : "bg-white/50 hover:bg-white/70"
+                  }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
 
           {/* Autoplay Toggle - Better positioned */}
-          <div className="absolute top-4 right-4 z-30">
+          <div className="absolute top-4 right-4 z-30  hidden md:flex">
             <Button
               variant="outline"
               size="sm"
@@ -494,11 +493,10 @@ const TestimonialsSection = () => {
                               </svg>
                             ) : (
                               <Star
-                                className={`h-4 w-4 ${
-                                  i < Math.floor(testimonial.rating)
-                                    ? "text-yellow-400 fill-yellow-400"
-                                    : "text-gray-300"
-                                }`}
+                                className={`h-4 w-4 ${i < Math.floor(testimonial.rating)
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-gray-300"
+                                  }`}
                               />
                             )}
                           </span>
@@ -561,12 +559,12 @@ const NewsletterSection = () => {
                   COMMUNITY
                 </h2>
 
-                <p className="text-gray-300 mb-6">
+                <p className="text-gray-300 mb-5">
                   Get exclusive workout tips, nutrition advice, and special
                   offers straight to your inbox.
                 </p>
 
-                <div className="flex flex-col gap-4 mb-6">
+                <div className="flex flex-col gap-2 md:gap-4 mb-3 md:mb-6">
                   <div className="flex items-center">
                     <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
                       <div className="h-6 w-6 text-primary">

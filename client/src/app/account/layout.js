@@ -48,7 +48,7 @@ export default function AccountLayout({ children }) {
 
   return (
     <ClientOnly>
-      <div className="container mx-auto py-10 px-4">
+      <div className="container mx-auto py-5 md:py-10 px-4">
         {isSpecialPage ? (
           // For pages like order details, just render the children
           children
@@ -65,11 +65,10 @@ export default function AccountLayout({ children }) {
                       <Link
                         key={item.path}
                         href={item.path}
-                        className={`flex items-center p-2 rounded-md ${
-                          isActive(item.path)
+                        className={`flex items-center p-2 rounded-md ${isActive(item.path)
                             ? "bg-primary/10 text-primary"
                             : "hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         <DynamicIcon
                           name={item.icon}

@@ -186,10 +186,10 @@ export function CartProvider({ children }) {
           items: prevCart.items.map((item) =>
             item.id === cartItemId
               ? {
-                  ...item,
-                  quantity,
-                  subtotal: (parseFloat(item.price) * quantity).toFixed(2),
-                }
+                ...item,
+                quantity,
+                subtotal: (parseFloat(item.price) * quantity).toFixed(2),
+              }
               : item
           ),
           // Recalculate the cart totals
@@ -309,21 +309,32 @@ export function CartProvider({ children }) {
     try {
       // First verify if the coupon is valid with our cart total
       const cartTotal = parseFloat(cart.subtotal || 0).toFixed(2);
+      const cartItemsPayload = (cart.items || []).map((item) => ({
+        productId: item?.product?.id,
+        productVariantId: item?.variant?.id,
+        brandId: item?.product?.brandId || item?.product?.brand?.id || null,
+        categoryIds: Array.isArray(item?.product?.categories)
+          ? item.product.categories
+            .map((category) => category?.id)
+            .filter(Boolean)
+          : [],
+        price: item?.price,
+        quantity: item?.quantity,
+      }));
 
       try {
-        console.log("Verifying coupon:", code, "with cart total:", cartTotal);
 
         const verifyResponse = await fetchApi("/coupons/verify", {
           method: "POST",
           credentials: "include",
-          body: JSON.stringify({ code, cartTotal }),
+          body: JSON.stringify({ code, cartTotal, cartItems: cartItemsPayload }),
         });
-
-        console.log("Verify response:", verifyResponse);
 
         // If we got here, coupon is valid - extract discount info
         const discountAmount = verifyResponse.data.coupon.discountAmount;
         const finalAmount = verifyResponse.data.coupon.finalAmount;
+        const applicableSubtotal = verifyResponse.data.coupon.applicableSubtotal;
+        const matchedItems = verifyResponse.data.coupon.matchedItems ?? 0;
         const originalCartTotal = parseFloat(cartTotal);
 
         // Check if discount is capped (for fixed amount discounts)
@@ -346,6 +357,8 @@ export function CartProvider({ children }) {
           discountValue: verifyResponse.data.coupon.discountValue,
           discountAmount,
           finalAmount,
+          applicableSubtotal,
+          matchedItems,
           isDiscountCapped,
         });
 
@@ -380,6 +393,10 @@ export function CartProvider({ children }) {
   // Remove coupon
   const removeCoupon = () => {
     setCoupon(null);
+    // Clear any coupon-related or general cart errors so UI banners disappear
+    setError(null);
+    // Refresh cart totals to ensure UI updates immediately
+    fetchCart().catch(() => { });
   };
 
   // Calculate totals

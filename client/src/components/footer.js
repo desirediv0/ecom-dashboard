@@ -61,7 +61,7 @@ export function Footer() {
       {/* Main Footer */}
       <div className="bg-[#0f2b47] py-12 md:py-32">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
             {/* Column 1 - About */}
             <div className="md:col-span-1">
               <div className="mb-6">

@@ -17,6 +17,12 @@ export const getUserCart = asyncHandler(async (req, res) => {
           product: {
             include: {
               images: true,
+              brand: true,
+              categories: {
+                include: {
+                  category: true,
+                },
+              },
             },
           },
           flavor: true,
@@ -63,20 +69,20 @@ export const getUserCart = asyncHandler(async (req, res) => {
         sku: variant.sku,
         flavor: variant.flavor
           ? {
-              id: variant.flavor.id,
-              name: variant.flavor.name,
-              description: variant.flavor.description,
-              image: variant.flavor.image
-                ? getFileUrl(variant.flavor.image)
-                : null,
-            }
+            id: variant.flavor.id,
+            name: variant.flavor.name,
+            description: variant.flavor.description,
+            image: variant.flavor.image
+              ? getFileUrl(variant.flavor.image)
+              : null,
+          }
           : null,
         weight: variant.weight
           ? {
-              id: variant.weight.id,
-              value: variant.weight.value,
-              unit: variant.weight.unit,
-            }
+            id: variant.weight.id,
+            value: variant.weight.value,
+            unit: variant.weight.unit,
+          }
           : null,
       },
       product: {
@@ -84,6 +90,17 @@ export const getUserCart = asyncHandler(async (req, res) => {
         name: variant.product.name,
         slug: variant.product.slug,
         image: imageUrl ? getFileUrl(imageUrl) : null,
+        brand: variant.product.brand
+          ? {
+            id: variant.product.brand.id,
+            name: variant.product.brand.name,
+          }
+          : null,
+        brandId: variant.product.brandId,
+        categories: (variant.product.categories || []).map((pc) => ({
+          id: pc.categoryId,
+          name: pc.category?.name,
+        })),
       },
     };
   });

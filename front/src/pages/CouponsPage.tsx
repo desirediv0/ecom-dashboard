@@ -1,7 +1,9 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
-import { coupons, partners } from "@/api/adminService";
+import { coupons, partners, categories, brands, products } from "@/api/adminService";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
+import MultiSelectCombo from "@/components/MultiSelectCombo";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,6 +24,26 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+interface CouponItem {
+  id: string;
+  code?: string;
+  description?: string;
+  discountType?: string;
+  discountValue?: number;
+  minOrderAmount?: number;
+  maxUses?: number;
+  couponPartners?: Array<{ partner: { id: string; name?: string }; commission?: number | null }>;
+  isActive?: boolean;
+  startDate?: string;
+  endDate?: string;
+  categories?: Array<{ id: string; name?: string; category?: { id: string; name?: string } }>;
+  products?: Array<{ id: string; name?: string; product?: { id: string; name?: string } }>;
+  brands?: Array<{ id: string; name?: string; brand?: { id: string; name?: string } }>;
+  couponCategories?: Array<{ categoryId: string; category?: { id: string; name?: string } }>;
+  couponProducts?: Array<{ productId: string; product?: { id: string; name?: string } }>;
+  couponBrands?: Array<{ brandId: string; brand?: { id: string; name?: string } }>;
+}
+
 export default function CouponsPage() {
   const { id } = useParams();
   const location = useLocation();
@@ -39,7 +61,7 @@ export default function CouponsPage() {
 }
 
 function CouponsList() {
-  const [couponsList, setCouponsList] = useState<any[]>([]);
+  const [couponsList, setCouponsList] = useState<CouponItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,16 +77,17 @@ function CouponsList() {
         if (response.data.success) {
           const fetchedCoupons = response.data.data?.coupons || [];
 
-          setCouponsList(fetchedCoupons);
+          setCouponsList(fetchedCoupons as CouponItem[]);
         } else {
           const errorMsg = response.data.message || "Failed to fetch coupons";
           console.error("Coupons fetch error:", errorMsg);
           setError(errorMsg);
           toast.error(errorMsg);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error fetching coupons:", error);
-        const errorMsg = error.response?.data?.message || "Failed to load coupons. Please try again.";
+        let errorMsg = "Failed to load coupons. Please try again.";
+        if (error instanceof Error) errorMsg = error.message;
         setError(errorMsg);
         toast.error(errorMsg);
       } finally {
@@ -92,7 +115,7 @@ function CouponsList() {
       } else {
         toast.error(response.data.message || "Failed to delete coupon");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting coupon:", error);
       toast.error("An error occurred while deleting the coupon");
     }
@@ -120,7 +143,7 @@ function CouponsList() {
       } else {
         toast.error(response.data.message || `Failed to ${action} coupon`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Error ${action}ing coupon:`, error);
       toast.error(`An error occurred while ${action}ing the coupon`);
     }
@@ -202,6 +225,9 @@ function CouponsList() {
                     Discount
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium">
+                    Targets
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">
                     Partner
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium">
@@ -248,15 +274,71 @@ function CouponsList() {
                         </div>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {(() => {
+                        const dedupe = (values: Array<string>) => Array.from(new Set(values));
+
+                        const categoryNames = dedupe([
+                          ...((coupon.categories ?? [])
+                            .map((entry) => entry.category?.name ?? entry.name ?? "")
+                            .filter((name): name is string => Boolean(name))),
+                          ...((coupon.couponCategories ?? [])
+                            .map((entry) => entry.category?.name ?? "")
+                            .filter((name): name is string => Boolean(name))),
+                        ]);
+
+                        const productNames = dedupe([
+                          ...((coupon.products ?? [])
+                            .map((entry) => entry.product?.name ?? entry.name ?? "")
+                            .filter((name): name is string => Boolean(name))),
+                          ...((coupon.couponProducts ?? [])
+                            .map((entry) => entry.product?.name ?? "")
+                            .filter((name): name is string => Boolean(name))),
+                        ]);
+
+                        const brandNames = dedupe([
+                          ...((coupon.brands ?? [])
+                            .map((entry) => entry.brand?.name ?? entry.name ?? "")
+                            .filter((name): name is string => Boolean(name))),
+                          ...((coupon.couponBrands ?? [])
+                            .map((entry) => entry.brand?.name ?? "")
+                            .filter((name): name is string => Boolean(name))),
+                        ]);
+
+                        if (!categoryNames.length && !productNames.length && !brandNames.length) {
+                          return <span className="text-xs uppercase tracking-wide text-green-600">All items</span>;
+                        }
+
+                        const parts: string[] = [];
+                        if (categoryNames.length) {
+                          const preview = categoryNames.slice(0, 2).join(", ");
+                          parts.push(`Categories: ${preview}${categoryNames.length > 2 ? " +" + (categoryNames.length - 2) : ""}`);
+                        }
+                        if (productNames.length) {
+                          const preview = productNames.slice(0, 2).join(", ");
+                          parts.push(`Products: ${preview}${productNames.length > 2 ? " +" + (productNames.length - 2) : ""}`);
+                        }
+                        if (brandNames.length) {
+                          const preview = brandNames.slice(0, 2).join(", ");
+                          parts.push(`Brands: ${preview}${brandNames.length > 2 ? " +" + (brandNames.length - 2) : ""}`);
+                        }
+
+                        return parts.map((text, index) => (
+                          <div key={index} className="text-xs leading-relaxed text-foreground/80">
+                            {text}
+                          </div>
+                        ));
+                      })()}
+                    </td>
                     <td className="px-4 py-3">
                       {coupon.couponPartners && coupon.couponPartners.length > 0 ? (
                         <div className="space-y-1">
-                          {coupon.couponPartners.slice(0, 2).map((cp: any, index: number) => (
+                          {coupon.couponPartners.slice(0, 2).map((cp, index: number) => (
                             <div key={index} className="flex flex-col">
                               <span className="text-sm font-medium">
                                 {cp.partner.name}
                               </span>
-                              {cp.commission && (
+                              {cp.commission != null && (
                                 <span className="text-xs text-muted-foreground">
                                   {cp.commission}% commission
                                 </span>
@@ -279,8 +361,8 @@ function CouponsList() {
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>
-                          {formatDate(coupon.startDate)}
-                          {coupon.endDate && ` - ${formatDate(coupon.endDate)}`}
+                          {formatDate(coupon.startDate || "")}
+                          {coupon.endDate && ` - ${formatDate(coupon.endDate || "")}`}
                         </span>
                       </div>
                     </td>
@@ -288,7 +370,7 @@ function CouponsList() {
                       <div className="flex items-center gap-2">
                         {/* Toggle Switch */}
                         <button
-                          onClick={() => handleToggleStatus(coupon.id, coupon.isActive, coupon.code)}
+                          onClick={() => handleToggleStatus(coupon.id, !!coupon.isActive, coupon.code || "")}
                           className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${coupon.isActive
                             ? 'bg-green-600 hover:bg-green-700'
                             : 'bg-gray-300 hover:bg-gray-400'
@@ -328,7 +410,7 @@ function CouponsList() {
                           size="sm"
                           className="text-destructive hover:text-destructive"
                           onClick={() =>
-                            handleDeleteCoupon(coupon.id, coupon.code)
+                            handleDeleteCoupon(coupon.id, coupon.code || "")
                           }
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
@@ -372,10 +454,112 @@ function CouponForm({
     Array<{ partnerId: string; commission: string }>
   >([]);
   const [error, setError] = useState<string | null>(null);
-  const [partnersList, setPartnersList] = useState<any[]>([]);
+  const [partnersList, setPartnersList] = useState<Array<{ id: string; name: string; email?: string }>>([]);
+  const [categoriesList, setCategoriesList] = useState<Array<{ id: string; name: string }>>([]);
+  const [brandsList, setBrandsList] = useState<Array<{ id: string; name: string }>>([]);
+  const [productsList, setProductsList] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
+
+  const mergeOptions = (
+    existing: Array<{ id: string; name: string }>,
+    extras: Array<{ id: string; name: string }>
+  ) => {
+    const map = new Map(existing.map((item) => [item.id, item]));
+    extras.forEach((option) => {
+      if (!map.has(option.id) || !map.get(option.id)?.name) {
+        map.set(option.id, option);
+      }
+    });
+    return Array.from(map.values());
+  };
 
   // Fetch partners list for dropdown
   useEffect(() => {
+    const fetchCatsAndBrands = async () => {
+      try {
+        const [catsRes, brandsRes, productsRes] = await Promise.all([
+          categories.getCategories(),
+          brands.getBrands(),
+          products.getProducts({ limit: 100 }),
+        ]);
+
+        const dedupeById = (items: Array<{ id: string; name: string }>) => {
+          const map = new Map<string, { id: string; name: string }>();
+          items.forEach((item) => {
+            if (!map.has(item.id)) {
+              map.set(item.id, item);
+            }
+          });
+          return Array.from(map.values());
+        };
+
+        const isObject = (value: unknown): value is Record<string, unknown> =>
+          typeof value === "object" && value !== null;
+
+        const rawCategories = catsRes.data.data?.categories || catsRes.data.data || [];
+        const normalizedCategories = dedupeById(
+          (Array.isArray(rawCategories) ? rawCategories : [])
+            .map((entry) => {
+              if (!isObject(entry)) return null;
+              const categoryValue = isObject(entry.category) ? entry.category : undefined;
+              const idCandidate = entry.id ?? entry.categoryId ?? categoryValue?.id ?? entry._id;
+              if (idCandidate === undefined || idCandidate === null) return null;
+              const nameCandidate = entry.name ?? categoryValue?.name ?? entry.label ?? entry.title;
+              const id = String(idCandidate);
+              const name = typeof nameCandidate === "string" && nameCandidate.trim()
+                ? nameCandidate
+                : `Category ${id}`;
+              return { id, name };
+            })
+            .filter((item): item is { id: string; name: string } => Boolean(item))
+        );
+
+        const rawBrands = brandsRes.data.data?.brands || brandsRes.data.data || [];
+        const normalizedBrands = dedupeById(
+          (Array.isArray(rawBrands) ? rawBrands : [])
+            .map((entry) => {
+              if (!isObject(entry)) return null;
+              const brandValue = isObject(entry.brand) ? entry.brand : undefined;
+              const idCandidate = entry.id ?? entry.brandId ?? brandValue?.id ?? entry._id;
+              if (idCandidate === undefined || idCandidate === null) return null;
+              const nameCandidate = entry.name ?? brandValue?.name ?? entry.label ?? entry.title;
+              const id = String(idCandidate);
+              const name = typeof nameCandidate === "string" && nameCandidate.trim()
+                ? nameCandidate
+                : `Brand ${id}`;
+              return { id, name };
+            })
+            .filter((item): item is { id: string; name: string } => Boolean(item))
+        );
+
+        const rawProducts = productsRes.data.data?.products || productsRes.data.data || [];
+        const normalizedProducts = dedupeById(
+          (Array.isArray(rawProducts) ? rawProducts : [])
+            .map((entry) => {
+              if (!isObject(entry)) return null;
+              const productValue = isObject(entry.product) ? entry.product : undefined;
+              const idCandidate = entry.id ?? entry.productId ?? productValue?.id ?? entry._id;
+              if (idCandidate === undefined || idCandidate === null) return null;
+              const nameCandidate = entry.name ?? productValue?.name ?? entry.label ?? entry.title;
+              const id = String(idCandidate);
+              const name = typeof nameCandidate === "string" && nameCandidate.trim()
+                ? nameCandidate
+                : `Product ${id}`;
+              return { id, name };
+            })
+            .filter((item): item is { id: string; name: string } => Boolean(item))
+        );
+
+        setCategoriesList(normalizedCategories);
+        setBrandsList(normalizedBrands);
+        setProductsList(normalizedProducts);
+      } catch (err) {
+        console.warn('Failed to load categories/brands/products for coupon form', err);
+      }
+    };
+
     const fetchPartners = async () => {
       try {
         const response = await partners.getApprovedPartners();
@@ -400,6 +584,7 @@ function CouponForm({
       }
     };
     fetchPartners();
+    fetchCatsAndBrands();
   }, []);
 
   // Fetch coupon details if in edit mode
@@ -412,9 +597,9 @@ function CouponForm({
           console.log("Coupon details response:", response); // Debug logging
 
           if (response.data.success) {
-            const couponData = response.data.data?.coupon;
+            const couponData = response.data.data?.coupon as CouponItem | undefined;
             // Format dates properly for edit form
-            const formatDateForInput = (dateString: string) => {
+            const formatDateForInput = (dateString?: string) => {
               try {
                 if (!dateString) return "";
                 const date = new Date(dateString);
@@ -426,38 +611,155 @@ function CouponForm({
             };
 
             setFormData({
-              code: couponData?.code.toUpperCase() || "",
+              code: couponData?.code?.toUpperCase() || "",
               description: couponData?.description || "",
               discountType: couponData?.discountType || "PERCENTAGE",
-              discountValue: couponData?.discountValue?.toString() || "",
-              minOrderAmount: couponData?.minOrderAmount?.toString() || "",
-              maxUses: couponData?.maxUses?.toString() || "",
+              discountValue: couponData?.discountValue?.toString?.() || "",
+              minOrderAmount: couponData?.minOrderAmount?.toString?.() || "",
+              maxUses: couponData?.maxUses?.toString?.() || "",
               startDate: formatDateForInput(couponData?.startDate) || new Date().toISOString().split("T")[0],
               endDate: formatDateForInput(couponData?.endDate),
               isActive: couponData?.isActive ?? true,
             });
 
             // Set selected partners (handle both array and object with 'partners' key)
-            let couponPartnersArr = [];
+            let couponPartnersArr: Array<{ partner: { id: string }; commission?: number | null }> = [];
             if (Array.isArray(couponData?.couponPartners)) {
               couponPartnersArr = couponData.couponPartners;
-            } else if (couponData?.couponPartners?.partners) {
-              couponPartnersArr = couponData.couponPartners.partners;
+            } else if ((couponData as unknown as { couponPartners?: { partners?: Array<{ partner: { id: string }; commission?: number | null }> } })?.couponPartners?.partners) {
+              couponPartnersArr = (couponData as unknown as { couponPartners: { partners: Array<{ partner: { id: string }; commission?: number | null }> } }).couponPartners.partners;
             }
             if (couponPartnersArr.length > 0) {
               setSelectedPartners(
-                couponPartnersArr.map((cp: any) => ({
+                couponPartnersArr.map((cp: { partner: { id: string }; commission?: number | null }) => ({
                   partnerId: cp.partner.id,
-                  commission: cp.commission?.toString() || "",
+                  commission: cp.commission != null ? cp.commission.toString() : "",
                 }))
               );
             } else {
               setSelectedPartners([]);
             }
+
+            // populate target selects if present
+            const toRecord = (value: unknown): Record<string, unknown> | null =>
+              typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
+
+            const coerceId = (value: unknown): string | undefined => {
+              if (typeof value === "string" || typeof value === "number") return String(value);
+              return undefined;
+            };
+
+            const collectTargetIds = (
+              primary: unknown[] | undefined,
+              fallback: unknown[] | undefined,
+              directKey: "categoryId" | "productId" | "brandId",
+              nestedKey: "category" | "product" | "brand"
+            ) => {
+              const ids: string[] = [];
+              const appendFrom = (source?: unknown[]) => {
+                (source ?? []).forEach((entry) => {
+                  const record = toRecord(entry);
+                  if (!record) return;
+                  const nested = toRecord(record[nestedKey]);
+                  const idCandidate =
+                    coerceId(record[directKey]) ??
+                    coerceId(nested?.id) ??
+                    coerceId(record.id) ??
+                    coerceId(record._id);
+                  if (idCandidate) ids.push(idCandidate);
+                });
+              };
+
+              appendFrom(primary);
+              appendFrom(fallback);
+              return Array.from(new Set(ids));
+            };
+
+            const collectTargetOptions = (
+              primary: unknown[] | undefined,
+              fallback: unknown[] | undefined,
+              directKey: "categoryId" | "productId" | "brandId",
+              nestedKey: "category" | "product" | "brand",
+              fallbackLabel: string
+            ) => {
+              const options = new Map<string, { id: string; name: string }>();
+              const appendFrom = (source?: unknown[]) => {
+                (source ?? []).forEach((entry) => {
+                  const record = toRecord(entry);
+                  if (!record) return;
+                  const nested = toRecord(record[nestedKey]);
+                  const idCandidate =
+                    coerceId(record[directKey]) ??
+                    coerceId(nested?.id) ??
+                    coerceId(record.id) ??
+                    coerceId(record._id);
+                  if (!idCandidate) return;
+                  const nameCandidate =
+                    typeof nested?.name === "string" && nested.name.trim()
+                      ? nested.name
+                      : typeof record.name === "string" && record.name.trim()
+                        ? record.name
+                        : typeof record.label === "string" && record.label.trim()
+                          ? record.label
+                          : typeof record.title === "string" && record.title.trim()
+                            ? record.title
+                            : `${fallbackLabel} ${idCandidate}`;
+                  if (!options.has(idCandidate)) {
+                    options.set(idCandidate, { id: idCandidate, name: nameCandidate });
+                  }
+                });
+              };
+
+              appendFrom(primary);
+              appendFrom(fallback);
+              return Array.from(options.values());
+            };
+
+            setSelectedCategoryIds(
+              collectTargetIds(couponData?.categories, couponData?.couponCategories, "categoryId", "category")
+            );
+            setSelectedProductIds(
+              collectTargetIds(couponData?.products, couponData?.couponProducts, "productId", "product")
+            );
+            setSelectedBrandIds(
+              collectTargetIds(couponData?.brands, couponData?.couponBrands, "brandId", "brand")
+            );
+
+            const prefilledCategories = collectTargetOptions(
+              couponData?.categories,
+              couponData?.couponCategories,
+              "categoryId",
+              "category",
+              "Category"
+            );
+            const prefilledProducts = collectTargetOptions(
+              couponData?.products,
+              couponData?.couponProducts,
+              "productId",
+              "product",
+              "Product"
+            );
+            const prefilledBrands = collectTargetOptions(
+              couponData?.brands,
+              couponData?.couponBrands,
+              "brandId",
+              "brand",
+              "Brand"
+            );
+
+            if (prefilledCategories.length) {
+              setCategoriesList((prev) => mergeOptions(prev, prefilledCategories));
+            }
+            if (prefilledProducts.length) {
+              setProductsList((prev) => mergeOptions(prev, prefilledProducts));
+            }
+            if (prefilledBrands.length) {
+              setBrandsList((prev) => mergeOptions(prev, prefilledBrands));
+            }
           } else {
             setError(response.data.message || "Failed to fetch coupon details");
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error("Error fetching coupon:", error);
           setError("An error occurred while fetching the coupon");
         } finally {
@@ -633,6 +935,11 @@ function CouponForm({
     setError(null);
 
     try {
+      const uniq = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
+      const categoryIds = uniq(selectedCategoryIds);
+      const productIds = uniq(selectedProductIds);
+      const brandIds = uniq(selectedBrandIds);
+
       const data = {
         ...formData,
         // Make sure code is uppercase when submitting to backend
@@ -649,6 +956,9 @@ function CouponForm({
             commission: p.commission ? parseFloat(p.commission) : undefined,
           }))
           : undefined,
+        categoryIds,
+        productIds,
+        brandIds,
       };
 
       let response;
@@ -676,13 +986,30 @@ function CouponForm({
           position: "top-center",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Error ${mode}ing coupon:`, error);
 
-      // Extract error message from the API response if available
-      const errorMessage =
-        error.response?.data?.message ||
-        `An error occurred while ${mode === "create" ? "creating" : "updating"} the coupon`;
+      // Prefer server-sent error message when available (Axios errors)
+      let errorMessage = `An error occurred while ${mode === "create" ? "creating" : "updating"} the coupon`;
+
+      if (axios.isAxiosError(error)) {
+        const respData: unknown = error.response ? error.response.data : null;
+        let serverMsg: string | null = null;
+
+        if (respData && typeof respData === "object") {
+          const d = respData as { [k: string]: unknown };
+          if (typeof d.message === "string") serverMsg = d.message;
+          else if (typeof d.error === "string") serverMsg = d.error;
+        }
+
+        if (serverMsg) {
+          errorMessage = serverMsg;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
 
       setError(errorMessage);
 
@@ -875,6 +1202,43 @@ function CouponForm({
                 value={formData.maxUses}
                 onChange={handleInputChange}
               />
+            </div>
+
+            {/* Targets: categories / products / brands */}
+            <div className="grid gap-2 md:col-span-2">
+              <MultiSelectCombo
+                items={categoriesList}
+                selectedIds={selectedCategoryIds}
+                onChange={setSelectedCategoryIds}
+                label="Target Categories (optional)"
+                placeholder="Select categories"
+                maxHeight={240}
+              />
+              <p className="text-xs text-muted-foreground">Leave empty to allow coupon on all categories.</p>
+            </div>
+
+            <div className="grid gap-2 md:col-span-2">
+              <MultiSelectCombo
+                items={productsList}
+                selectedIds={selectedProductIds}
+                onChange={setSelectedProductIds}
+                label="Target Products (optional)"
+                placeholder="Select products"
+                maxHeight={240}
+              />
+              <p className="text-xs text-muted-foreground">Leave empty to allow coupon on all products.</p>
+            </div>
+
+            <div className="grid gap-2 md:col-span-2">
+              <MultiSelectCombo
+                items={brandsList}
+                selectedIds={selectedBrandIds}
+                onChange={setSelectedBrandIds}
+                label="Target Brands (optional)"
+                placeholder="Select brands"
+                maxHeight={240}
+              />
+              <p className="text-xs text-muted-foreground">Leave empty to allow coupon on all brands.</p>
             </div>
 
             <div className="grid gap-2">

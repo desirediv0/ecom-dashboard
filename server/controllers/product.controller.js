@@ -298,6 +298,7 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
           category: true,
         },
       },
+      brand: true,
       images: {
         orderBy: { isPrimary: "desc" },
       },
@@ -351,6 +352,14 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
     // Add primary category
     category:
       product.categories.length > 0 ? product.categories[0].category : null,
+    // Include brand (only select basic fields)
+    brand: product.brand
+      ? {
+        id: product.brand.id,
+        name: product.brand.name,
+        slug: product.brand.slug,
+      }
+      : null,
     images: product.images.map((image) => ({
       ...image,
       url: getFileUrl(image.url),

@@ -59,7 +59,7 @@ function ProductsContent() {
     if (categorySlug) return "categories";
     if (flavorId) return "flavors";
     if (weightId) return "weights";
-    return "search"; // default to search if no filters are active
+    return "search";
   };
 
   const [activeFilterSection, setActiveFilterSection] = useState(
@@ -82,11 +82,6 @@ function ProductsContent() {
     weightId ? [weightId] : []
   );
 
-  // Restore the price range states
-  const [priceRange, setPriceRange] = useState([
-    minPrice ? parseInt(minPrice) : 0,
-    maxPrice ? parseInt(maxPrice) : 1000,
-  ]);
   const [maxPossiblePrice, setMaxPossiblePrice] = useState(1000);
 
   const [filters, setFilters] = useState({
@@ -157,12 +152,6 @@ function ProductsContent() {
     orderParam,
   ]);
 
-  // Add a function to apply all filters at once
-  const applyAllFilters = () => {
-    // Force a re-fetch by resetting the page
-    setPagination((prev) => ({ ...prev, page: 1 }));
-    setLoading(true);
-  };
 
   // Add function to handle filter section toggle
   const toggleFilterSection = (section) => {
@@ -335,12 +324,7 @@ function ProductsContent() {
   }, []);
 
   // Add the price range update useEffect
-  useEffect(() => {
-    setPriceRange([
-      filters.minPrice ? parseInt(filters.minPrice) : 0,
-      filters.maxPrice ? parseInt(filters.maxPrice) : maxPossiblePrice,
-    ]);
-  }, [filters.minPrice, filters.maxPrice, maxPossiblePrice]);
+
 
   // Add the fetch max price useEffect
   useEffect(() => {
@@ -823,32 +807,6 @@ function ProductsContent() {
                   </div>
                 </div>
               </div>
-
-              {/* Add Apply All Filters button after all filters */}
-              <div className="p-4 border-t">
-                <Button
-                  onClick={applyAllFilters}
-                  className="w-full"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Applying Filters...
-                    </>
-                  ) : (
-                    <>
-                      Apply All Filters
-                      {(selectedFlavors.length > 0 ||
-                        selectedWeights.length > 0) && (
-                          <span className="ml-1 bg-primary-dark rounded-full text-xs w-5 h-5 inline-flex items-center justify-center">
-                            {selectedFlavors.length + selectedWeights.length}
-                          </span>
-                        )}
-                    </>
-                  )}
-                </Button>
-              </div>
             </div>
           </div>
 
@@ -1013,7 +971,7 @@ function ProductsContent() {
 
             {/* Products Grid with Loading State */}
             {loading && products.length === 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3">
                 {[...Array(pagination.limit || 12)].map((_, index) => (
                   <ProductCardSkeleton key={index} />
                 ))}
@@ -1101,7 +1059,7 @@ function ProductsContent() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3">
                 {loading
                   ? // Show skeleton cards when loading with existing data
                   [...Array(pagination.limit || 12)].map((_, index) => (

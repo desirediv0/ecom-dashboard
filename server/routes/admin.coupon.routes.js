@@ -22,6 +22,10 @@ router.get("/coupons", isAdmin, async (req, res) => {
             },
           },
         },
+        // relation names on Coupon model (defined in Prisma schema)
+        categories: { include: { category: true } },
+        products: { include: { product: true } },
+        brands: { include: { brand: true } },
       },
     });
 
@@ -59,6 +63,9 @@ router.get("/coupons/:id", isAdmin, async (req, res) => {
             },
           },
         },
+        categories: { include: { category: true } },
+        products: { include: { product: true } },
+        brands: { include: { brand: true } },
       },
     });
 
@@ -109,6 +116,9 @@ router.post("/coupons", isAdmin, async (req, res) => {
     }
 
     // Validate discount value
+
+    // Targets: optional arrays of IDs
+    const { categoryIds, productIds, brandIds } = req.body;
     const discountValueNum = parseFloat(discountValue);
     if (isNaN(discountValueNum) || discountValueNum <= 0) {
       return res.status(400).json({
@@ -239,6 +249,28 @@ router.post("/coupons", isAdmin, async (req, res) => {
         },
       });
 
+      // Create targeting relations if provided
+      if (Array.isArray(categoryIds) && categoryIds.length) {
+        await tx.couponCategory.createMany({
+          data: categoryIds.map((c) => ({ couponId: newCoupon.id, categoryId: c })),
+          skipDuplicates: true,
+        });
+      }
+
+      if (Array.isArray(productIds) && productIds.length) {
+        await tx.couponProduct.createMany({
+          data: productIds.map((p) => ({ couponId: newCoupon.id, productId: p })),
+          skipDuplicates: true,
+        });
+      }
+
+      if (Array.isArray(brandIds) && brandIds.length) {
+        await tx.couponBrand.createMany({
+          data: brandIds.map((b) => ({ couponId: newCoupon.id, brandId: b })),
+          skipDuplicates: true,
+        });
+      }
+
       // Create partner relationships if any
       if (partnersData.length > 0) {
         await tx.couponPartner.createMany({
@@ -320,6 +352,9 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
 
     // Prepare update data
     const updateData = {};
+
+    // Targets: optional arrays of IDs
+    const { categoryIds, productIds, brandIds } = req.body;
 
     // Update code if provided
     if (code !== undefined) {
@@ -491,6 +526,37 @@ router.patch("/coupons/:id", isAdmin, async (req, res) => {
         where: { id },
         data: updateData,
       });
+
+      // Update targeting relations if keys provided
+      if (categoryIds !== undefined) {
+        await prisma.couponCategory.deleteMany({ where: { couponId: id } });
+        if (Array.isArray(categoryIds) && categoryIds.length) {
+          await prisma.couponCategory.createMany({
+            data: categoryIds.map((c) => ({ couponId: id, categoryId: c })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      if (productIds !== undefined) {
+        await prisma.couponProduct.deleteMany({ where: { couponId: id } });
+        if (Array.isArray(productIds) && productIds.length) {
+          await prisma.couponProduct.createMany({
+            data: productIds.map((p) => ({ couponId: id, productId: p })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      if (brandIds !== undefined) {
+        await prisma.couponBrand.deleteMany({ where: { couponId: id } });
+        if (Array.isArray(brandIds) && brandIds.length) {
+          await prisma.couponBrand.createMany({
+            data: brandIds.map((b) => ({ couponId: id, brandId: b })),
+            skipDuplicates: true,
+          });
+        }
+      }
 
       // Update partners if provided
       if (partners !== undefined) {

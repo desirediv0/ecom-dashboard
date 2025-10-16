@@ -170,6 +170,7 @@ model Category {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   products    ProductCategory[]
+  coupons     CouponCategory[]
 }
 
 model Product {
@@ -204,6 +205,7 @@ model Product {
   reviews           Review[]
   wishlistItems     WishlistItem[]
   ProductView       ProductView[]
+  coupons           CouponProduct[]
 }
 
 model ProductImage {
@@ -434,6 +436,10 @@ model Coupon {
   userCoupons      UserCoupon[]
   partnerEarnings  PartnerEarning[]
   couponPartners   CouponPartner[]
+  // Targets: many-to-many relations to restrict coupon applicability
+  categories       CouponCategory[]
+  products         CouponProduct[]
+  brands           CouponBrand[]
 }
 
 // Join table for many-to-many Coupon <-> Partner with commission per partner per coupon
@@ -446,6 +452,37 @@ model CouponPartner {
   partner    Partner @relation("CouponPartnerToPartner", fields: [partnerId], references: [id], onDelete: Cascade)
 
   @@unique([couponId, partnerId])
+}
+
+// Coupon targeting join tables
+model CouponCategory {
+  id         String   @id @default(uuid())
+  couponId   String
+  categoryId String
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, categoryId])
+}
+
+model CouponProduct {
+  id        String  @id @default(uuid())
+  couponId  String
+  productId String
+  coupon    Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, productId])
+}
+
+model CouponBrand {
+  id       String @id @default(uuid())
+  couponId String
+  brandId  String
+  coupon   Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  brand    Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, brandId])
 }
 
 enum PartnerRequestStatus {
@@ -606,14 +643,15 @@ model ProductView {
 }
 
 model Brand {
-  id        String    @id @default(uuid())
-  name      String    @unique
-  slug      String    @unique
+  id        String        @id @default(uuid())
+  name      String        @unique
+  slug      String        @unique
   image     String
-  tags      String[]  @default([])
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  tags      String[]      @default([])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
   products  Product[]
+  coupons   CouponBrand[]
 }
 
 enum UserRole {

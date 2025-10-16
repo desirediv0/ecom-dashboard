@@ -420,8 +420,8 @@ export default function ProductContent({ slug }) {
           />
         </div>
 
-        {/* Thumbnail grid for multiple images */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
           {imagesToShow.map((image, index) => (
             <div
               key={index}
@@ -652,9 +652,14 @@ export default function ProductContent({ slug }) {
 
         {/* Right Column - Product Details */}
         <div className="flex flex-col">
-          {/* Brand name if available */}
+          {/* Brand name (show plain text regardless of shape) */}
           {product.brand && (
-            <div className="text-gray-500 text-sm mb-1">{product.brand}</div>
+            <Link
+              href={`/brand/${product.brand.slug}`}
+              className="text-orange-500 text-sm mb-1"
+            >
+              {product.brand?.name ?? product.brand ?? product.brandName ?? ""}
+            </Link>
           )}
 
           {/* Product name */}
@@ -823,7 +828,7 @@ export default function ProductContent({ slug }) {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <Button
-              className="flex-1 flex items-center justify-center gap-2 py-6 text-base bg-primary hover:bg-primary/90 rounded-md"
+              className="flex-1 flex items-center justify-center gap-2 py-4 md:py-6 text-base bg-primary hover:bg-primary/90 rounded-md"
               size="lg"
               onClick={handleAddToCart}
               disabled={
