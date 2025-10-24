@@ -31,18 +31,20 @@ import {
 } from "../controllers/user.controller.js";
 import { verifyJWTToken } from "../middlewares/auth.middleware.js";
 import { uploadFiles } from "../middlewares/multer.middlerware.js";
+import otpRateLimiter from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 // Auth routes
-router.post("/register", registerUser);
+// Apply otpRateLimiter to endpoints that generate or resend OTPs / reset links
+router.post("/register", otpRateLimiter, registerUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/refresh-token", refreshAccessToken);
 router.get("/verify-email/:token", verifyEmail); // legacy link-based, kept for backward compatibility
 router.post("/verify-otp", verifyOtp);
-router.post("/resend-verification", resendVerificationEmail);
-router.post("/forgot-password", forgotPassword);
+router.post("/resend-verification", otpRateLimiter, resendVerificationEmail);
+router.post("/forgot-password", otpRateLimiter, forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 router.post("/change-password", verifyJWTToken, changePassword);
 
