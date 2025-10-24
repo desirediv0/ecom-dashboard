@@ -46,8 +46,8 @@ export default function LoginPage() {
 
       // Add a small delay to allow the toast to be seen (300ms)
       setTimeout(() => {
-        // Navigate to homepage or return URL after successful login
-        window.location.href = returnUrl ? decodeURIComponent(returnUrl) : "/";
+        // Navigate to homepage or return URL after successful login using SPA navigation
+        router.push(returnUrl ? decodeURIComponent(returnUrl) : "/");
       }, 300);
     } catch (error) {
       const errorMessage =

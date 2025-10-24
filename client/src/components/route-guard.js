@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
@@ -16,7 +16,8 @@ export function RouteGuard({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [authorized, setAuthorized] = useState(false);
-  const [firstRun, setFirstRun] = useState(true);
+  // useRef to track initial mount without causing re-renders
+  const firstRunRef = useRef(true);
 
   useEffect(() => {
     // Authentication check
@@ -51,7 +52,7 @@ export function RouteGuard({ children }) {
         const redirectPath = pathname === "/cart" ? "/" : pathname;
 
         // Show toast only if it's not the first run (to prevent showing on initial page load)
-        if (!firstRun) {
+        if (!firstRunRef.current) {
           toast.error("Please log in to access this page");
         }
 
@@ -60,11 +61,10 @@ export function RouteGuard({ children }) {
         // Check if user just logged in (to prevent double toast message)
         const justLoggedIn =
           typeof window !== "undefined"
-            ? sessionStorage.getItem("justLoggedIn")
-            : null;
+            ? sessionStorage.getItem("justLoggedIn") === "true"
+            : false;
 
-        // Only show notification if not first run and not just logged in
-        if (!firstRun && !justLoggedIn) {
+        if (!firstRunRef.current && !justLoggedIn) {
           toast.info("You are already logged in");
         }
 
@@ -79,8 +79,8 @@ export function RouteGuard({ children }) {
       }
 
       // After first run, clear flag
-      if (firstRun) {
-        setFirstRun(false);
+      if (firstRunRef.current) {
+        firstRunRef.current = false;
       }
     };
 
@@ -91,7 +91,7 @@ export function RouteGuard({ children }) {
       // While loading, consider the user authorized to avoid flashing screens
       setAuthorized(true);
     }
-  }, [isAuthenticated, loading, pathname, router, firstRun]);
+  }, [isAuthenticated, loading, pathname, router]);
 
   // Always render children - no more loading or unauthorized screens
   return children;

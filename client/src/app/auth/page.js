@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 
-const TABS = ["login", "register", "verify-otp"]; // All possible views
-const NAV_TABS = ["login", "register"]; // Only show these as buttons
+const TABS = ["login", "register", "verify-otp"];
+const NAV_TABS = ["login", "register"];
 
 export default function AuthPage() {
   const router = useRouter();
@@ -85,7 +85,6 @@ export default function AuthPage() {
     try {
       await login(loginEmail, loginPassword);
       sessionStorage.setItem("justLoggedIn", "true");
-      toast.success("Login successful! Redirecting...");
       const returnUrl =
         searchParams.get("returnUrl") || searchParams.get("redirect");
       setTimeout(() => {

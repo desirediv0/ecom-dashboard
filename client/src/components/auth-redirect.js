@@ -13,9 +13,9 @@ export function AuthRedirect({ children }) {
     // Check if user just logged in
     const justLoggedIn = sessionStorage.getItem("justLoggedIn");
 
-    // If user just logged in, don't redirect
+    // If user just logged in, don't redirect. Do NOT remove the flag here;
+    // RouteGuard is responsible for clearing it so the suppression works reliably.
     if (justLoggedIn === "true") {
-      sessionStorage.removeItem("justLoggedIn");
       return;
     }
 
