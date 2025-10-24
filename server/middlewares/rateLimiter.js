@@ -16,9 +16,20 @@ export const otpRateLimiter = rateLimit({
             const bodyEmail = req.body && (req.body.email || req.body?.data?.email);
             if (bodyEmail) return String(bodyEmail).toLowerCase();
         } catch (e) {
-            // fall back to IP
+            // fall back to IP-like value
         }
-        return req.ip;
+
+        // Avoid using `req.ip` directly to satisfy express-rate-limit IPv6 checks.
+        // Prefer X-Forwarded-For (when behind proxy) then socket remoteAddress.
+        const xff = req.headers && (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For']);
+        if (xff) {
+            // x-forwarded-for may contain a list: client, proxy1, proxy2
+            const first = String(xff).split(',')[0].trim();
+            if (first) return first;
+        }
+
+        // Fallback to socket remoteAddress or connection remoteAddress
+        return (req.socket && req.socket.remoteAddress) || (req.connection && req.connection.remoteAddress) || '';
     },
 });
 
