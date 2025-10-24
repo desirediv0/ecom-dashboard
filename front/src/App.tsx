@@ -19,9 +19,6 @@ import CouponsPage from "./pages/CouponsPage";
 import AdminsPage from "./pages/AdminsPage";
 import AdminCreatePage from "./pages/AdminCreatePage";
 import AdminPermissionsPage from "./pages/AdminPermissionsPage";
-import BlogManagementPage from "./pages/BlogManagementPage";
-import CreateBlogPostPage from "./pages/CreateBlogPostPage";
-import EditBlogPostPage from "./pages/EditBlogPostPage";
 import ContactManagementPage from "./pages/ContactManagementPage";
 import ReviewsManagementPage from "./pages/ReviewsManagementPage";
 import FAQManagementPage from "./pages/FAQManagementPage";
@@ -371,39 +368,6 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-
-          {/* <Route
-            path="blog-management"
-            element={
-              <ProtectedRoute resource={Resource.CONTENT} action={Action.READ}>
-                <BlogManagementPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="blog-management/create"
-            element={
-              <ProtectedRoute
-                resource={Resource.CONTENT}
-                action={Action.CREATE}
-              >
-                <CreateBlogPostPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="blog-management/edit/:id"
-            element={
-              <ProtectedRoute
-                resource={Resource.CONTENT}
-                action={Action.UPDATE}
-              >
-                <EditBlogPostPage />
-              </ProtectedRoute>
-            }
-          /> */}
 
           <Route
             path="contact-management"

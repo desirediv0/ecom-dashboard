@@ -15,7 +15,6 @@ import {
   Coffee,
   Scale,
   Ticket,
-  FileText,
   Mail,
   Star,
   MessageSquare,
@@ -235,16 +234,7 @@ export default function DashboardLayout() {
                   Action.READ
                 )}
               />
-              {/* <NavItem
-                href="/blog-management"
-                icon={<FileText className="h-5 w-5" />}
-                title="Blog"
-                hasPermission={hasPermissionFor(
-                  admin,
-                  Resource.CONTENT,
-                  Action.READ
-                )}
-              /> */}
+
               <NavItem
                 href="/contact-management"
                 icon={<Mail className="h-5 w-5" />}
@@ -467,17 +457,7 @@ export default function DashboardLayout() {
                   Action.READ
                 )}
               />
-              {/* <NavItem
-                href="/blog-management"
-                icon={<FileText className="h-5 w-5" />}
-                title="Blog"
-                onClick={toggleMobileMenu}
-                hasPermission={hasPermissionFor(
-                  admin,
-                  Resource.CONTENT,
-                  Action.READ
-                )}
-              /> */}
+
               <NavItem
                 href="/contact-management"
                 icon={<Mail className="h-5 w-5" />}
