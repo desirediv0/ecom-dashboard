@@ -54,63 +54,63 @@ const HeroCarousel = () => {
 
   const slides = [
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg1,
       smimg: bg1sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg2,
       smimg: bg2sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg3,
       smimg: bg3sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg4,
       smimg: bg4sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg5,
       smimg: bg5sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg6,
       smimg: bg6sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg7,
       smimg: bg7sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg8,
       smimg: bg8sm,
       title: "Protein Collection",
       subtitle: "Build Muscle Faster",
     },
     {
-      ctaLink: "/category/protein",
+      ctaLink: "/products",
       img: bg9,
       smimg: bg9sm,
       title: "Protein Collection",
@@ -118,7 +118,6 @@ const HeroCarousel = () => {
     },
   ];
 
-  // Handle responsive detection
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -254,7 +253,7 @@ const AnnouncementBanner = () => {
   );
 };
 
-// Featured Products Component with modern card design and carousel
+
 const FeaturedProducts = ({
   products = [],
   isLoading = false,
@@ -263,7 +262,6 @@ const FeaturedProducts = ({
   const [api, setApi] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Handle slide change
   useEffect(() => {
     if (!api) return;
 
@@ -347,9 +345,9 @@ const FeaturedProducts = ({
   );
 };
 
-// Testimonials Section
+
 const TestimonialsSection = () => {
-  // Expanded testimonials data (6 entries, no images, initials only)
+
   const testimonials = [
     {
       name: "Yatharth S.",
@@ -399,7 +397,6 @@ const TestimonialsSection = () => {
     },
   ];
 
-  // Carousel logic
   const [api, setApi] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -519,7 +516,7 @@ const TestimonialsSection = () => {
   );
 };
 
-// Newsletter Section
+
 const NewsletterSection = () => {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
