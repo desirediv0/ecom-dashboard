@@ -4,7 +4,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { prisma } from "../config/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
 import {
   generateAccessAndRefreshTokens,
   setCookies,
@@ -70,6 +69,8 @@ export const registerUser = asyncHandler(async (req, res, next) => {
   // Remove sensitive data from response
   const userWithoutPassword = { ...newUser };
   delete userWithoutPassword.password;
+  delete userWithoutPassword.otp;
+
 
   // Send OTP email
   try {
@@ -79,7 +80,8 @@ export const registerUser = asyncHandler(async (req, res, next) => {
       html: getEmailOtpTemplate(otpCode, 10),
     });
 
-    console.log("Verification OTP sent to:", email, otpCode);
+    // Log only recipient email — do NOT log the OTP code
+    console.log("Verification OTP sent to:", email);
   } catch (error) {
     console.error("Error sending verification email:", error);
     // Don't throw error, still allow registration
@@ -145,6 +147,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
   // Remove sensitive data from response
   const userWithoutPassword = { ...user };
   delete userWithoutPassword.password;
+  delete userWithoutPassword.otp;
 
   res.status(200).json(
     new ApiResponsive(
@@ -466,7 +469,8 @@ export const getCurrentUser = asyncHandler(async (req, res, next) => {
   // Remove sensitive data
   const userWithoutPassword = { ...user };
   delete userWithoutPassword.password;
-  // No need to delete refreshToken as it doesn't exist in the model
+  delete userWithoutPassword.otp;
+  delete userWithoutPassword.otpVerifiedExpiry;
 
   res
     .status(200)
@@ -517,6 +521,7 @@ export const updateUserProfile = asyncHandler(async (req, res, next) => {
   // Remove sensitive data
   const userWithoutPassword = { ...updatedUser };
   delete userWithoutPassword.password;
+  delete userWithoutPassword.otp;
 
   // Add full URL for profile image
   if (userWithoutPassword.profileImage) {
@@ -835,9 +840,9 @@ export const getUserWishlist = asyncHandler(async (req, res, next) => {
       const avgRating =
         product.reviews.length > 0
           ? (
-              product.reviews.reduce((sum, review) => sum + review.rating, 0) /
-              product.reviews.length
-            ).toFixed(1)
+            product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+            product.reviews.length
+          ).toFixed(1)
           : 0;
 
       // Get price from first available variant
@@ -870,26 +875,26 @@ export const getUserWishlist = asyncHandler(async (req, res, next) => {
           salePrice: variant.salePrice,
           flavor: variant.flavor
             ? {
-                id: variant.flavor.id,
-                name: variant.flavor.name,
-                image: variant.flavor.image
-                  ? getFileUrl(variant.flavor.image)
-                  : null,
-              }
+              id: variant.flavor.id,
+              name: variant.flavor.name,
+              image: variant.flavor.image
+                ? getFileUrl(variant.flavor.image)
+                : null,
+            }
             : null,
           weight: variant.weight
             ? {
-                id: variant.weight.id,
-                value: variant.weight.value,
-                unit: variant.weight.unit,
-                display: `${variant.weight.value}${variant.weight.unit}`,
-              }
+              id: variant.weight.id,
+              value: variant.weight.value,
+              unit: variant.weight.unit,
+              display: `${variant.weight.value}${variant.weight.unit}`,
+            }
             : null,
           images: variant.images
             ? variant.images.map((img) => ({
-                ...img,
-                url: getFileUrl(img.url),
-              }))
+              ...img,
+              url: getFileUrl(img.url),
+            }))
             : [],
         })),
         createdAt: item.createdAt,
@@ -1360,7 +1365,8 @@ export const resendVerificationEmail = asyncHandler(async (req, res, next) => {
       html: getEmailOtpTemplate(otpCode, 10),
     });
 
-    console.log("Verification OTP resent to:", email, otpCode);
+    // Log only recipient email — do NOT log the OTP code
+    console.log("Verification OTP resent to:", email);
   } catch (error) {
     console.error("Error sending verification email:", error);
     // Don't throw error, still return success
