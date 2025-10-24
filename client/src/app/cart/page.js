@@ -143,7 +143,7 @@ export default function CartPage() {
         toast.success("Cart updated successfully");
       } catch (err) {
         console.error("Error updating quantity:", err);
-        toast.error("Failed to update cart");
+        toast.error(err.message || "Failed to update quantity");
       }
     },
     [updateCartItem]
