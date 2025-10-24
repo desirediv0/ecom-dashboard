@@ -235,7 +235,7 @@ export default function DashboardLayout() {
                   Action.READ
                 )}
               />
-              <NavItem
+              {/* <NavItem
                 href="/blog-management"
                 icon={<FileText className="h-5 w-5" />}
                 title="Blog"
@@ -244,7 +244,7 @@ export default function DashboardLayout() {
                   Resource.CONTENT,
                   Action.READ
                 )}
-              />
+              /> */}
               <NavItem
                 href="/contact-management"
                 icon={<Mail className="h-5 w-5" />}
@@ -467,7 +467,7 @@ export default function DashboardLayout() {
                   Action.READ
                 )}
               />
-              <NavItem
+              {/* <NavItem
                 href="/blog-management"
                 icon={<FileText className="h-5 w-5" />}
                 title="Blog"
@@ -477,7 +477,7 @@ export default function DashboardLayout() {
                   Resource.CONTENT,
                   Action.READ
                 )}
-              />
+              /> */}
               <NavItem
                 href="/contact-management"
                 icon={<Mail className="h-5 w-5" />}

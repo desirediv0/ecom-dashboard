@@ -372,7 +372,7 @@ const App = () => {
             }
           />
 
-          <Route
+          {/* <Route
             path="blog-management"
             element={
               <ProtectedRoute resource={Resource.CONTENT} action={Action.READ}>
@@ -403,7 +403,7 @@ const App = () => {
                 <EditBlogPostPage />
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           <Route
             path="contact-management"

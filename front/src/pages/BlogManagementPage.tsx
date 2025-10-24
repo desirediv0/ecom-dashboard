@@ -124,13 +124,13 @@ const BlogManagementPage = () => {
     fetchBlogPosts();
   }, [page]);
 
-  const handleCreatePost = () => {
-    navigate("/blog-management/create");
-  };
+  // const handleCreatePost = () => {
+  //   navigate("/blog-management/create");
+  // };
 
-  const handleEditPost = (post: BlogPost) => {
-    navigate(`/blog-management/edit/${post.id}`);
-  };
+  // const handleEditPost = (post: BlogPost) => {
+  //   navigate(`/blog-management/edit/${post.id}`);
+  // };
 
   const handleViewPost = (post: BlogPost) => {
     window.open(`/blog/${post.slug}`, "_blank");
