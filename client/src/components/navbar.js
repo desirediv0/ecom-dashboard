@@ -884,7 +884,7 @@ export function Navbar() {
             href="https://genuinepharmacy.com"
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center justify-center p-2 rounded-l-md overflow-hidden h-14 my-auto`}
+            className={`flex items-center justify-center p-2 rounded-l-md overflow-hidden h-16 my-auto`}
           >
             <Image src="/pharmacy-rm.png" alt="Genuine Pharmacy" width={200} height={200}
               className="object-contain h-full w-full"
