@@ -196,7 +196,7 @@ export default function ProductSectionsPage() {
 
             const newTypes: string[] = isAdding
                 ? [...new Set([...currentTypes, sectionKey])]
-                : currentTypes.filter((t) => t !== sectionKey);
+                : currentTypes.filter((t: string) => t !== sectionKey);
 
             // Send API request
             const formData = new FormData();
