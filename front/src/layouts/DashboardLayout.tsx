@@ -175,9 +175,9 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
-                href="/featured-products"
+                href="/product-sections"
                 icon={<Star className="h-5 w-5" />}
-                title="Featured"
+                title="Product Sections"
                 hasPermission={hasPermissionFor(
                   admin,
                   Resource.PRODUCTS,
@@ -392,9 +392,9 @@ export default function DashboardLayout() {
                 )}
               />
               <NavItem
-                href="/featured-products"
+                href="/product-sections"
                 icon={<Star className="h-5 w-5" />}
-                title="Featured"
+                title="Product Sections"
                 onClick={toggleMobileMenu}
                 hasPermission={hasPermissionFor(
                   admin,

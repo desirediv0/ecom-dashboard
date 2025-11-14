@@ -738,6 +738,18 @@ export default function Home() {
   const [bestsellerProducts, setBestsellerProducts] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
+  const [proteinProducts, setProteinProducts] = useState([]);
+  const [gainerProducts, setGainerProducts] = useState([]);
+  const [preWorkoutProducts, setPreWorkoutProducts] = useState([]);
+  const [postWorkoutProducts, setPostWorkoutProducts] = useState([]);
+  const [aminoProducts, setAminoProducts] = useState([]);
+  const [creatineProducts, setCreatineProducts] = useState([]);
+  const [fatBurnerProducts, setFatBurnerProducts] = useState([]);
+  const [vitaminProducts, setVitaminProducts] = useState([]);
+  const [snackProducts, setSnackProducts] = useState([]);
+  const [drinkProducts, setDrinkProducts] = useState([]);
+  const [comboProducts, setComboProducts] = useState([]);
+  const [eliteProducts, setEliteProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -747,15 +759,46 @@ export default function Home() {
       try {
         setProductsLoading(true);
 
-        // Fetch products by different types
-        const [featuredRes, latestRes, bestsellerRes, trendingRes, newRes] =
-          await Promise.allSettled([
-            fetchProductsByType("featured", 8),
-            fetchProductsByType("latest", 8),
-            fetchProductsByType("bestseller", 8),
-            fetchProductsByType("trending", 8),
-            fetchProductsByType("new", 8),
-          ]);
+        const [
+          featuredRes,
+          latestRes,
+          bestsellerRes,
+          trendingRes,
+          newRes,
+
+          // Nutrition/Gym sections
+          proteinRes,
+          gainerRes,
+          preWorkoutRes,
+          postWorkoutRes,
+          aminoRes,
+          creatineRes,
+          fatBurnerRes,
+          vitaminRes,
+          snackRes,
+          drinkRes,
+          comboRes,
+          eliteRes,
+        ] = await Promise.allSettled([
+          fetchProductsByType("featured", 8),
+          fetchProductsByType("latest", 8),
+          fetchProductsByType("bestseller", 8),
+          fetchProductsByType("trending", 8),
+          fetchProductsByType("new", 8),
+
+          fetchProductsByType("protein", 8),
+          fetchProductsByType("gainers", 8),
+          fetchProductsByType("preworkout", 8),
+          fetchProductsByType("postworkout", 8),
+          fetchProductsByType("aminos", 8),
+          fetchProductsByType("creatine", 8),
+          fetchProductsByType("fatburner", 8),
+          fetchProductsByType("vitamins", 8),
+          fetchProductsByType("snacks", 8),
+          fetchProductsByType("drinks", 8),
+          fetchProductsByType("combo", 8),
+          fetchProductsByType("elite", 8),
+        ]);
 
         // Set featured products (fallback to regular featured if type doesn't exist)
         if (featuredRes.status === "fulfilled") {
@@ -787,6 +830,54 @@ export default function Home() {
         if (newRes.status === "fulfilled") {
           setNewProducts(newRes.value?.data?.products || []);
         }
+        if (proteinRes.status === "fulfilled") {
+          setProteinProducts(proteinRes.value?.data?.products || []);
+        }
+
+        if (gainerRes.status === "fulfilled") {
+          setGainerProducts(gainerRes.value?.data?.products || []);
+        }
+
+        if (preWorkoutRes.status === "fulfilled") {
+          setPreWorkoutProducts(preWorkoutRes.value?.data?.products || []);
+        }
+
+        if (postWorkoutRes.status === "fulfilled") {
+          setPostWorkoutProducts(postWorkoutRes.value?.data?.products || []);
+        }
+
+        if (aminoRes.status === "fulfilled") {
+          setAminoProducts(aminoRes.value?.data?.products || []);
+        }
+
+        if (creatineRes.status === "fulfilled") {
+          setCreatineProducts(creatineRes.value?.data?.products || []);
+        }
+
+        if (fatBurnerRes.status === "fulfilled") {
+          setFatBurnerProducts(fatBurnerRes.value?.data?.products || []);
+        }
+
+        if (vitaminRes.status === "fulfilled") {
+          setVitaminProducts(vitaminRes.value?.data?.products || []);
+        }
+
+        if (snackRes.status === "fulfilled") {
+          setSnackProducts(snackRes.value?.data?.products || []);
+        }
+
+        if (drinkRes.status === "fulfilled") {
+          setDrinkProducts(drinkRes.value?.data?.products || []);
+        }
+
+        if (comboRes.status === "fulfilled") {
+          setComboProducts(comboRes.value?.data?.products || []);
+        }
+
+        if (eliteRes.status === "fulfilled") {
+          setEliteProducts(eliteRes.value?.data?.products || []);
+        }
+
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err?.message || "Failed to fetch data");
@@ -804,12 +895,10 @@ export default function Home() {
       <HeroCarousel />
       <AnnouncementBanner />
 
-      {/* Brand Carousels */}
+      {/* TOP BRANDS */}
       <BrandCarousel tag="TOP" title="TOP BRANDS" />
 
-      {/* Featured Categories Section */}
-
-      {/* Featured Products Section */}
+      {/* FEATURED PRODUCTS */}
       {featuredProducts.length > 0 && (
         <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
           <div className="container mx-auto px-4">
@@ -828,14 +917,15 @@ export default function Home() {
           </div>
         </section>
       )}
+
       <SupplementStoreUI />
 
+      {/* NEW BRANDS */}
       <BrandCarousel tag="NEW" title="NEW BRANDS" />
 
-      {/* <GymSupplementShowcase /> */}
       <CategoryGrid />
 
-      {/* Latest Products Section */}
+      {/* LATEST PRODUCTS */}
       {latestProducts.length > 0 && (
         <section className="py-10 bg-white">
           <div className="container mx-auto px-4">
@@ -855,7 +945,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* Bestseller Products Section */}
+      {/* BEST SELLERS */}
       {bestsellerProducts.length > 0 && (
         <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
           <div className="container mx-auto px-4">
@@ -875,8 +965,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* <SupplementStoreUI /> */}
-      {/* Trending Products Section */}
+      {/* TRENDING */}
       {trendingProducts.length > 0 && (
         <section className="py-5 md:py-6 my-3 md:my-4 bg-white">
           <div className="container mx-auto px-4">
@@ -896,7 +985,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* New Products Section */}
+      {/* NEW ARRIVALS */}
       {newProducts.length > 0 && (
         <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
           <div className="container mx-auto px-4">
@@ -915,6 +1004,250 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* ========== NUTRITION SECTIONS START ========== */}
+
+      {/* PROTEIN */}
+      {proteinProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="TOP PROTEIN POWDERS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                Premium whey, isolate & blend proteins for muscle growth
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={proteinProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* GAINERS */}
+      {gainerProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="MASS GAINERS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                High calorie gainers for effective bulking
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={gainerProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* PREWORKOUT */}
+      {preWorkoutProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="PRE-WORKOUT BOOSTERS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                Boost energy, focus, and strength
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={preWorkoutProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* POSTWORKOUT */}
+      {postWorkoutProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="POST-WORKOUT RECOVERY" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                Faster muscle recovery & strength rebuilding
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={postWorkoutProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* BCAA / AMINO */}
+      {aminoProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="BCAA & AMINO ACIDS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                Improve endurance, reduce soreness & repair faster
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={aminoProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* CREATINE */}
+      {creatineProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="CREATINE BEST SELLERS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                Pure monohydrate for power, strength & performance
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={creatineProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* FAT BURNERS */}
+      {fatBurnerProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="FAT BURNERS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                Thermogenic fat burners for faster cutting
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={fatBurnerProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* VITAMINS */}
+      {vitaminProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="VITAMINS & MULTIVITAMINS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                For strong immunity, energy & daily wellness
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={vitaminProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* SNACKS */}
+      {snackProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="HEALTHY SNACKS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                High-protein snacks for clean eating
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={snackProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* DRINKS */}
+      {drinkProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="ENERGY & HYDRATION DRINKS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                Stay hydrated and boost stamina
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={drinkProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* COMBO PACKS */}
+      {comboProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="COMBO PACKS & STACKS" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                Best value stacks & powerful supplement bundles
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={comboProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* ELITE COLLECTION */}
+      {eliteProducts.length > 0 && (
+        <section className="py-5 md:py-6 my-3 md:my-4 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <Headtext text="ELITE ATHLETE COLLECTION" />
+              <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
+                High performance supplements for professional athletes
+              </p>
+            </div>
+
+            <FeaturedProducts
+              products={eliteProducts}
+              isLoading={productsLoading}
+              error={error}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* HOT BRANDS */}
       <BrandCarousel tag="HOT" title="HOT BRANDS" />
 
       <Image
@@ -929,5 +1262,6 @@ export default function Home() {
       <TestimonialsSection />
       <NewsletterSection />
     </div>
+
   );
 }

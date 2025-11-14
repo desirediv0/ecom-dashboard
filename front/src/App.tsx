@@ -27,7 +27,6 @@ import NotFoundPage from "./pages/NotFoundPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import ProductCreatePage from "./pages/ProductCreatePage";
-import FeaturedProductsPage from "./pages/FeaturedProducts";
 import { useAuth } from "./context/AuthContext";
 import { Resource, Action } from "./types/admin";
 import { PermissionGuard } from "./components/PermissionGuard";
@@ -36,6 +35,7 @@ import { Card, CardContent } from "./components/ui/card";
 import UserManagementPage from "./pages/UserManagementPage";
 import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
 import BrandsPage from "./pages/BrandsPage";
+import ProductSectionsPage from "./pages/ProductSections";
 
 // Protected Route Component
 const ProtectedRoute = ({
@@ -388,16 +388,17 @@ const App = () => {
           />
 
           <Route
-            path="featured-products"
+            path="product-sections"
             element={
               <ProtectedRoute
                 resource={Resource.PRODUCTS}
                 action={Action.UPDATE}
               >
-                <FeaturedProductsPage />
+                <ProductSectionsPage />
               </ProtectedRoute>
             }
           />
+
 
           <Route
             path="faq-management"
