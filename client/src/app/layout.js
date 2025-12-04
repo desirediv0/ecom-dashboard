@@ -7,6 +7,7 @@ import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
 import { RouteGuard } from "@/components/route-guard";
 import { ClientOnly } from "@/components/client-only";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 const jostFont = localFont({
   src: "./fonts/Jost-Regular.ttf",
@@ -36,6 +37,7 @@ export default function RootLayout({ children }) {
       >
         <AuthProvider>
           <CartProvider>
+            <ScrollToTop />
             <div className="flex min-h-screen flex-col">
               <Navbar />
               <main className="flex-1">

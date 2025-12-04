@@ -49,10 +49,52 @@ const HeroCarousel = () => {
   const [api, setApi] = useState(null);
   const [autoplay, setAutoplay] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [banners, setBanners] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const router = useRouter();
 
-  const slides = [
+
+  // Fetch banners from API
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetchApi("/public/banners");
+
+        // Handle response: fetchApi returns { success, data: { banners: [...] }, message }
+        if (
+          response &&
+          response.success &&
+          response.data &&
+          response.data.banners
+        ) {
+          const bannersArray = response.data.banners;
+
+          // Only set banners if array has items (length > 0)
+          if (Array.isArray(bannersArray) && bannersArray.length > 0) {
+            setBanners(bannersArray);
+          } else {
+            // Empty array from API - use fallback
+            setBanners([]);
+          }
+        } else {
+          // No banners in response - use fallback
+          setBanners([]);
+        }
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+        // On error, set empty array so fallback slides will show
+        setBanners([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, []);
+
+  const fallbackSlides = [
     {
       ctaLink: "/products",
       img: bg1,
@@ -118,6 +160,17 @@ const HeroCarousel = () => {
     },
   ];
 
+  const slides =
+    banners.length > 0
+      ? banners.map((banner) => ({
+        ctaLink: banner.link || "/products",
+        img: banner.desktopImage,
+        smimg: banner.mobileImage,
+        title: banner.title || "",
+        subtitle: banner.subtitle || "",
+      }))
+      : fallbackSlides;
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -155,8 +208,36 @@ const HeroCarousel = () => {
   }, [api]);
 
   const handleSlideClick = (ctaLink) => {
-    router.push(ctaLink);
+    if (ctaLink) {
+      router.push(ctaLink);
+    } else {
+      router.push("/products");
+    }
   };
+
+
+  if (isLoading) {
+    return (
+      <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
+        <div className="relative overflow-hidden w-full aspect-[9/16] md:aspect-[16/9] bg-gradient-to-br from-gray-100 to-gray-200">
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <div>
+                <p className="text-gray-700 font-semibold text-lg mb-1">
+                  Loading ....
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (slides.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative w-full">
