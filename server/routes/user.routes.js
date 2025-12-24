@@ -14,6 +14,7 @@ import {
   updateUserAddress,
   deleteUserAddress,
   getUserAddresses,
+  setDefaultAddress,
   addToWishlist,
   removeFromWishlist,
   getUserWishlist,
@@ -66,6 +67,7 @@ router.get("/confirm-account-deletion/:token", confirmAccountDeletion);
 // Address routes
 router.get("/addresses", verifyJWTToken, getUserAddresses);
 router.post("/addresses", verifyJWTToken, addUserAddress);
+router.patch("/addresses/:addressId/default", verifyJWTToken, setDefaultAddress);
 router.patch("/addresses/:addressId", verifyJWTToken, updateUserAddress);
 router.delete("/addresses/:addressId", verifyJWTToken, deleteUserAddress);
 

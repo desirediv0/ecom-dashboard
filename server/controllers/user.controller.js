@@ -683,6 +683,49 @@ export const getUserAddresses = asyncHandler(async (req, res, next) => {
     );
 });
 
+// Set address as default
+export const setDefaultAddress = asyncHandler(async (req, res, next) => {
+  const { addressId } = req.params;
+
+  // Check if address exists and belongs to user
+  const address = await prisma.address.findFirst({
+    where: {
+      id: addressId,
+      userId: req.user.id,
+    },
+  });
+
+  if (!address) {
+    throw new ApiError(404, "Address not found");
+  }
+
+  // Clear default flag from all other addresses
+  await prisma.address.updateMany({
+    where: {
+      userId: req.user.id,
+      isDefault: true,
+      id: { not: addressId },
+    },
+    data: { isDefault: false },
+  });
+
+  // Set this address as default
+  const updatedAddress = await prisma.address.update({
+    where: { id: addressId },
+    data: { isDefault: true },
+  });
+
+  res
+    .status(200)
+    .json(
+      new ApiResponsive(
+        200,
+        { address: updatedAddress },
+        "Default address updated successfully"
+      )
+    );
+});
+
 // Add product to wishlist
 export const addToWishlist = asyncHandler(async (req, res, next) => {
   const { productId } = req.body;
